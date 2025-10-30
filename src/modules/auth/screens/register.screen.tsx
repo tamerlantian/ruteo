@@ -1,31 +1,32 @@
 import CustomBottomSheet from '../../../shared/components/bottom-sheet/bottom-sheet';
 import { DevModeSelector } from '../../../shared/components/bottom-sheet/dev-mode-selector';
+import { useDevMode } from '../../../shared/context/dev-mode-context';
 import { FormButton } from '../../../shared/components/ui/button/FormButton';
 import { FormInputController } from '../../../shared/components/ui/form/FormInputController';
 import { PasswordInputController } from '../../../shared/components/ui/form/PasswordInputController';
-import { useDevMode } from '../../../shared/context/dev-mode-context';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import BottomSheet from '@gorhom/bottom-sheet';
+import CheckBox from '@react-native-community/checkbox';
 import React, { useRef } from 'react';
-import { useForm } from 'react-hook-form';
-import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Controller, useForm } from 'react-hook-form';
+import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LoginFormValues } from '../interfaces/auth.interface';
+import { RegisterFormValues } from '../interfaces/auth.interface';
 import { loginStyles } from '../styles/login.style';
-import { useLogin } from '../view-models/login.view-model';
-// import { useNavigation } from '@react-navigation/native';
+import { useRegister } from '../view-models/register.view-model';
+import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../../navigation/types';
 
-type LoginScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
+type RegisterScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Register'>;
 
-export const LoginScreen = () => {
-  // ViewModel para login
-  const { login, isLoading } = useLogin();
-  // const navigation = useNavigation<LoginScreenNavigationProp>();
+export const RegisterScreen = () => {
+  // ViewModel para registro
+  const navigation = useNavigation<RegisterScreenNavigationProp>();
+  const { register, isLoading } = useRegister();
 
   // Contexto de modo desarrollador
-  const { isLoading: isDevModeLoading, isDeveloperMode } = useDevMode();
+  const { isDeveloperMode } = useDevMode();
 
   // Referencia al bottom sheet
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -44,30 +45,33 @@ export const LoginScreen = () => {
   const {
     control,
     handleSubmit,
+    watch,
     formState: { errors, isValid },
-  } = useForm<LoginFormValues>({
+  } = useForm<RegisterFormValues>({
     defaultValues: {
       username: '',
       password: '',
-      proyecto: 'REDDOC',
+      aplicacion: 'reddoc',
+      confirmarPassword: '',
+      aceptarTerminosCondiciones: false,
     },
     mode: 'onChange',
   });
 
-  // Manejar envío del formulario
-  const onSubmit = (data: LoginFormValues) => {
-    login(data);
-  };
+  // Obtener el valor actual de password para comparar con confirmPassword
+  const password = watch('password');
 
-  // Mostrar loading mientras se inicializa el contexto de modo desarrollador
-  if (isDevModeLoading) {
-    return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#0066cc" />
-        <Text style={{ marginTop: 16, color: '#666' }}>Inicializando...</Text>
-      </SafeAreaView>
-    );
-  }
+  // Manejar envío del formulario
+  const onSubmit = (data: RegisterFormValues) => {
+    // Transformar los datos al formato esperado por el método register
+    register({
+      username: data.username,
+      password: data.password,
+      confirmarPassword: data.confirmarPassword,
+      aceptarTerminosCondiciones: data.aceptarTerminosCondiciones,
+      aplicacion: data.aplicacion,
+    });
+  };
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -95,26 +99,17 @@ export const LoginScreen = () => {
           contentContainerStyle={loginStyles.container}
           keyboardShouldPersistTaps="handled"
         >
-          {/* <View style={loginStyles.logoContainer}>
+          <View style={loginStyles.logoContainer}>
             <Image
               source={require('../../../../assets/images/icon.png')}
               style={loginStyles.logo}
             />
-          </View> */}
-
-          <View
-            style={{
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginBottom: 30,
-            }}
-          >
-            <Text style={loginStyles.title}>Iniciar sesión</Text>
           </View>
 
+          <Text style={loginStyles.title}>Crear cuenta</Text>
+
           {/* Campo de email */}
-          <FormInputController<LoginFormValues>
+          <FormInputController<RegisterFormValues>
             control={control}
             name="username"
             label="Correo electrónico"
@@ -132,7 +127,7 @@ export const LoginScreen = () => {
           />
 
           {/* Campo de contraseña */}
-          <PasswordInputController<LoginFormValues>
+          <PasswordInputController<RegisterFormValues>
             control={control}
             name="password"
             label="Contraseña"
@@ -146,33 +141,69 @@ export const LoginScreen = () => {
               },
             }}
           />
-          {/* Enlace para recuperar contraseña */}
-          <TouchableOpacity
-            style={loginStyles.forgotPassword}
-            onPress={() => {
-              // navigation.navigate('ForgotPassword');
-            }}
-          >
-            <Text style={loginStyles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
-          </TouchableOpacity>
 
-          {/* Botón de login */}
+          {/* Campo de confirmar contraseña */}
+          <PasswordInputController<RegisterFormValues>
+            control={control}
+            name="confirmarPassword"
+            label="Confirmar contraseña"
+            placeholder="**************"
+            error={errors.confirmarPassword}
+            rules={{
+              required: 'Debes confirmar tu contraseña',
+              validate: (value: string) => value === password || 'Las contraseñas no coinciden',
+            }}
+          />
+
+          {/* Checkbox para términos y condiciones */}
+          <Controller
+            control={control}
+            name="aceptarTerminosCondiciones"
+            rules={{ required: 'Debes aceptar los términos y condiciones' }}
+            render={({ field: { onChange, value } }) => (
+              <View style={loginStyles.checkboxContainer}>
+                <CheckBox
+                  value={value}
+                  onValueChange={onChange}
+                  style={loginStyles.checkbox}
+                />
+                <View style={loginStyles.termsContainer}>
+                  <Text style={loginStyles.termsText}>
+                    Acepto los{' '}
+                    <Text
+                      style={loginStyles.termsLink}
+                      onPress={() => console.log('Términos presionados')}
+                    >
+                      términos y condiciones
+                    </Text>
+                  </Text>
+                  {errors.aceptarTerminosCondiciones && (
+                    <Text style={loginStyles.errorText}>
+                      {errors.aceptarTerminosCondiciones.message}
+                    </Text>
+                  )}
+                </View>
+              </View>
+            )}
+          />
+
+          {/* Botón de registro */}
           <FormButton
-            title="Iniciar sesión"
+            title="Registrarse"
             onPress={handleSubmit(onSubmit)}
             disabled={!isValid}
             isLoading={isLoading}
           />
 
-          {/* Enlace para registrarse */}
+          {/* Enlace para iniciar sesión */}
           <View style={loginStyles.footer}>
-            <Text style={loginStyles.footerText}>¿No tienes una cuenta?</Text>
+            <Text style={loginStyles.footerText}>¿Ya tienes una cuenta?</Text>
             <TouchableOpacity
               onPress={() => {
-                // navigation.navigate('Register');
+                navigation.navigate('Login');
               }}
             >
-              <Text style={loginStyles.footerLink}>Regístrate</Text>
+              <Text style={loginStyles.footerLink}>Iniciar sesión</Text>
             </TouchableOpacity>
           </View>
 
@@ -197,7 +228,7 @@ export const LoginScreen = () => {
         </ScrollView>
 
         {/* Bottom Sheet para el selector de modo desarrollador */}
-        <CustomBottomSheet ref={bottomSheetRef} initialSnapPoints={['30%', '50%']}>
+        <CustomBottomSheet ref={bottomSheetRef} initialSnapPoints={['40%']}>
           <DevModeSelector onClose={handleCloseDevModeSheet} />
         </CustomBottomSheet>
       </View>
