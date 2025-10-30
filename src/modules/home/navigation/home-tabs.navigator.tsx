@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { MainTabParamList } from '../../../navigation/types';
 import { DashboardScreen } from '../screens/dashboard.screen';
-import { RoutesScreen } from '../screens/routes.screen';
+import { VisitasScreen } from '../screens/visitas.screen';
 import { ProfileScreen } from '../screens/profile.screen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -15,7 +15,7 @@ const getTabBarIcon = (route: any, focused: boolean, color: string, size: number
     case 'Dashboard':
       iconName = focused ? 'home' : 'home-outline';
       break;
-    case 'Routes':
+    case 'Visitas':
       iconName = focused ? 'map' : 'map-outline';
       break;
     case 'Profile':
@@ -58,10 +58,10 @@ export const HomeTabsNavigator = () => {
         }}
       />
       <Tab.Screen 
-        name="Routes" 
-        component={RoutesScreen}
+        name="Visitas" 
+        component={VisitasScreen}
         options={{
-          tabBarLabel: 'Rutas',
+          tabBarLabel: 'Visitas',
         }}
       />
       <Tab.Screen 

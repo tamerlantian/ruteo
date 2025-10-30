@@ -2,11 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export const RoutesScreen = () => {
+export const VisitasScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.content}>
-        <Text style={styles.title}>Rutas</Text>
+        <Text style={styles.title}>Visitas</Text>
         
         <View style={styles.emptyState}>
           <Text style={styles.emptyTitle}>No hay rutas disponibles</Text>
