@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LoginFormValues } from '../interfaces/auth.interface';
 import { loginStyles } from '../styles/login.style';
 import { useLogin } from '../view-models/login.view-model';
-// import { useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../../navigation/types';
 
@@ -22,7 +22,7 @@ type LoginScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, '
 export const LoginScreen = () => {
   // ViewModel para login
   const { login, isLoading } = useLogin();
-  // const navigation = useNavigation<LoginScreenNavigationProp>();
+  const navigation = useNavigation<LoginScreenNavigationProp>();
 
   // Contexto de modo desarrollador
   const { isLoading: isDevModeLoading, isDeveloperMode } = useDevMode();
@@ -169,7 +169,7 @@ export const LoginScreen = () => {
             <Text style={loginStyles.footerText}>¿No tienes una cuenta?</Text>
             <TouchableOpacity
               onPress={() => {
-                // navigation.navigate('Register');
+                navigation.navigate('Register');
               }}
             >
               <Text style={loginStyles.footerLink}>Regístrate</Text>

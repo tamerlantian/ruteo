@@ -1,57 +1,47 @@
-import React, {useState} from 'react';
-import {HomeScreen} from '../screens/main/HomeScreen';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { HomeScreen } from '../screens/main/HomeScreen';
 import { LoginScreen } from '../modules/auth/screens/login.screen';
+import { RegisterScreen } from '../modules/auth/screens/register.screen';
+import { AuthStackParamList, RootStackParamList } from './types';
 
-export type Screen = 'Login' | 'Home';
+const AuthStack = createNativeStackNavigator<AuthStackParamList>();
+const RootStack = createNativeStackNavigator<RootStackParamList>();
 
-interface NavigationState {
-  currentScreen: Screen;
-  isAuthenticated: boolean;
-}
+const AuthNavigator = () => {
+  return (
+    <AuthStack.Navigator 
+      initialRouteName="Login"
+      screenOptions={{
+        headerShown: false, // Ocultar header por defecto
+      }}
+    >
+      <AuthStack.Screen name="Login" component={LoginScreen} />
+      <AuthStack.Screen name="Register" component={RegisterScreen} />
+    </AuthStack.Navigator>
+  );
+};
 
-interface AppNavigatorProps {
-  initialScreen?: Screen;
-}
+const MainNavigator = () => {
+  return (
+    <HomeScreen onLogout={() => {}} navigate={() => {}} />
+  );
+};
 
-export const AppNavigator: React.FC<AppNavigatorProps> = ({
-  initialScreen = 'Login',
-}) => {
-  const [navigationState, setNavigationState] = useState<NavigationState>({
-    currentScreen: initialScreen,
-    isAuthenticated: false,
-  });
+export const AppNavigator: React.FC = () => {
+  // TODO: Implementar lógica de autenticación
+  const isAuthenticated = false;
 
-  const navigate = (screen: Screen) => {
-    setNavigationState(prev => ({
-      ...prev,
-      currentScreen: screen,
-    }));
-  };
-
-  const login = () => {
-    setNavigationState({
-      currentScreen: 'Home',
-      isAuthenticated: true,
-    });
-  };
-
-  const logout = () => {
-    setNavigationState({
-      currentScreen: 'Login',
-      isAuthenticated: false,
-    });
-  };
-
-  const renderScreen = () => {
-    switch (navigationState.currentScreen) {
-      case 'Login':
-        return <LoginScreen />;
-      case 'Home':
-        return <HomeScreen onLogout={logout} navigate={navigate} />;
-      default:
-        return <LoginScreen />;
-    }
-  };
-
-  return <>{renderScreen()}</>;
+  return (
+    <NavigationContainer>
+      <RootStack.Navigator screenOptions={{ headerShown: false }}>
+        {isAuthenticated ? (
+          <RootStack.Screen name="Main" component={MainNavigator} />
+        ) : (
+          <RootStack.Screen name="Auth" component={AuthNavigator} />
+        )}
+      </RootStack.Navigator>
+    </NavigationContainer>
+  );
 };

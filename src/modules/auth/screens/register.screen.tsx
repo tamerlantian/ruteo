@@ -99,12 +99,12 @@ export const RegisterScreen = () => {
           contentContainerStyle={loginStyles.container}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={loginStyles.logoContainer}>
+          {/* <View style={loginStyles.logoContainer}>
             <Image
               source={require('../../../../assets/images/icon.png')}
               style={loginStyles.logo}
             />
-          </View>
+          </View> */}
 
           <Text style={loginStyles.title}>Crear cuenta</Text>
 
