@@ -29,7 +29,7 @@ function AppContent() {
   const safeAreaInsets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.container, { paddingTop: safeAreaInsets.top }]}>
+    <View style={[styles.container]}>
       <AppNavigator />
     </View>
   );
