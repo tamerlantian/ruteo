@@ -8,7 +8,7 @@ import { Ionicons } from '@react-native-vector-icons/ionicons';
 import BottomSheet from '@gorhom/bottom-sheet';
 import React, { useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LoginFormValues } from '../interfaces/auth.interface';
 import { loginStyles } from '../styles/login.style';

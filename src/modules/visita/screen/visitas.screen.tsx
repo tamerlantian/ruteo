@@ -1,22 +1,42 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import BottomSheet from '@gorhom/bottom-sheet';
+import CustomBottomSheet from '../../../shared/components/bottom-sheet/bottom-sheet';
+import CargarOrdenComponent from '../components/cargar-orden/cargar-orden.component';
 
 export const VisitasScreen = () => {
+
+   // Referencia al bottom sheet
+  const bottomSheetRef = useRef<BottomSheet>(null);
+
+  // Función para abrir el bottom sheet
+  const handleOpenDevModeSheet = () => {
+    bottomSheetRef.current?.expand();
+  };
+
+  // Función para cerrar el bottom sheet
+  // const handleCloseDevModeSheet = () => {
+  //   bottomSheetRef.current?.close();
+  // };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.content}>
         <Text style={styles.title}>Visitas</Text>
         
         <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>No hay rutas disponibles</Text>
+          <Text style={styles.emptyTitle}>No tienes visitas cargadas</Text>
           <Text style={styles.emptySubtitle}>
-            Las rutas aparecerán aquí cuando estén disponibles
+            Las visitas aparecerán aquí cuando estén disponibles
           </Text>
+          <TouchableOpacity style={styles.emptyButtonContainer} onPress={handleOpenDevModeSheet}>
+            <Text style={styles.emptyButton}>Cargar orden</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Placeholder para futuras rutas */}
-        <View style={styles.routeCard}>
+        {/* <View style={styles.routeCard}>
           <Text style={styles.routeTitle}>Ruta de ejemplo</Text>
           <Text style={styles.routeDescription}>
             Esta es una ruta de ejemplo que se mostrará cuando implementemos la funcionalidad
@@ -25,8 +45,13 @@ export const VisitasScreen = () => {
             <Text style={styles.routeInfoText}>Distancia: 15.2 km</Text>
             <Text style={styles.routeInfoText}>Tiempo: 45 min</Text>
           </View>
-        </View>
+        </View> */}
       </ScrollView>
+
+      {/* Bottom Sheet para el selector de modo desarrollador */}
+      <CustomBottomSheet ref={bottomSheetRef} initialSnapPoints={['30%']}>
+        <CargarOrdenComponent />
+      </CustomBottomSheet>
     </SafeAreaView>
   );
 };
@@ -65,6 +90,16 @@ const styles = StyleSheet.create({
     color: '#8e8e93',
     textAlign: 'center',
     paddingHorizontal: 20,
+  },
+  emptyButtonContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyButton: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#007aff',
+    marginTop: 20,
   },
   routeCard: {
     backgroundColor: '#fff',

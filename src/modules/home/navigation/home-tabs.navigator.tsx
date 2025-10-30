@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { MainTabParamList } from '../../../navigation/types';
 import { DashboardScreen } from '../screens/dashboard.screen';
-import { VisitasScreen } from '../screens/visitas.screen';
+import { VisitasScreen } from '../../visita/screen/visitas.screen';
 import { ProfileScreen } from '../screens/profile.screen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
