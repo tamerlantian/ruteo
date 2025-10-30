@@ -1,9 +1,9 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { HomeScreen } from '../modules/home/screens/home.screen';
 import { LoginScreen } from '../modules/auth/screens/login.screen';
 import { RegisterScreen } from '../modules/auth/screens/register.screen';
+import { HomeTabsNavigator } from '../modules/home/navigation/home-tabs.navigator';
 import { AuthStackParamList, MainStackParamList, RootStackParamList } from './types';
 import { useAuth } from '../modules/auth/screens/auth-provider';
 
@@ -28,12 +28,12 @@ const AuthNavigator = () => {
 const MainNavigator = () => {
   return (
     <MainStack.Navigator
-      initialRouteName="Home"
+      initialRouteName="HomeTabs"
       screenOptions={{
         headerShown: false, // Ocultar header por defecto
       }}
     >
-      <MainStack.Screen name="Home" component={HomeScreen} />
+      <MainStack.Screen name="HomeTabs" component={HomeTabsNavigator} />
     </MainStack.Navigator>
   );
 };

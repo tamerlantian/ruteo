@@ -4,8 +4,14 @@ export type AuthStackParamList = {
   ForgotPassword: undefined;
 };
 
+export type MainTabParamList = {
+  Dashboard: undefined;
+  Routes: undefined;
+  Profile: undefined;
+};
+
 export type MainStackParamList = {
-  Home: undefined;
+  HomeTabs: undefined;
 };
 
 export type RootStackParamList = {
