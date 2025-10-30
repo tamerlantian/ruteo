@@ -26,6 +26,18 @@
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
+	  <key>NSExceptionDomains</key>
+      <dict>
+        <key>reddocapi.online</key>
+        <dict>
+          <key>NSIncludesSubdomains</key>
+          <true/>
+          <key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+          <true/>
+          <key>NSTemporaryExceptionMinimumTLSVersion</key>
+          <string>TLSv1.1</string>
+      </dict>
+      </dict>
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
 		<key>NSAllowsLocalNetworking</key>

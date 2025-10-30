@@ -10,12 +10,13 @@ export const useLogout = () => {
   const logoutMutation = useMutation({
     mutationFn: authController.logout,
     onSuccess: () => {
-      // Limpiar el estado de autenticación y usuario
-      queryClient.invalidateQueries({ queryKey: authKeys.session() });
-      queryClient.invalidateQueries({ queryKey: authKeys.user() });
+      // Limpiar el estado de autenticación y usuario inmediatamente
       queryClient.setQueryData(authKeys.session(), false);
       queryClient.setQueryData(authKeys.user(), null);
-      // router.replace('/(auth)/login');
+      
+      // Invalidar queries para limpiar cache
+      queryClient.invalidateQueries({ queryKey: authKeys.session() });
+      queryClient.invalidateQueries({ queryKey: authKeys.user() });
     },
   });
 

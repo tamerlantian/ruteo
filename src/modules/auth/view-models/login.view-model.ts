@@ -14,10 +14,15 @@ export const useLogin = () => {
 
   const loginMutation = useMutation({
     mutationFn: (credentials: LoginCredentials) => authController.login(credentials),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      // Actualizar el estado de autenticación inmediatamente
+      queryClient.setQueryData(authKeys.session(), true);
+      queryClient.setQueryData(authKeys.user(), response.user);
+      
+      // Invalidar queries para refrescar datos
       queryClient.invalidateQueries({ queryKey: authKeys.session() });
       queryClient.invalidateQueries({ queryKey: authKeys.user() });
-      // navigation.navigate();
+      
       toast.success('Inicio de sesión exitoso');
     },
     onError: (error: any) => {
