@@ -2,11 +2,11 @@ import { View, Text, StyleSheet } from 'react-native';
 import React from 'react';
 import { FormInputController } from '../../../../shared/components/ui/form/FormInputController';
 import { useForm } from 'react-hook-form';
-import { Button } from '../../../../components';
 import { verticalRepository } from '../../../vertical/repositories/vertical.repository';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { cargarVisitasThunk } from '../../store/thunk/visita.thunk';
 import { selectIsLoading } from '../../store/selector/visita.selector';
+import { FormButton } from '../../../../shared/components/ui/button/FormButton';
 
 interface CargarOrdenFormValues {
   codigo: string;
@@ -52,11 +52,11 @@ const CargarOrdenComponent = () => {
           required: 'El código es obligatorio',
         }}
       />
-      <Button
+      <FormButton
         title="Cargar Orden"
         onPress={handleSubmit(onCargarOrden)}
         disabled={!isValid || isLoading}
-        loading={isLoading}
+        isLoading={isLoading}
       />
     </View>
   );
