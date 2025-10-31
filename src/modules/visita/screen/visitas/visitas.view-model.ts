@@ -4,15 +4,7 @@ import { useAppSelector, useAppDispatch } from '../../../../store/hooks';
 import { selectVisitas, selectIsLoading, selectIsSucceeded, selectTotalVisitasSeleccionadas } from '../../store/selector/visita.selector';
 import { limpiarSeleccionVisitas } from '../../store/slice/visita.slice';
 import { VisitaResponse } from '../../interfaces/visita.interface';
-
-// Constantes para optimización de FlatList
-export const LIST_OPTIMIZATION_CONFIG = {
-  ITEM_HEIGHT: 120,
-  INITIAL_NUM_TO_RENDER: 10,
-  MAX_TO_RENDER_PER_BATCH: 5,
-  WINDOW_SIZE: 10,
-  UPDATE_CELLS_BATCHING_PERIOD: 50,
-} as const;
+import { LIST_OPTIMIZATION_CONFIG } from '../../constants/visita.constant';
 
 /**
  * ViewModel para la pantalla de Visitas

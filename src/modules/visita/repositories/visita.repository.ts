@@ -3,7 +3,7 @@ import { buildUrlWithSubdomain } from '../../../shared/utils/url-builder.util';
 import { VisitaResponse } from '../interfaces/visita.interface';
 
 /**
- * Repositorio para manejar las operaciones de API relacionadas con autenticación
+ * Repositorio para manejar las operaciones de API relacionadas con visitas
  * Implementa el patrón Singleton para evitar múltiples instancias
  */
 export class VisitaRepository extends HttpBaseRepository {
@@ -28,8 +28,11 @@ export class VisitaRepository extends HttpBaseRepository {
   }
 
   /**
-   * Realiza el login del usuario
-   * @param credentials Credenciales de login (email y password)
+   * Obtiene las visitas
+   * @param schemaName Nombre del schema
+   * @param despachoId Id del despacho
+   * @param estadoEntregado Estado de entregado
+   * @param estadoNovedad Estado de novedad
    * @returns Promise con la respuesta del login
    */
   async getVisitas(
