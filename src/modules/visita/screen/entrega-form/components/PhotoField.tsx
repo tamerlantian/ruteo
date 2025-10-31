@@ -25,7 +25,6 @@ export const PhotoField: React.FC<PhotoFieldProps> = ({
   label,
   error,
   rules,
-  required = false,
   maxPhotos = 5,
 }) => {
   return (
@@ -33,7 +32,6 @@ export const PhotoField: React.FC<PhotoFieldProps> = ({
       {/* Label */}
       <Text style={entregaFormStyles.photoLabel}>
         {label}
-        {required && <Text style={entregaFormStyles.requiredAsterisk}> *</Text>}
       </Text>
 
       {/* Controller para React Hook Form */}

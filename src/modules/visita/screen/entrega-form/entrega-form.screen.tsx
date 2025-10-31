@@ -60,28 +60,13 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
           showsVerticalScrollIndicator={false}
           scrollEnabled={scrollEnabled}
         >
-          {/* Progress Indicator */}
-          <View style={entregaFormStyles.progressContainer}>
-            <View style={entregaFormStyles.progressBar}>
-              <View 
-                style={[
-                  entregaFormStyles.progressFill, 
-                  { width: `${viewModel.progressPercentage}%` }
-                ]} 
-              />
-            </View>
-            <Text style={entregaFormStyles.progressText}>
-              {viewModel.completedFields} de {viewModel.totalFields} campos completados
-            </Text>
-          </View>
-
           {/* Form Fields */}
           <View style={entregaFormStyles.formContainer}>
             {/* Campo: Recibe */}
             <FormInputController
               control={viewModel.control}
               name="recibe"
-              label="¿Quién recibe? *"
+              label="¿Quién recibe?"
               placeholder="Nombre completo de quien recibe"
               rules={viewModel.validationRules.recibe}
               error={viewModel.errors.recibe}
@@ -93,24 +78,24 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
             <FormInputController
               control={viewModel.control}
               name="numeroIdentificacion"
-              label="Número de Identificación *"
+              label="Número de Identificación"
               placeholder="Cédula o documento de identidad"
               rules={viewModel.validationRules.numeroIdentificacion}
               error={viewModel.errors.numeroIdentificacion}
               keyboardType="numeric"
-              maxLength={15}
+              autoComplete="off"
             />
 
             {/* Campo: Celular */}
             <FormInputController
               control={viewModel.control}
               name="celular"
-              label="Número de Celular *"
+              label="Número de Celular"
               placeholder="Número de contacto"
               rules={viewModel.validationRules.celular}
               error={viewModel.errors.celular}
               keyboardType="phone-pad"
-              maxLength={15}
+              autoComplete="tel"
             />
 
             {/* Campo: Firma Digital */}
@@ -120,7 +105,7 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
               label="Firma del Receptor"
               rules={viewModel.validationRules.firma}
               error={viewModel.errors.firma}
-              required={true}
+              required={false}
               onScrollEnable={setScrollEnabled}
             />
 
@@ -131,7 +116,7 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
               label="Fotos de Entrega"
               rules={viewModel.validationRules.fotos}
               error={viewModel.errors.fotos}
-              required={true}
+              required={false}
               maxPhotos={5}
             />
 

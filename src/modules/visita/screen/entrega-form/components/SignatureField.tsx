@@ -24,7 +24,6 @@ export const SignatureField: React.FC<SignatureFieldProps> = ({
   label,
   error,
   rules,
-  required = false,
   onScrollEnable,
 }) => {
   return (
@@ -32,7 +31,6 @@ export const SignatureField: React.FC<SignatureFieldProps> = ({
       {/* Label */}
       <Text style={entregaFormStyles.signatureLabel}>
         {label}
-        {required && <Text style={entregaFormStyles.requiredAsterisk}> *</Text>}
       </Text>
 
       {/* Controller para React Hook Form */}

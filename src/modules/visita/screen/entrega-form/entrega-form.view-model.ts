@@ -23,59 +23,57 @@ export interface EntregaFormData {
   fotos: PhotoData[];
 }
 
-// Reglas de validación
+// Reglas de validación (todos los campos opcionales)
 const validationRules = {
   recibe: {
-    required: 'El nombre de quien recibe es obligatorio',
     minLength: {
       value: 2,
       message: 'El nombre debe tener al menos 2 caracteres'
     },
     maxLength: {
-      value: 50,
-      message: 'El nombre no puede exceder 50 caracteres'
+      value: 100,
+      message: 'El nombre no puede exceder 100 caracteres'
     }
   },
   numeroIdentificacion: {
-    required: 'El número de identificación es obligatorio',
-    pattern: {
-      value: /^[0-9]+$/,
-      message: 'Solo se permiten números'
-    },
     minLength: {
       value: 6,
-      message: 'Debe tener al menos 6 dígitos'
+      message: 'El número de identificación debe tener al menos 6 caracteres'
     },
     maxLength: {
-      value: 15,
-      message: 'No puede exceder 15 dígitos'
+      value: 20,
+      message: 'El número de identificación no puede exceder 20 caracteres'
+    },
+    pattern: {
+      value: /^[0-9]+$/,
+      message: 'El número de identificación solo puede contener números'
     }
   },
   celular: {
-    required: 'El número de celular es obligatorio',
-    pattern: {
-      value: /^[0-9+\-\s()]+$/,
-      message: 'Formato de celular inválido'
-    },
     minLength: {
       value: 10,
-      message: 'Debe tener al menos 10 dígitos'
+      message: 'El número de celular debe tener al menos 10 dígitos'
     },
     maxLength: {
       value: 15,
-      message: 'No puede exceder 15 dígitos'
+      message: 'El número de celular no puede exceder 15 dígitos'
+    },
+    pattern: {
+      value: /^[0-9+\-\s()]+$/,
+      message: 'Formato de número de celular inválido'
     }
   },
   firma: {
-    required: 'La firma es obligatoria',
     validate: (value: string) => {
       console.log('Validating signature:', value ? `${value.substring(0, 50)}... (length: ${value.length})` : 'empty');
       
+      // Si no hay firma, es válido (campo opcional)
       if (!value || value.trim() === '') {
-        return 'Debe proporcionar una firma';
+        console.log('No signature provided - valid (optional field)');
+        return true;
       }
       
-      // Validar que sea un base64 válido (más flexible)
+      // Si hay firma, validar que sea un base64 válido
       if (!value.startsWith('data:image/') && !value.includes('base64')) {
         console.log('Invalid signature format:', value.substring(0, 100));
         return 'Formato de firma inválido';
@@ -86,12 +84,13 @@ const validationRules = {
     }
   },
   fotos: {
-    required: 'Debes tomar al menos una foto de la entrega',
     validate: (value: PhotoData[]) => {
       console.log('Validating photos:', value ? value.length : 0, 'photos');
       
+      // Si no hay fotos, es válido (campo opcional)
       if (!value || value.length === 0) {
-        return 'Debes tomar al menos una foto de la entrega';
+        console.log('No photos provided - valid (optional field)');
+        return true;
       }
       
       if (value.length > 5) {
@@ -154,13 +153,8 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
 
   // === ESTADOS COMPUTADOS ===
   
-  // Verificar si todos los campos requeridos están llenos
-  const allRequiredFieldsFilled = formValues.recibe && 
-                                  formValues.numeroIdentificacion && 
-                                  formValues.celular && 
-                                  formValues.firma &&
-                                  formValues.fotos && 
-                                  formValues.fotos.length > 0;
+  // Como todos los campos son opcionales, el formulario siempre puede enviarse
+  const allRequiredFieldsFilled = true;
   
   const canSubmit = isValid && allRequiredFieldsFilled;
   const hasErrors = Object.keys(errors).length > 0;
