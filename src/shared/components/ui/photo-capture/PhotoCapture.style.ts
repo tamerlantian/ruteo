@@ -1,0 +1,112 @@
+import { StyleSheet } from 'react-native';
+
+export const photoCaptureStyles = StyleSheet.create({
+  container: {
+    marginVertical: 8,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  counter: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  photosGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  photoItem: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    overflow: 'hidden',
+    position: 'relative',
+    backgroundColor: '#f5f5f5',
+    borderWidth: 1,
+    borderColor: '#e1e5e9',
+  },
+  photoImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  removeButton: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 59, 48, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addPhotoButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#007AFF',
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 122, 255, 0.05)',
+  },
+  addPhotoButtonDisabled: {
+    borderColor: '#c7c7cc',
+    backgroundColor: '#f2f2f7',
+  },
+  addPhotoIcon: {
+    marginBottom: 4,
+  },
+  addPhotoText: {
+    fontSize: 12,
+    color: '#007AFF',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  addPhotoTextDisabled: {
+    color: '#c7c7cc',
+  },
+  photoIndex: {
+    position: 'absolute',
+    bottom: 2,
+    left: 2,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+    minWidth: 16,
+    textAlign: 'center',
+  },
+  emptyState: {
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e1e5e9',
+  },
+  emptyStateIcon: {
+    marginBottom: 8,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+});

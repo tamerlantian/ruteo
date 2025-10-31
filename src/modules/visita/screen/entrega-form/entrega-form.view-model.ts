@@ -5,11 +5,22 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParamList } from '../../../../navigation/types';
 
 // Tipos para el formulario de entrega
+export interface PhotoData {
+  uri: string;
+  fileName?: string;
+  type?: string;
+  fileSize?: number;
+  width?: number;
+  height?: number;
+  timestamp: number;
+}
+
 export interface EntregaFormData {
   recibe: string;
   numeroIdentificacion: string;
   celular: string;
   firma: string; // Base64 de la firma
+  fotos: PhotoData[];
 }
 
 // Reglas de validación
@@ -73,6 +84,23 @@ const validationRules = {
       console.log('Signature validation passed');
       return true;
     }
+  },
+  fotos: {
+    required: 'Debes tomar al menos una foto de la entrega',
+    validate: (value: PhotoData[]) => {
+      console.log('Validating photos:', value ? value.length : 0, 'photos');
+      
+      if (!value || value.length === 0) {
+        return 'Debes tomar al menos una foto de la entrega';
+      }
+      
+      if (value.length > 5) {
+        return 'No puedes agregar más de 5 fotos';
+      }
+      
+      console.log('Photos validation passed');
+      return true;
+    }
   }
 };
 
@@ -86,20 +114,15 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
   const navigation = useNavigation<NavigationProp>();
 
   // Configuración de React Hook Form
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isValid, isDirty },
-    reset,
-    watch
-  } = useForm<EntregaFormData>({
-    mode: 'onChange', // Validación en tiempo real
+  const { control, handleSubmit, formState: { isValid, isDirty, errors }, reset, watch } = useForm<EntregaFormData>({
     defaultValues: {
       recibe: '',
       numeroIdentificacion: '',
       celular: '',
-      firma: ''
-    }
+      firma: '',
+      fotos: [],
+    },
+    mode: 'onChange',
   });
 
   // Observar cambios en los campos para feedback visual
@@ -135,7 +158,9 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
   const allRequiredFieldsFilled = formValues.recibe && 
                                   formValues.numeroIdentificacion && 
                                   formValues.celular && 
-                                  formValues.firma;
+                                  formValues.firma &&
+                                  formValues.fotos && 
+                                  formValues.fotos.length > 0;
   
   const canSubmit = isValid && allRequiredFieldsFilled;
   const hasErrors = Object.keys(errors).length > 0;
@@ -150,12 +175,13 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
   const totalFields = Object.keys(formValues).length;
   const progressPercentage = (completedFields / totalFields) * 100;
 
-  // Debug: Log form values para verificar la firma
+  // Debug: Log form values para verificar la firma y fotos
   console.log('Form values:', {
     recibe: formValues.recibe?.substring(0, 20) + '...',
     numeroIdentificacion: formValues.numeroIdentificacion,
     celular: formValues.celular,
     firma: formValues.firma ? `${formValues.firma.substring(0, 30)}... (length: ${formValues.firma.length})` : 'empty',
+    fotos: formValues.fotos ? `${formValues.fotos.length} photos` : 'empty',
     isValid,
     isDirty,
     allRequiredFieldsFilled,

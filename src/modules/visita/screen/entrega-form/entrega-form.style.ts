@@ -224,7 +224,26 @@ export const entregaFormStyles = StyleSheet.create({
     fontSize: 12,
     color: '#8e8e93',
     marginTop: 8,
-    textAlign: 'center',
-    fontStyle: 'italic',
+    lineHeight: 16,
+  },
+  // Estilos para el campo de fotos
+  photoFieldContainer: {
+    marginBottom: 24,
+  },
+  photoLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  photoError: {
+    fontSize: 12,
+    color: '#ff3b30',
+    marginTop: 8,
+  },
+  photoHelper: {
+    fontSize: 12,
+    color: '#8e8e93',
+    marginTop: 8,
+    lineHeight: 16,
   },
 });

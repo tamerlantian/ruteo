@@ -6,6 +6,7 @@ import { MainStackParamList } from '../../../../navigation/types';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { FormInputController } from '../../../../shared/components/ui/form/FormInputController';
 import { SignatureField } from './components/SignatureField';
+import { PhotoField } from './components/PhotoField';
 import { entregaFormStyles } from './entrega-form.style';
 import { useEntregaFormViewModel } from './entrega-form.view-model';
 
@@ -121,6 +122,17 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
               error={viewModel.errors.firma}
               required={true}
               onScrollEnable={setScrollEnabled}
+            />
+
+            {/* Campo: Fotos de Entrega */}
+            <PhotoField
+              control={viewModel.control}
+              name="fotos"
+              label="Fotos de Entrega"
+              rules={viewModel.validationRules.fotos}
+              error={viewModel.errors.fotos}
+              required={true}
+              maxPhotos={5}
             />
 
             {/* Info de visitas seleccionadas */}
