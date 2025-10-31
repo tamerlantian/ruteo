@@ -1,5 +1,6 @@
 import React, { useRef, useMemo, useCallback, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ListRenderItem } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, ListRenderItem } from 'react-native';
+import { visitasStyles } from './visitas.style';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BottomSheet from '@gorhom/bottom-sheet';
 import CustomBottomSheet from '../../../../shared/components/bottom-sheet/bottom-sheet';
@@ -74,11 +75,11 @@ export const VisitasScreen = () => {
 
   // Componente de header memoizado
   const ListHeaderComponent = useMemo(() => (
-    <View style={styles.header}>
-      <View style={styles.titleRow}>
-        <Text style={styles.title}>Visitas</Text>
+    <View style={visitasStyles.header}>
+      <View style={visitasStyles.titleRow}>
+        <Text style={visitasStyles.title}>Visitas</Text>
         {totalSeleccionadas > 0 && (
-          <Text style={styles.selectionCounter}>
+          <Text style={visitasStyles.selectionCounter}>
             {totalSeleccionadas} seleccionada{totalSeleccionadas !== 1 ? 's' : ''}
           </Text>
         )}
@@ -86,22 +87,22 @@ export const VisitasScreen = () => {
       
       {/* Controles de selección cuando hay visitas */}
       {visitas.length > 0 && (
-        <View style={styles.selectionControls}>
+        <View style={visitasStyles.selectionControls}>
           <TouchableOpacity 
-            style={styles.selectionButton} 
+            style={visitasStyles.selectionButton} 
             onPress={todasSeleccionadas ? handleLimpiarSeleccion : handleSeleccionarTodas}
           >
-            <Text style={styles.selectionButtonText}>
+            <Text style={visitasStyles.selectionButtonText}>
               {todasSeleccionadas ? 'Deseleccionar todas' : 'Seleccionar todas'}
             </Text>
           </TouchableOpacity>
           
           {totalSeleccionadas > 0 && (
             <TouchableOpacity 
-              style={[styles.selectionButton, styles.clearButton]} 
+              style={[visitasStyles.selectionButton, visitasStyles.clearButton]} 
               onPress={handleLimpiarSeleccion}
             >
-              <Text style={[styles.selectionButtonText, styles.clearButtonText]}>
+              <Text style={[visitasStyles.selectionButtonText, visitasStyles.clearButtonText]}>
                 Limpiar
               </Text>
             </TouchableOpacity>
@@ -110,13 +111,13 @@ export const VisitasScreen = () => {
       )}
       
       {visitas.length === 0 && (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>No tienes visitas cargadas</Text>
-          <Text style={styles.emptySubtitle}>
+        <View style={visitasStyles.emptyState}>
+          <Text style={visitasStyles.emptyTitle}>No tienes visitas cargadas</Text>
+          <Text style={visitasStyles.emptySubtitle}>
             Las visitas aparecerán aquí cuando estén disponibles
           </Text>
-          <TouchableOpacity style={styles.emptyButtonContainer} onPress={handleOpenDevModeSheet}>
-            <Text style={styles.emptyButton}>Cargar orden</Text>
+          <TouchableOpacity style={visitasStyles.emptyButtonContainer} onPress={handleOpenDevModeSheet}>
+            <Text style={visitasStyles.emptyButton}>Cargar orden</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -126,8 +127,8 @@ export const VisitasScreen = () => {
   // Componente de footer para loading
   const ListFooterComponent = useMemo(() => (
     isLoading ? (
-      <View style={styles.loadingFooter}>
-        <Text style={styles.loadingText}>Cargando más visitas...</Text>
+      <View style={visitasStyles.loadingFooter}>
+        <Text style={visitasStyles.loadingText}>Cargando más visitas...</Text>
       </View>
     ) : null
   ), [isLoading]);
@@ -137,7 +138,7 @@ export const VisitasScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={visitasStyles.container}>
       <FlatList
         data={visitas}
         renderItem={renderVisitaItem}
@@ -158,8 +159,8 @@ export const VisitasScreen = () => {
         onRefresh={onRefresh}
         
         // Estilos
-        style={styles.flatList}
-        contentContainerStyle={styles.contentContainer}
+        style={visitasStyles.flatList}
+        contentContainerStyle={visitasStyles.contentContainer}
         showsVerticalScrollIndicator={false}
         
         // Optimización adicional para listas grandes
@@ -173,103 +174,3 @@ export const VisitasScreen = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  flatList: {
-    flex: 1,
-  },
-  contentContainer: {
-    flexGrow: 1,
-  },
-  header: {
-    padding: 20,
-    paddingBottom: 10,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1c1c1e',
-    marginBottom: 20,
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    marginBottom: 20,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1c1c1e',
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    color: '#8e8e93',
-    textAlign: 'center',
-    paddingHorizontal: 20,
-  },
-  emptyButtonContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyButton: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#007aff',
-    marginTop: 20,
-  },
-  loadingFooter: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: 14,
-    color: '#8e8e93',
-  },
-  titleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  selectionCounter: {
-    fontSize: 14,
-    color: '#007aff',
-    fontWeight: '600',
-    backgroundColor: '#f0f8ff',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  selectionControls: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
-  },
-  selectionButton: {
-    backgroundColor: '#007aff',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    flex: 1,
-  },
-  selectionButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  clearButton: {
-    backgroundColor: '#ff3b30',
-  },
-  clearButtonText: {
-    color: '#fff',
-  },
-});
