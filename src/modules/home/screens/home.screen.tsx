@@ -1,10 +1,17 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Ionicons from '@react-native-vector-icons/ionicons';
 import { useAuth } from '../../auth/screens/auth-provider';
+import { usePermissions } from '../../../shared/hooks/usePermissions';
 
 export const HomeScreen = () => {
   const { logout, user } = useAuth();
+  const { 
+    permissionsGranted, 
+    permissionsChecked, 
+    isRequestingPermissions 
+  } = usePermissions();
 
   const handleLogout = () => {
     logout();
@@ -20,6 +27,34 @@ export const HomeScreen = () => {
             <Text style={styles.welcomeText}>
               Bienvenido, {user.correo || user.username}
             </Text>
+          </View>
+        )}
+
+        {/* Indicador de estado de permisos */}
+        {permissionsChecked && (
+          <View style={styles.permissionsStatus}>
+            <View style={styles.permissionItem}>
+              <Ionicons 
+                name={permissionsGranted ? "checkmark-circle" : "alert-circle"} 
+                size={20} 
+                color={permissionsGranted ? "#34c759" : "#ff9500"} 
+              />
+              <Text style={[
+                styles.permissionText,
+                permissionsGranted ? styles.permissionGranted : styles.permissionPending
+              ]}>
+                {permissionsGranted 
+                  ? "Permisos configurados correctamente" 
+                  : "Algunos permisos pendientes"
+                }
+              </Text>
+            </View>
+            
+            {isRequestingPermissions && (
+              <Text style={styles.requestingText}>
+                Configurando permisos...
+              </Text>
+            )}
           </View>
         )}
 
@@ -71,5 +106,35 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  permissionsStatus: {
+    marginBottom: 30,
+    padding: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    minWidth: 280,
+    alignItems: 'center',
+  },
+  permissionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  permissionText: {
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  requestingText: {
+    fontSize: 12,
+    color: '#8e8e93',
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
+  permissionGranted: {
+    color: '#34c759',
+  },
+  permissionPending: {
+    color: '#ff9500',
   },
 });

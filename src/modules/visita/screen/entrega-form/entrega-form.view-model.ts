@@ -9,6 +9,7 @@ export interface EntregaFormData {
   recibe: string;
   numeroIdentificacion: string;
   celular: string;
+  firma: string; // Base64 de la firma
 }
 
 // Reglas de validación
@@ -53,6 +54,25 @@ const validationRules = {
       value: 15,
       message: 'No puede exceder 15 dígitos'
     }
+  },
+  firma: {
+    required: 'La firma es obligatoria',
+    validate: (value: string) => {
+      console.log('Validating signature:', value ? `${value.substring(0, 50)}... (length: ${value.length})` : 'empty');
+      
+      if (!value || value.trim() === '') {
+        return 'Debe proporcionar una firma';
+      }
+      
+      // Validar que sea un base64 válido (más flexible)
+      if (!value.startsWith('data:image/') && !value.includes('base64')) {
+        console.log('Invalid signature format:', value.substring(0, 100));
+        return 'Formato de firma inválido';
+      }
+      
+      console.log('Signature validation passed');
+      return true;
+    }
   }
 };
 
@@ -77,7 +97,8 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
     defaultValues: {
       recibe: '',
       numeroIdentificacion: '',
-      celular: ''
+      celular: '',
+      firma: ''
     }
   });
 
@@ -97,7 +118,7 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
     // - Mostrar confirmación
     
     // Por ahora solo navegamos de vuelta
-    navigation.goBack();
+    // navigation.goBack();
   }, [navigation, visitasSeleccionadas]);
 
   const handleCancel = useCallback(() => {
@@ -110,13 +131,39 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
 
   // === ESTADOS COMPUTADOS ===
   
-  const canSubmit = isValid && isDirty;
+  // Verificar si todos los campos requeridos están llenos
+  const allRequiredFieldsFilled = formValues.recibe && 
+                                  formValues.numeroIdentificacion && 
+                                  formValues.celular && 
+                                  formValues.firma;
+  
+  const canSubmit = isValid && allRequiredFieldsFilled;
   const hasErrors = Object.keys(errors).length > 0;
   
   // Información de progreso del formulario
-  const completedFields = Object.values(formValues).filter(value => value.trim() !== '').length;
+  const completedFields = Object.values(formValues).filter(value => {
+    if (typeof value === 'string') {
+      return value.trim() !== '';
+    }
+    return value != null && value !== '';
+  }).length;
   const totalFields = Object.keys(formValues).length;
   const progressPercentage = (completedFields / totalFields) * 100;
+
+  // Debug: Log form values para verificar la firma
+  console.log('Form values:', {
+    recibe: formValues.recibe?.substring(0, 20) + '...',
+    numeroIdentificacion: formValues.numeroIdentificacion,
+    celular: formValues.celular,
+    firma: formValues.firma ? `${formValues.firma.substring(0, 30)}... (length: ${formValues.firma.length})` : 'empty',
+    isValid,
+    isDirty,
+    allRequiredFieldsFilled,
+    canSubmit,
+    completedFields,
+    totalFields,
+    errors: Object.keys(errors)
+  });
 
   return {
     // Form control

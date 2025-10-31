@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MainStackParamList } from '../../../../navigation/types';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { FormInputController } from '../../../../shared/components/ui/form/FormInputController';
+import { SignatureField } from './components/SignatureField';
 import { entregaFormStyles } from './entrega-form.style';
 import { useEntregaFormViewModel } from './entrega-form.view-model';
 
@@ -18,6 +19,10 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
   
   // Usar el ViewModel para manejar la lógica del formulario
   const viewModel = useEntregaFormViewModel(visitasSeleccionadas);
+
+  // Estado para controlar el scroll durante la firma
+  const [scrollEnabled, setScrollEnabled] = useState(true);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const handleGoBack = () => {
     navigation.goBack();
@@ -48,9 +53,11 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView 
+          ref={scrollViewRef}
           style={entregaFormStyles.scrollContainer}
           contentContainerStyle={entregaFormStyles.scrollContent}
           showsVerticalScrollIndicator={false}
+          scrollEnabled={scrollEnabled}
         >
           {/* Progress Indicator */}
           <View style={entregaFormStyles.progressContainer}>
@@ -105,8 +112,19 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
               maxLength={15}
             />
 
+            {/* Campo: Firma Digital */}
+            <SignatureField
+              control={viewModel.control}
+              name="firma"
+              label="Firma del Receptor"
+              rules={viewModel.validationRules.firma}
+              error={viewModel.errors.firma}
+              required={true}
+              onScrollEnable={setScrollEnabled}
+            />
+
             {/* Info de visitas seleccionadas */}
-            <View style={entregaFormStyles.visitasInfo}>
+            {/* <View style={entregaFormStyles.visitasInfo}>
               <Text style={entregaFormStyles.visitasInfoTitle}>
                 Visitas a entregar ({visitasSeleccionadas.length})
               </Text>
@@ -122,7 +140,7 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
                   </Text>
                 )}
               </View>
-            </View>
+            </View> */}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

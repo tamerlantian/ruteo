@@ -45,6 +45,12 @@
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Esta aplicación necesita acceso a la galería de fotos para guardar las firmas digitales.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Esta aplicación necesita permiso para guardar las firmas digitales en la galería de fotos.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Esta aplicación puede necesitar acceso a la cámara para funcionalidades relacionadas con documentos.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

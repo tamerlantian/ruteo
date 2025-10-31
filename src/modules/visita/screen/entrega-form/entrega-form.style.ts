@@ -202,4 +202,29 @@ export const entregaFormStyles = StyleSheet.create({
     borderRadius: 4,
     overflow: 'hidden',
   },
+  // Estilos para el campo de firma
+  signatureFieldContainer: {
+    marginBottom: 24,
+  },
+  signatureLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#1c1c1e',
+    marginBottom: 12,
+  },
+  requiredAsterisk: {
+    color: '#ff3b30',
+  },
+  signatureError: {
+    color: '#ff3b30',
+    fontSize: 14,
+    marginTop: 8,
+  },
+  signatureHelper: {
+    fontSize: 12,
+    color: '#8e8e93',
+    marginTop: 8,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
 });
