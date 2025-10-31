@@ -12,6 +12,9 @@ export type MainTabParamList = {
 
 export type MainStackParamList = {
   HomeTabs: undefined;
+  EntregaForm: {
+    visitasSeleccionadas: string[]; // Array de IDs de visitas seleccionadas
+  };
 };
 
 export type RootStackParamList = {

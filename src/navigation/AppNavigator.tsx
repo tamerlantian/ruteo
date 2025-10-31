@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LoginScreen } from '../modules/auth/screens/login.screen';
 import { RegisterScreen } from '../modules/auth/screens/register.screen';
 import { HomeTabsNavigator } from '../modules/home/navigation/home-tabs.navigator';
+import { EntregaFormScreen } from '../modules/visita/screen/entrega-form/entrega-form.screen';
 import { AuthStackParamList, MainStackParamList, RootStackParamList } from './types';
 import { useAuth } from '../modules/auth/screens/auth-provider';
 
@@ -34,6 +35,14 @@ const MainNavigator = () => {
       }}
     >
       <MainStack.Screen name="HomeTabs" component={HomeTabsNavigator} />
+      <MainStack.Screen 
+        name="EntregaForm" 
+        component={EntregaFormScreen}
+        options={{
+          presentation: 'modal', // Presentación modal para mejor UX
+          gestureEnabled: true,
+        }}
+      />
     </MainStack.Navigator>
   );
 };

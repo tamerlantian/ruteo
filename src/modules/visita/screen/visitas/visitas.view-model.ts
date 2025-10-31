@@ -1,23 +1,30 @@
 import { useCallback, useState, useRef, useMemo } from 'react';
 import BottomSheet from '@gorhom/bottom-sheet';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppSelector, useAppDispatch } from '../../../../store/hooks';
-import { selectVisitas, selectIsLoading, selectIsSucceeded, selectTotalVisitasSeleccionadas } from '../../store/selector/visita.selector';
+import { selectVisitas, selectIsLoading, selectIsSucceeded, selectTotalVisitasSeleccionadas, selectVisitasSeleccionadas } from '../../store/selector/visita.selector';
 import { limpiarSeleccionVisitas } from '../../store/slice/visita.slice';
 import { VisitaResponse } from '../../interfaces/visita.interface';
+import { MainStackParamList } from '../../../../navigation/types';
 import { LIST_OPTIMIZATION_CONFIG } from '../../constants/visita.constant';
 
 /**
  * ViewModel para la pantalla de Visitas
  * Maneja toda la lógica de negocio y estado de la pantalla
  */
+type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
+
 export const useVisitasViewModel = () => {
   const dispatch = useAppDispatch();
+  const navigation = useNavigation<NavigationProp>();
   
   // Estados del store
   const visitas = useAppSelector(selectVisitas);
   const isLoading = useAppSelector(selectIsLoading);
   const isSuccess = useAppSelector(selectIsSucceeded);
   const totalSeleccionadas = useAppSelector(selectTotalVisitasSeleccionadas);
+  const visitasSeleccionadas = useAppSelector(selectVisitasSeleccionadas);
   
   // Estados locales
   const [refreshing, setRefreshing] = useState(false);
@@ -40,12 +47,17 @@ export const useVisitasViewModel = () => {
   }, [dispatch]);
 
   const deliverSelectedVisitas = useCallback(() => {
-    // TODO: Implementar lógica de entrega real
-    console.log(`Entregando ${totalSeleccionadas} visitas`);
-    
-    // Por ahora solo limpiamos la selección
-    dispatch(limpiarSeleccionVisitas());
-  }, [dispatch, totalSeleccionadas]);
+    if (visitasSeleccionadas.length === 0) {
+      console.warn('No hay visitas seleccionadas para entregar');
+      return;
+    }
+
+    // Navegar al formulario de entrega con las visitas seleccionadas
+    // Convertir los IDs de number a string para la navegación
+    navigation.navigate('EntregaForm', {
+      visitasSeleccionadas: visitasSeleccionadas.map(id => id.toString()),
+    });
+  }, [navigation, visitasSeleccionadas]);
 
   // === ACCIONES DE LISTA ===
   const onRefresh = useCallback(() => {
