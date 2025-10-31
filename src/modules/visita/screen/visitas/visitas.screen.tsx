@@ -2,14 +2,14 @@ import React, { useRef, useMemo, useCallback, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, ListRenderItem } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BottomSheet from '@gorhom/bottom-sheet';
-import CustomBottomSheet from '../../../shared/components/bottom-sheet/bottom-sheet';
-import CargarOrdenComponent from '../components/cargar-orden/cargar-orden.component';
-import { useAppSelector, useAppDispatch } from '../../../store/hooks';
-import { selectVisitas } from '../store/selector/visita.selector';
-import { selectIsLoading, selectIsSucceeded, selectTotalVisitasSeleccionadas, selectTodasVisitasSeleccionadas } from '../store/selector/visita.selector';
-import { seleccionarTodasVisitas, limpiarSeleccionVisitas } from '../store/slice/visita.slice';
-import VisitaCardComponent from '../components/visita-card/visita-card.component';
-import { VisitaResponse } from '../interfaces/visita.interface';
+import CustomBottomSheet from '../../../../shared/components/bottom-sheet/bottom-sheet';
+import CargarOrdenComponent from '../../components/cargar-orden/cargar-orden.component';
+import { useAppSelector, useAppDispatch } from '../../../../store/hooks';
+import { selectVisitas } from '../../store/selector/visita.selector';
+import { selectIsLoading, selectIsSucceeded, selectTotalVisitasSeleccionadas, selectTodasVisitasSeleccionadas } from '../../store/selector/visita.selector';
+import { seleccionarTodasVisitas, limpiarSeleccionVisitas } from '../../store/slice/visita.slice';
+import VisitaCardComponent from '../../components/visita-card/visita-card.component';
+import { VisitaResponse } from '../../interfaces/visita.interface';
 
 // Constantes para optimización
 const ITEM_HEIGHT = 120; // Altura estimada de cada card
