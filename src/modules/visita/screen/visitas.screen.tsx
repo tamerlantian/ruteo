@@ -1,30 +1,69 @@
-import React, { useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useRef, useMemo, useCallback, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ListRenderItem } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BottomSheet from '@gorhom/bottom-sheet';
 import CustomBottomSheet from '../../../shared/components/bottom-sheet/bottom-sheet';
 import CargarOrdenComponent from '../components/cargar-orden/cargar-orden.component';
+import { useAppSelector } from '../../../store/hooks';
+import { selectVisitas } from '../store/selector/visita.selector';
+import { selectIsLoading, selectIsSucceeded } from '../store/selector/visita.selector';
+import VisitaCardComponent from '../components/visita-card/visita-card.component';
+import { VisitaResponse } from '../interfaces/visita.interface';
+
+// Constantes para optimización
+const ITEM_HEIGHT = 120; // Altura estimada de cada card
+const INITIAL_NUM_TO_RENDER = 10;
+const MAX_TO_RENDER_PER_BATCH = 5;
+const WINDOW_SIZE = 10;
 
 export const VisitasScreen = () => {
+  const visitas = useAppSelector(selectVisitas);
+  const isLoading = useAppSelector(selectIsLoading);
+  const isSuccess = useAppSelector(selectIsSucceeded);
+  
+  // Estados para paginación virtual
+  const [refreshing, setRefreshing] = useState(false);
 
-   // Referencia al bottom sheet
   const bottomSheetRef = useRef<BottomSheet>(null);
 
-  // Función para abrir el bottom sheet
-  const handleOpenDevModeSheet = () => {
+  const handleOpenDevModeSheet = useCallback(() => {
     bottomSheetRef.current?.expand();
-  };
+  }, []);
 
-  // Función para cerrar el bottom sheet
-  // const handleCloseDevModeSheet = () => {
-  //   bottomSheetRef.current?.close();
-  // };
+  const handleCloseDevModeSheet = useCallback(() => {
+    bottomSheetRef.current?.close();
+  }, []);
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.content}>
-        <Text style={styles.title}>Visitas</Text>
-        
+  // Optimización: Memoizar el renderItem
+  const renderVisitaItem: ListRenderItem<VisitaResponse> = useCallback(({ item, index }) => (
+    <VisitaCardComponent 
+      visita={item} 
+      index={index}
+    />
+  ), []);
+
+  // Optimización: getItemLayout para mejor rendimiento
+  const getItemLayout = useCallback((data: ArrayLike<VisitaResponse> | null | undefined, index: number) => ({
+    length: ITEM_HEIGHT,
+    offset: ITEM_HEIGHT * index,
+    index,
+  }), []);
+
+  // Optimización: keyExtractor memoizado
+  const keyExtractor = useCallback((item: VisitaResponse) => `visita-${item.id}`, []);
+
+  // Manejar refresh
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    // Aquí puedes agregar lógica para recargar datos
+    setTimeout(() => setRefreshing(false), 1000);
+  }, []);
+
+  // Componente de header memoizado
+  const ListHeaderComponent = useMemo(() => (
+    <View style={styles.header}>
+      <Text style={styles.title}>Visitas</Text>
+      {visitas.length === 0 && (
         <View style={styles.emptyState}>
           <Text style={styles.emptyTitle}>No tienes visitas cargadas</Text>
           <Text style={styles.emptySubtitle}>
@@ -34,19 +73,52 @@ export const VisitasScreen = () => {
             <Text style={styles.emptyButton}>Cargar orden</Text>
           </TouchableOpacity>
         </View>
+      )}
+    </View>
+  ), [visitas.length, handleOpenDevModeSheet]);
 
-        {/* Placeholder para futuras rutas */}
-        {/* <View style={styles.routeCard}>
-          <Text style={styles.routeTitle}>Ruta de ejemplo</Text>
-          <Text style={styles.routeDescription}>
-            Esta es una ruta de ejemplo que se mostrará cuando implementemos la funcionalidad
-          </Text>
-          <View style={styles.routeInfo}>
-            <Text style={styles.routeInfoText}>Distancia: 15.2 km</Text>
-            <Text style={styles.routeInfoText}>Tiempo: 45 min</Text>
-          </View>
-        </View> */}
-      </ScrollView>
+  // Componente de footer para loading
+  const ListFooterComponent = useMemo(() => (
+    isLoading ? (
+      <View style={styles.loadingFooter}>
+        <Text style={styles.loadingText}>Cargando más visitas...</Text>
+      </View>
+    ) : null
+  ), [isLoading]);
+
+  if(isSuccess) {
+    handleCloseDevModeSheet();
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <FlatList
+        data={visitas}
+        renderItem={renderVisitaItem}
+        keyExtractor={keyExtractor}
+        getItemLayout={getItemLayout}
+        ListHeaderComponent={ListHeaderComponent}
+        ListFooterComponent={ListFooterComponent}
+        
+        // Optimizaciones de rendimiento críticas
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={MAX_TO_RENDER_PER_BATCH}
+        initialNumToRender={INITIAL_NUM_TO_RENDER}
+        windowSize={WINDOW_SIZE}
+        updateCellsBatchingPeriod={50}
+        
+        // Pull to refresh
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        
+        // Estilos
+        style={styles.flatList}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+        
+        // Optimización adicional para listas grandes
+        legacyImplementation={false}
+      />
 
       {/* Bottom Sheet para el selector de modo desarrollador */}
       <CustomBottomSheet ref={bottomSheetRef} initialSnapPoints={['30%']}>
@@ -61,9 +133,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f9fa',
   },
-  content: {
+  flatList: {
     flex: 1,
+  },
+  contentContainer: {
+    flexGrow: 1,
+  },
+  header: {
     padding: 20,
+    paddingBottom: 10,
   },
   title: {
     fontSize: 28,
@@ -101,35 +179,12 @@ const styles = StyleSheet.create({
     color: '#007aff',
     marginTop: 20,
   },
-  routeCard: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  loadingFooter: {
+    padding: 20,
+    alignItems: 'center',
   },
-  routeTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1c1c1e',
-    marginBottom: 4,
-  },
-  routeDescription: {
+  loadingText: {
     fontSize: 14,
     color: '#8e8e93',
-    marginBottom: 12,
-  },
-  routeInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  routeInfoText: {
-    fontSize: 12,
-    color: '#007aff',
-    fontWeight: '500',
   },
 });

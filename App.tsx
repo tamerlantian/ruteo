@@ -16,6 +16,8 @@ import { DevModeProvider } from './src/shared/context/dev-mode-context';
 import { ToastProvider } from './src/shared/context';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { AuthProvider } from './src/modules/auth/screens/auth-provider';
+import { Provider } from 'react-redux';
+import { store } from './src/store';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,24 +32,26 @@ function App() {
   const isDarkMode = useColorScheme() === 'dark';
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        <ToastProvider>
-          <BottomSheetModalProvider>
-            <DevModeProvider>
-              <AuthProvider>
-                <SafeAreaProvider>
-                  <StatusBar
-                    barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-                  />
-                  <AppContent />
-                </SafeAreaProvider>
-              </AuthProvider>
-            </DevModeProvider>
-          </BottomSheetModalProvider>
-        </ToastProvider>
-      </QueryClientProvider>
-    </GestureHandlerRootView>
+    <Provider store={store}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <QueryClientProvider client={queryClient}>
+          <ToastProvider>
+            <BottomSheetModalProvider>
+              <DevModeProvider>
+                <AuthProvider>
+                  <SafeAreaProvider>
+                    <StatusBar
+                      barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+                    />
+                    <AppContent />
+                  </SafeAreaProvider>
+                </AuthProvider>
+              </DevModeProvider>
+            </BottomSheetModalProvider>
+          </ToastProvider>
+        </QueryClientProvider>
+      </GestureHandlerRootView>
+    </Provider>
   );
 }
 

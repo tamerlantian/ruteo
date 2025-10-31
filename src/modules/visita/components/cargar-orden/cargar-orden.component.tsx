@@ -3,25 +3,40 @@ import React from 'react';
 import { FormInputController } from '../../../../shared/components/ui/form/FormInputController';
 import { useForm } from 'react-hook-form';
 import { Button } from '../../../../components';
+import { verticalRepository } from '../../../vertical/repositories/vertical.repository';
+import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
+import { cargarVisitasThunk } from '../../store/thunk/visita.thunk';
+import { selectIsLoading } from '../../store/selector/visita.selector';
 
 interface CargarOrdenFormValues {
-  orden: string;
+  codigo: string;
 }
 
 const CargarOrdenComponent = () => {
+  const dispatch = useAppDispatch();
+  const isLoading = useAppSelector(selectIsLoading);
   const {
     control,
     handleSubmit,
     formState: { errors, isValid },
   } = useForm<CargarOrdenFormValues>({
     defaultValues: {
-      orden: '',
+      codigo: '',
     },
     mode: 'onChange',
   });
 
-  const onSubmit = (data: CargarOrdenFormValues) => {
-    console.log(data);
+  const onCargarOrden = async (data: CargarOrdenFormValues) => {
+    const entrega = await verticalRepository.getEntrega(data.codigo);
+    if (entrega) {
+      const { schema_name, despacho_id } = entrega;
+      dispatch(
+        cargarVisitasThunk({
+          schemaName: schema_name,
+          despachoId: despacho_id,
+        }),
+      );
+    }
   };
 
   return (
@@ -29,18 +44,19 @@ const CargarOrdenComponent = () => {
       <Text style={styles.title}>Cargar Orden</Text>
       <FormInputController
         control={control}
-        name="orden"
+        name="codigo"
         label=""
         placeholder="#"
-        error={errors.orden}
+        error={errors.codigo}
         rules={{
-          required: 'El número de orden es obligatorio',
+          required: 'El código es obligatorio',
         }}
       />
       <Button
         title="Cargar Orden"
-        onPress={handleSubmit(onSubmit)}
-        disabled={!isValid}
+        onPress={handleSubmit(onCargarOrden)}
+        disabled={!isValid || isLoading}
+        loading={isLoading}
       />
     </View>
   );
