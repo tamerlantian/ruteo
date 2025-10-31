@@ -1,10 +1,12 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MainStackParamList } from '../../../../navigation/types';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import { FormInputController } from '../../../../shared/components/ui/form/FormInputController';
 import { entregaFormStyles } from './entrega-form.style';
+import { useEntregaFormViewModel } from './entrega-form.view-model';
 
 type EntregaFormScreenProps = NativeStackScreenProps<MainStackParamList, 'EntregaForm'>;
 
@@ -13,16 +15,11 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
   route 
 }) => {
   const { visitasSeleccionadas } = route.params;
+  
+  // Usar el ViewModel para manejar la lógica del formulario
+  const viewModel = useEntregaFormViewModel(visitasSeleccionadas);
 
   const handleGoBack = () => {
-    navigation.goBack();
-  };
-
-  const handleSubmitEntrega = () => {
-    // TODO: Implementar lógica de entrega
-    console.log('Procesando entrega de visitas:', visitasSeleccionadas);
-    
-    // Por ahora solo navegamos de vuelta
     navigation.goBack();
   };
 
@@ -46,27 +43,89 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
       </View>
 
       {/* Content */}
-      <View style={entregaFormStyles.content}>
-        <View style={entregaFormStyles.placeholderContainer}>
-          <Ionicons name="document-text-outline" size={64} color="#8e8e93" />
-          <Text style={entregaFormStyles.placeholderTitle}>
-            Formulario en Construcción
-          </Text>
-          <Text style={entregaFormStyles.placeholderText}>
-            Aquí se implementará el formulario de entrega para las {visitasSeleccionadas.length} visitas seleccionadas.
-          </Text>
-          
-          {/* Lista de IDs para desarrollo */}
-          <View style={entregaFormStyles.debugContainer}>
-            <Text style={entregaFormStyles.debugTitle}>Visitas a entregar:</Text>
-            {visitasSeleccionadas.map((id, index) => (
-              <Text key={id} style={entregaFormStyles.debugItem}>
-                {index + 1}. ID: {id}
-              </Text>
-            ))}
+      <KeyboardAvoidingView 
+        style={entregaFormStyles.keyboardContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView 
+          style={entregaFormStyles.scrollContainer}
+          contentContainerStyle={entregaFormStyles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Progress Indicator */}
+          <View style={entregaFormStyles.progressContainer}>
+            <View style={entregaFormStyles.progressBar}>
+              <View 
+                style={[
+                  entregaFormStyles.progressFill, 
+                  { width: `${viewModel.progressPercentage}%` }
+                ]} 
+              />
+            </View>
+            <Text style={entregaFormStyles.progressText}>
+              {viewModel.completedFields} de {viewModel.totalFields} campos completados
+            </Text>
           </View>
-        </View>
-      </View>
+
+          {/* Form Fields */}
+          <View style={entregaFormStyles.formContainer}>
+            {/* Campo: Recibe */}
+            <FormInputController
+              control={viewModel.control}
+              name="recibe"
+              label="¿Quién recibe? *"
+              placeholder="Nombre completo de quien recibe"
+              rules={viewModel.validationRules.recibe}
+              error={viewModel.errors.recibe}
+              autoCapitalize="words"
+              autoComplete="name"
+            />
+
+            {/* Campo: Número de Identificación */}
+            <FormInputController
+              control={viewModel.control}
+              name="numeroIdentificacion"
+              label="Número de Identificación *"
+              placeholder="Cédula o documento de identidad"
+              rules={viewModel.validationRules.numeroIdentificacion}
+              error={viewModel.errors.numeroIdentificacion}
+              keyboardType="numeric"
+              maxLength={15}
+            />
+
+            {/* Campo: Celular */}
+            <FormInputController
+              control={viewModel.control}
+              name="celular"
+              label="Número de Celular *"
+              placeholder="Número de contacto"
+              rules={viewModel.validationRules.celular}
+              error={viewModel.errors.celular}
+              keyboardType="phone-pad"
+              maxLength={15}
+            />
+
+            {/* Info de visitas seleccionadas */}
+            <View style={entregaFormStyles.visitasInfo}>
+              <Text style={entregaFormStyles.visitasInfoTitle}>
+                Visitas a entregar ({visitasSeleccionadas.length})
+              </Text>
+              <View style={entregaFormStyles.visitasIds}>
+                {visitasSeleccionadas.slice(0, 5).map((id) => (
+                  <Text key={id} style={entregaFormStyles.visitaId}>
+                    #{id}
+                  </Text>
+                ))}
+                {visitasSeleccionadas.length > 5 && (
+                  <Text style={entregaFormStyles.visitaIdMore}>
+                    +{visitasSeleccionadas.length - 5} más
+                  </Text>
+                )}
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Footer Actions */}
       <View style={entregaFormStyles.footer}>
@@ -78,11 +137,18 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
         </TouchableOpacity>
         
         <TouchableOpacity 
-          style={entregaFormStyles.submitButton}
-          onPress={handleSubmitEntrega}
+          style={[
+            entregaFormStyles.submitButton,
+            !viewModel.canSubmit && entregaFormStyles.submitButtonDisabled
+          ]}
+          onPress={viewModel.onSubmit}
+          disabled={!viewModel.canSubmit}
         >
-          <Text style={entregaFormStyles.submitButtonText}>
-            Procesar Entrega
+          <Text style={[
+            entregaFormStyles.submitButtonText,
+            !viewModel.canSubmit && entregaFormStyles.submitButtonTextDisabled
+          ]}>
+            {viewModel.canSubmit ? 'Procesar Entrega' : 'Complete los campos'}
           </Text>
         </TouchableOpacity>
       </View>

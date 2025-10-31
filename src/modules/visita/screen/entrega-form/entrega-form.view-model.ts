@@ -1,0 +1,148 @@
+import { useCallback } from 'react';
+import { useForm } from 'react-hook-form';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MainStackParamList } from '../../../../navigation/types';
+
+// Tipos para el formulario de entrega
+export interface EntregaFormData {
+  recibe: string;
+  numeroIdentificacion: string;
+  celular: string;
+}
+
+// Reglas de validación
+const validationRules = {
+  recibe: {
+    required: 'El nombre de quien recibe es obligatorio',
+    minLength: {
+      value: 2,
+      message: 'El nombre debe tener al menos 2 caracteres'
+    },
+    maxLength: {
+      value: 50,
+      message: 'El nombre no puede exceder 50 caracteres'
+    }
+  },
+  numeroIdentificacion: {
+    required: 'El número de identificación es obligatorio',
+    pattern: {
+      value: /^[0-9]+$/,
+      message: 'Solo se permiten números'
+    },
+    minLength: {
+      value: 6,
+      message: 'Debe tener al menos 6 dígitos'
+    },
+    maxLength: {
+      value: 15,
+      message: 'No puede exceder 15 dígitos'
+    }
+  },
+  celular: {
+    required: 'El número de celular es obligatorio',
+    pattern: {
+      value: /^[0-9+\-\s()]+$/,
+      message: 'Formato de celular inválido'
+    },
+    minLength: {
+      value: 10,
+      message: 'Debe tener al menos 10 dígitos'
+    },
+    maxLength: {
+      value: 15,
+      message: 'No puede exceder 15 dígitos'
+    }
+  }
+};
+
+type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
+
+/**
+ * ViewModel para el formulario de entrega
+ * Maneja la lógica de validación y envío del formulario
+ */
+export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
+  const navigation = useNavigation<NavigationProp>();
+
+  // Configuración de React Hook Form
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isValid, isDirty },
+    reset,
+    watch
+  } = useForm<EntregaFormData>({
+    mode: 'onChange', // Validación en tiempo real
+    defaultValues: {
+      recibe: '',
+      numeroIdentificacion: '',
+      celular: ''
+    }
+  });
+
+  // Observar cambios en los campos para feedback visual
+  const formValues = watch();
+
+  // === ACCIONES DEL FORMULARIO ===
+  
+  const onSubmit = useCallback((data: EntregaFormData) => {
+    console.log('Datos del formulario:', data);
+    console.log('Visitas a entregar:', visitasSeleccionadas);
+    
+    // TODO: Implementar lógica de entrega real
+    // - Validar datos
+    // - Enviar a API
+    // - Manejar respuesta
+    // - Mostrar confirmación
+    
+    // Por ahora solo navegamos de vuelta
+    navigation.goBack();
+  }, [navigation, visitasSeleccionadas]);
+
+  const handleCancel = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
+
+  const handleReset = useCallback(() => {
+    reset();
+  }, [reset]);
+
+  // === ESTADOS COMPUTADOS ===
+  
+  const canSubmit = isValid && isDirty;
+  const hasErrors = Object.keys(errors).length > 0;
+  
+  // Información de progreso del formulario
+  const completedFields = Object.values(formValues).filter(value => value.trim() !== '').length;
+  const totalFields = Object.keys(formValues).length;
+  const progressPercentage = (completedFields / totalFields) * 100;
+
+  return {
+    // Form control
+    control,
+    errors,
+    
+    // Form state
+    isValid,
+    isDirty,
+    canSubmit,
+    hasErrors,
+    formValues,
+    
+    // Progress info
+    completedFields,
+    totalFields,
+    progressPercentage,
+    
+    // Actions
+    onSubmit: handleSubmit(onSubmit),
+    handleCancel,
+    handleReset,
+    
+    // Validation rules
+    validationRules,
+  };
+};
+
+export type EntregaFormViewModel = ReturnType<typeof useEntregaFormViewModel>;
