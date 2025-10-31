@@ -7,8 +7,8 @@ import CustomBottomSheet from '../../../../shared/components/bottom-sheet/bottom
 import CargarOrdenComponent from '../../components/cargar-orden/cargar-orden.component';
 import { useAppSelector, useAppDispatch } from '../../../../store/hooks';
 import { selectVisitas } from '../../store/selector/visita.selector';
-import { selectIsLoading, selectIsSucceeded, selectTotalVisitasSeleccionadas, selectTodasVisitasSeleccionadas } from '../../store/selector/visita.selector';
-import { seleccionarTodasVisitas, limpiarSeleccionVisitas } from '../../store/slice/visita.slice';
+import { selectIsLoading, selectIsSucceeded, selectTotalVisitasSeleccionadas } from '../../store/selector/visita.selector';
+import { limpiarSeleccionVisitas } from '../../store/slice/visita.slice';
 import VisitaCardComponent from '../../components/visita-card/visita-card.component';
 import { VisitaResponse } from '../../interfaces/visita.interface';
 
@@ -24,7 +24,6 @@ export const VisitasScreen = () => {
   const isLoading = useAppSelector(selectIsLoading);
   const isSuccess = useAppSelector(selectIsSucceeded);
   const totalSeleccionadas = useAppSelector(selectTotalVisitasSeleccionadas);
-  const todasSeleccionadas = useAppSelector(selectTodasVisitasSeleccionadas);
   
   // Estados para paginación virtual
   const [refreshing, setRefreshing] = useState(false);
@@ -65,13 +64,17 @@ export const VisitasScreen = () => {
   }, []);
 
   // Funciones para manejar selección múltiple
-  const handleSeleccionarTodas = useCallback(() => {
-    dispatch(seleccionarTodasVisitas());
-  }, [dispatch]);
-
   const handleLimpiarSeleccion = useCallback(() => {
     dispatch(limpiarSeleccionVisitas());
   }, [dispatch]);
+
+  // Función para manejar entrega de visitas seleccionadas
+  const handleEntregarVisitas = useCallback(() => {
+    // TODO: Implementar lógica de entrega
+    console.log(`Entregando ${totalSeleccionadas} visitas`);
+    // Por ahora solo limpiamos la selección
+    dispatch(limpiarSeleccionVisitas());
+  }, [dispatch, totalSeleccionadas]);
 
   // Componente de header memoizado
   const ListHeaderComponent = useMemo(() => (
@@ -84,32 +87,7 @@ export const VisitasScreen = () => {
           </Text>
         )}
       </View>
-      
-      {/* Controles de selección cuando hay visitas */}
-      {visitas.length > 0 && (
-        <View style={visitasStyles.selectionControls}>
-          <TouchableOpacity 
-            style={visitasStyles.selectionButton} 
-            onPress={todasSeleccionadas ? handleLimpiarSeleccion : handleSeleccionarTodas}
-          >
-            <Text style={visitasStyles.selectionButtonText}>
-              {todasSeleccionadas ? 'Deseleccionar todas' : 'Seleccionar todas'}
-            </Text>
-          </TouchableOpacity>
-          
-          {totalSeleccionadas > 0 && (
-            <TouchableOpacity 
-              style={[visitasStyles.selectionButton, visitasStyles.clearButton]} 
-              onPress={handleLimpiarSeleccion}
-            >
-              <Text style={[visitasStyles.selectionButtonText, visitasStyles.clearButtonText]}>
-                Limpiar
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
-      
+            
       {visitas.length === 0 && (
         <View style={visitasStyles.emptyState}>
           <Text style={visitasStyles.emptyTitle}>No tienes visitas cargadas</Text>
@@ -122,7 +100,7 @@ export const VisitasScreen = () => {
         </View>
       )}
     </View>
-  ), [visitas.length, totalSeleccionadas, todasSeleccionadas, handleOpenDevModeSheet, handleSeleccionarTodas, handleLimpiarSeleccion]);
+  ), [visitas.length, totalSeleccionadas, handleOpenDevModeSheet]);
 
   // Componente de footer para loading
   const ListFooterComponent = useMemo(() => (
@@ -166,6 +144,41 @@ export const VisitasScreen = () => {
         // Optimización adicional para listas grandes
         legacyImplementation={false}
       />
+
+      {/* Floating Action Bar - aparece solo cuando hay visitas seleccionadas */}
+      {totalSeleccionadas > 0 && (
+        <View style={visitasStyles.floatingActionBar}>
+          <TouchableOpacity 
+            style={visitasStyles.clearSelectionButton}
+            onPress={handleLimpiarSeleccion}
+          >
+            <Text style={visitasStyles.clearSelectionText}>✕</Text>
+          </TouchableOpacity>
+          
+          <View style={visitasStyles.actionButtonsContainer}>
+            <TouchableOpacity 
+              style={visitasStyles.primaryActionButton}
+              onPress={handleEntregarVisitas}
+            >
+              <Text style={visitasStyles.primaryActionText}>
+                Entregar ({totalSeleccionadas})
+              </Text>
+            </TouchableOpacity>
+            
+            {/* Espacio reservado para futuro botón Novedad */}
+            {/* 
+            <TouchableOpacity 
+              style={visitasStyles.secondaryActionButton}
+              onPress={handleNovedadVisitas}
+            >
+              <Text style={visitasStyles.secondaryActionText}>
+                Novedad ({totalSeleccionadas})
+              </Text>
+            </TouchableOpacity>
+            */}
+          </View>
+        </View>
+      )}
 
       {/* Bottom Sheet para el selector de modo desarrollador */}
       <CustomBottomSheet ref={bottomSheetRef} initialSnapPoints={['30%']}>
