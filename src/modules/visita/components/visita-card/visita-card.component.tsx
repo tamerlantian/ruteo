@@ -1,6 +1,9 @@
-import { View, Text, StyleSheet } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import React from 'react'
 import { VisitaResponse } from '../../interfaces/visita.interface'
+import { useAppSelector, useAppDispatch } from '../../../../store/hooks'
+import { selectIsVisitaSeleccionada } from '../../store/selector/visita.selector'
+import { toggleVisitaSeleccion } from '../../store/slice/visita.slice'
 
 interface VisitaCardProps {
   visita: VisitaResponse;
@@ -8,8 +11,22 @@ interface VisitaCardProps {
 }
 
 const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
+  const dispatch = useAppDispatch();
+  const isSelected = useAppSelector(selectIsVisitaSeleccionada(visita.id));
+
+  const handlePress = () => {
+    dispatch(toggleVisitaSeleccion(visita.id));
+  };
+
   return (
-    <View style={styles.container}>
+    <TouchableOpacity 
+      style={[
+        styles.container,
+        isSelected && styles.containerSelected
+      ]} 
+      onPress={handlePress}
+      activeOpacity={0.7}
+    >
       <View style={styles.content}>
         <Text style={styles.title}>#{visita.numero || visita.id}</Text>
         <Text style={styles.subtitle}>
@@ -23,7 +40,14 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
           <Text style={styles.weight}>Peso: {visita.peso}kg</Text>
         </View>
       </View>
-    </View>
+      
+      {/* Indicador visual de selección */}
+      {isSelected && (
+        <View style={styles.selectedIndicator}>
+          <View style={styles.checkmark} />
+        </View>
+      )}
+    </TouchableOpacity>
   )
 })
 
@@ -75,6 +99,40 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#007aff',
     fontWeight: '500',
+  },
+  containerSelected: {
+    backgroundColor: '#f0f8ff', // Azul muy suave
+    borderWidth: 2,
+    borderColor: '#007aff',
+    shadowColor: '#007aff',
+    shadowOpacity: 0.2,
+    elevation: 6,
+  },
+  selectedIndicator: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#007aff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  checkmark: {
+    width: 8,
+    height: 12,
+    borderBottomWidth: 2,
+    borderRightWidth: 2,
+    borderColor: '#fff',
+    transform: [{ rotate: '45deg' }],
+    marginTop: -2,
+    marginLeft: 2,
   },
 })
 

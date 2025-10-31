@@ -4,9 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import BottomSheet from '@gorhom/bottom-sheet';
 import CustomBottomSheet from '../../../shared/components/bottom-sheet/bottom-sheet';
 import CargarOrdenComponent from '../components/cargar-orden/cargar-orden.component';
-import { useAppSelector } from '../../../store/hooks';
+import { useAppSelector, useAppDispatch } from '../../../store/hooks';
 import { selectVisitas } from '../store/selector/visita.selector';
-import { selectIsLoading, selectIsSucceeded } from '../store/selector/visita.selector';
+import { selectIsLoading, selectIsSucceeded, selectTotalVisitasSeleccionadas, selectTodasVisitasSeleccionadas } from '../store/selector/visita.selector';
+import { seleccionarTodasVisitas, limpiarSeleccionVisitas } from '../store/slice/visita.slice';
 import VisitaCardComponent from '../components/visita-card/visita-card.component';
 import { VisitaResponse } from '../interfaces/visita.interface';
 
@@ -17,9 +18,12 @@ const MAX_TO_RENDER_PER_BATCH = 5;
 const WINDOW_SIZE = 10;
 
 export const VisitasScreen = () => {
+  const dispatch = useAppDispatch();
   const visitas = useAppSelector(selectVisitas);
   const isLoading = useAppSelector(selectIsLoading);
   const isSuccess = useAppSelector(selectIsSucceeded);
+  const totalSeleccionadas = useAppSelector(selectTotalVisitasSeleccionadas);
+  const todasSeleccionadas = useAppSelector(selectTodasVisitasSeleccionadas);
   
   // Estados para paginación virtual
   const [refreshing, setRefreshing] = useState(false);
@@ -59,10 +63,52 @@ export const VisitasScreen = () => {
     setTimeout(() => setRefreshing(false), 1000);
   }, []);
 
+  // Funciones para manejar selección múltiple
+  const handleSeleccionarTodas = useCallback(() => {
+    dispatch(seleccionarTodasVisitas());
+  }, [dispatch]);
+
+  const handleLimpiarSeleccion = useCallback(() => {
+    dispatch(limpiarSeleccionVisitas());
+  }, [dispatch]);
+
   // Componente de header memoizado
   const ListHeaderComponent = useMemo(() => (
     <View style={styles.header}>
-      <Text style={styles.title}>Visitas</Text>
+      <View style={styles.titleRow}>
+        <Text style={styles.title}>Visitas</Text>
+        {totalSeleccionadas > 0 && (
+          <Text style={styles.selectionCounter}>
+            {totalSeleccionadas} seleccionada{totalSeleccionadas !== 1 ? 's' : ''}
+          </Text>
+        )}
+      </View>
+      
+      {/* Controles de selección cuando hay visitas */}
+      {visitas.length > 0 && (
+        <View style={styles.selectionControls}>
+          <TouchableOpacity 
+            style={styles.selectionButton} 
+            onPress={todasSeleccionadas ? handleLimpiarSeleccion : handleSeleccionarTodas}
+          >
+            <Text style={styles.selectionButtonText}>
+              {todasSeleccionadas ? 'Deseleccionar todas' : 'Seleccionar todas'}
+            </Text>
+          </TouchableOpacity>
+          
+          {totalSeleccionadas > 0 && (
+            <TouchableOpacity 
+              style={[styles.selectionButton, styles.clearButton]} 
+              onPress={handleLimpiarSeleccion}
+            >
+              <Text style={[styles.selectionButtonText, styles.clearButtonText]}>
+                Limpiar
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+      
       {visitas.length === 0 && (
         <View style={styles.emptyState}>
           <Text style={styles.emptyTitle}>No tienes visitas cargadas</Text>
@@ -75,7 +121,7 @@ export const VisitasScreen = () => {
         </View>
       )}
     </View>
-  ), [visitas.length, handleOpenDevModeSheet]);
+  ), [visitas.length, totalSeleccionadas, todasSeleccionadas, handleOpenDevModeSheet, handleSeleccionarTodas, handleLimpiarSeleccion]);
 
   // Componente de footer para loading
   const ListFooterComponent = useMemo(() => (
@@ -186,5 +232,44 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 14,
     color: '#8e8e93',
+  },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  selectionCounter: {
+    fontSize: 14,
+    color: '#007aff',
+    fontWeight: '600',
+    backgroundColor: '#f0f8ff',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  selectionControls: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  selectionButton: {
+    backgroundColor: '#007aff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    flex: 1,
+  },
+  selectionButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  clearButton: {
+    backgroundColor: '#ff3b30',
+  },
+  clearButtonText: {
+    color: '#fff',
   },
 });

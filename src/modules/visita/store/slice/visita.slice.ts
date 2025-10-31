@@ -17,7 +17,33 @@ const initialState: VisitaState = {
 const visitaSlice = createSlice({
   name: 'visita',
   initialState,
-  reducers: {},
+  reducers: {
+    toggleVisitaSeleccion: (state, action) => {
+      const visitaId = action.payload;
+      const index = state.seleccionadas.indexOf(visitaId);
+      
+      if (index > -1) {
+        // Si está seleccionada, la removemos
+        state.seleccionadas.splice(index, 1);
+      } else {
+        // Si no está seleccionada, la agregamos
+        state.seleccionadas.push(visitaId);
+      }
+    },
+    seleccionarTodasVisitas: (state) => {
+      // Seleccionar todas las visitas actuales
+      state.seleccionadas = state.visitas.map(visita => visita.id);
+    },
+    limpiarSeleccionVisitas: (state) => {
+      // Limpiar todas las selecciones
+      state.seleccionadas = [];
+    },
+    seleccionarMultiplesVisitas: (state, action) => {
+      // Agregar múltiples IDs a la selección
+      const idsToAdd = action.payload.filter((id: number) => !state.seleccionadas.includes(id));
+      state.seleccionadas.push(...idsToAdd);
+    },
+  },
   extraReducers(builder) {
     builder.addCase(cargarVisitasThunk.pending, state => {
       state.status = 'loading';
@@ -32,5 +58,10 @@ const visitaSlice = createSlice({
   },
 });
 
-export const {} = visitaSlice.actions;
+export const { 
+  toggleVisitaSeleccion, 
+  seleccionarTodasVisitas, 
+  limpiarSeleccionVisitas, 
+  seleccionarMultiplesVisitas 
+} = visitaSlice.actions;
 export default visitaSlice.reducer;
