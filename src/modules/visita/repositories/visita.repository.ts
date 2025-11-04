@@ -1,6 +1,6 @@
 import { HttpBaseRepository } from '../../../core/repositories/http-base.repository';
 import { buildUrlWithSubdomain } from '../../../shared/utils/url-builder.util';
-import { VisitaResponse } from '../interfaces/visita.interface';
+import { CrearVisita, VisitaResponse } from '../interfaces/visita.interface';
 
 /**
  * Repositorio para manejar las operaciones de API relacionadas con visitas
@@ -50,6 +50,14 @@ export class VisitaRepository extends HttpBaseRepository {
         serializador: 'lista',
         ordering: 'orden'
     });
+  }
+
+  async entregaVisita(
+    schemaName: string,
+    payloadVisita: CrearVisita,
+  ): Promise<VisitaResponse[]> {
+    const url = await buildUrlWithSubdomain(schemaName, 'ruteo/visita/entrega/');
+    return this.post<VisitaResponse[]>(url, payloadVisita);
   }
 }
 

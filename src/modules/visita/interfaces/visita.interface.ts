@@ -1,3 +1,5 @@
+// TODO: visitaresponse is the plane response from the api
+// visita is our client-side object for managing the data
 export interface VisitaResponse {
   id: number;
   numero: number;
@@ -72,7 +74,7 @@ export interface Visita {
   orden: number;
   distancia: number;
   franja_id: any;
-  datosAdicionales: DatosAdicionalesVisita;
+  datosAdicionales: DatosAdicionales;
   franja_codigo: any;
   despacho: number;
   resultados: Resultado[];
@@ -155,9 +157,23 @@ export interface PlusCode {
   compound_code: string;
 }
 
-export interface DatosAdicionalesVisita {
+export interface DatosAdicionales {
   recibe: string;
   recibeParentesco: string;
   recibeNumeroIdentificacion: string;
   recibeCelular: string;
+}
+
+export interface CrearVisita {
+  id: number;
+  fecha_entrega: string;
+  imagenes: Media[];
+  firmas: Media[];
+  datos_adicionales: DatosAdicionales;
+}
+
+export interface Media {
+  uri: string;
+  name: string;
+  type: string;
 }

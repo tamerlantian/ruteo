@@ -20,9 +20,9 @@ export const PhotoCapture: React.FC<PhotoCaptureProps> = ({
 
   const canAddMore = photos.length < maxPhotos && !disabled;
 
-  const handleAddPhoto = () => {
+  const handleAddPhoto = async () => {
     if (!canAddMore || isLoading) return;
-    addPhoto(photos, onPhotosChange);
+    await addPhoto(photos, onPhotosChange);
   };
 
   const handleRemovePhoto = (index: number) => {

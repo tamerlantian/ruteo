@@ -78,7 +78,7 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
             <FormInputController
               control={viewModel.control}
               name="numeroIdentificacion"
-              label="Número de Identificación"
+              label="Número de identificación"
               placeholder="Cédula o documento de identidad"
               rules={viewModel.validationRules.numeroIdentificacion}
               error={viewModel.errors.numeroIdentificacion}
@@ -90,7 +90,7 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
             <FormInputController
               control={viewModel.control}
               name="celular"
-              label="Número de Celular"
+              label="Número de celular"
               placeholder="Número de contacto"
               rules={viewModel.validationRules.celular}
               error={viewModel.errors.celular}
@@ -102,7 +102,7 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
             <SignatureField
               control={viewModel.control}
               name="firma"
-              label="Firma del Receptor"
+              label="Firma del receptor"
               rules={viewModel.validationRules.firma}
               error={viewModel.errors.firma}
               required={false}
@@ -113,7 +113,7 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
             <PhotoField
               control={viewModel.control}
               name="fotos"
-              label="Fotos de Entrega"
+              label="Fotos"
               rules={viewModel.validationRules.fotos}
               error={viewModel.errors.fotos}
               required={false}
