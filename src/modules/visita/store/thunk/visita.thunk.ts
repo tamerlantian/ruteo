@@ -1,11 +1,12 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { visitaRepository } from '../../repositories/visita.repository';
+import { updateSettingsThunk } from '../../../settings';
 
 export const cargarVisitasThunk = createAsyncThunk(
   'visita/cargar-orden',
   async (
-    { schemaName, despachoId }: { schemaName: string; despachoId: number },
-    { rejectWithValue },
+    { schemaName, despachoId, ordenCodigo }: { schemaName: string; despachoId: number; ordenCodigo?: string },
+    { rejectWithValue, dispatch },
   ) => {
     try {
       const visitas = await visitaRepository.getVisitas(
@@ -15,23 +16,18 @@ export const cargarVisitasThunk = createAsyncThunk(
         false,
       );
 
+      if (visitas && visitas.length > 0) {
+        // Save settings using the new settings slice
+        await dispatch(updateSettingsThunk({
+          subdominio: schemaName,
+          despacho: `${despachoId}`,
+          ...(ordenCodigo && { ordenEntrega: ordenCodigo })
+        }));
+
+        // TODO: await iniciarTareaSeguimientoUbicacion();
+      }
+
       return visitas || [];
-
-      //     if (visitas.length > 0) {
-      //       await storageService.setItem(STORAGE_KEYS.subdominio, schema_name);
-      //       await storageService.setItem(STORAGE_KEYS.despacho, `${despacho_id}`);
-      //       await storageService.setItem(
-      //         STORAGE_KEYS.ordenEntrega,
-      //         `${payload.codigo}`
-      //       );
-
-      //       await iniciarTareaSeguimientoUbicacion();
-      //     }
-
-      //     return visitas;
-      //   }
-
-      //   return [];
     } catch (error: any) {
         return rejectWithValue(error);
     }

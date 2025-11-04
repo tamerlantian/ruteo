@@ -3,107 +3,11 @@ import { useForm } from 'react-hook-form';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParamList } from '../../../../navigation/types';
-import { CrearVisita, Media } from '../../interfaces/visita.interface';
+import { CrearVisita, EntregaFormData, Media, PhotoData } from '../../interfaces/visita.interface';
 import { visitaRepository } from '../../repositories/visita.repository';
-
-// Tipos para el formulario de entrega
-export interface PhotoData {
-  uri: string;
-  fileName?: string;
-  type?: string;
-  fileSize?: number;
-  width?: number;
-  height?: number;
-  timestamp: number;
-}
-
-export interface EntregaFormData {
-  recibe: string;
-  numeroIdentificacion: string;
-  celular: string;
-  firma: string; // Base64 de la firma
-  fotos: PhotoData[];
-}
-
-// Reglas de validación (todos los campos opcionales)
-const validationRules = {
-  recibe: {
-    minLength: {
-      value: 2,
-      message: 'El nombre debe tener al menos 2 caracteres'
-    },
-    maxLength: {
-      value: 100,
-      message: 'El nombre no puede exceder 100 caracteres'
-    }
-  },
-  numeroIdentificacion: {
-    minLength: {
-      value: 6,
-      message: 'El número de identificación debe tener al menos 6 caracteres'
-    },
-    maxLength: {
-      value: 20,
-      message: 'El número de identificación no puede exceder 20 caracteres'
-    },
-    pattern: {
-      value: /^[0-9]+$/,
-      message: 'El número de identificación solo puede contener números'
-    }
-  },
-  celular: {
-    minLength: {
-      value: 10,
-      message: 'El número de celular debe tener al menos 10 dígitos'
-    },
-    maxLength: {
-      value: 15,
-      message: 'El número de celular no puede exceder 15 dígitos'
-    },
-    pattern: {
-      value: /^[0-9+\-\s()]+$/,
-      message: 'Formato de número de celular inválido'
-    }
-  },
-  firma: {
-    validate: (value: string) => {
-      console.log('Validating signature:', value ? `${value.substring(0, 50)}... (length: ${value.length})` : 'empty');
-      
-      // Si no hay firma, es válido (campo opcional)
-      if (!value || value.trim() === '') {
-        console.log('No signature provided - valid (optional field)');
-        return true;
-      }
-      
-      // Si hay firma, validar que sea un base64 válido
-      if (!value.startsWith('data:image/') && !value.includes('base64')) {
-        console.log('Invalid signature format:', value.substring(0, 100));
-        return 'Formato de firma inválido';
-      }
-      
-      console.log('Signature validation passed');
-      return true;
-    }
-  },
-  fotos: {
-    validate: (value: PhotoData[]) => {
-      console.log('Validating photos:', value ? value.length : 0, 'photos');
-      
-      // Si no hay fotos, es válido (campo opcional)
-      if (!value || value.length === 0) {
-        console.log('No photos provided - valid (optional field)');
-        return true;
-      }
-      
-      if (value.length > 5) {
-        return 'No puedes agregar más de 5 fotos';
-      }
-      
-      console.log('Photos validation passed');
-      return true;
-    }
-  }
-};
+import { visitaFormValidationRules } from '../../constants/visita.constant';
+import { selectSubdominio } from '../../../settings';
+import { useAppSelector } from '../../../../store/hooks';
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -113,6 +17,7 @@ type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
  */
 export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
   const navigation = useNavigation<NavigationProp>();
+  const subdominio = useAppSelector(selectSubdominio);
 
   // Configuración de React Hook Form
   const { control, handleSubmit, formState: { isValid, isDirty, errors }, reset, watch } = useForm<EntregaFormData>({
@@ -165,12 +70,16 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
       }
     }
 
-    visitaRepository.entregaVisita('', payloadVisita)
+    // visitaRepository.entregaVisita('', payloadVisita)
 
     console.log('=== FORMULARIO ENVIADO ===');
-   
+
+    console.log('Subdominio:', subdominio);
+    console.log('Visita ID:', visitaId);
+    console.log('Payload:', payloadVisita);
+    
     navigation.navigate('HomeTabs');
-  }, [navigation, visitasSeleccionadas]);
+  }, [navigation, visitasSeleccionadas, subdominio]);
 
   const handleCancel = useCallback(() => {
     navigation.goBack();
@@ -250,7 +159,7 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
     handleReset,
     
     // Validation rules
-    validationRules,
+    visitaFormValidationRules,
   };
 };
 

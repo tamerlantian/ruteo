@@ -7,6 +7,7 @@ import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { cargarVisitasThunk } from '../../store/thunk/visita.thunk';
 import { selectIsLoading } from '../../store/selector/visita.selector';
 import { FormButton } from '../../../../shared/components/ui/button/FormButton';
+import { updateSettingsThunk } from '../../../settings';
 
 interface CargarOrdenFormValues {
   codigo: string;
@@ -30,7 +31,14 @@ const CargarOrdenComponent = () => {
     const entrega = await verticalRepository.getEntrega(data.codigo);
     if (entrega) {
       const { schema_name, despacho_id } = entrega;
-      dispatch(
+      await dispatch(
+        updateSettingsThunk({
+          subdominio: schema_name,
+          despacho: `${despacho_id}`,
+          ordenEntrega: data.codigo,
+        }),
+      );
+      await dispatch(
         cargarVisitasThunk({
           schemaName: schema_name,
           despachoId: despacho_id,

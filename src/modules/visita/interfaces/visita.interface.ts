@@ -177,3 +177,21 @@ export interface Media {
   name: string;
   type: string;
 }
+
+export interface PhotoData {
+  uri: string;
+  fileName?: string;
+  type?: string;
+  fileSize?: number;
+  width?: number;
+  height?: number;
+  timestamp: number;
+}
+
+export interface EntregaFormData {
+  recibe: string;
+  numeroIdentificacion: string;
+  celular: string;
+  firma: string; // Base64 de la firma
+  fotos: PhotoData[];
+}
