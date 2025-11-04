@@ -11,7 +11,7 @@ import {
 } from '../../constants/visita.constant';
 import { selectSubdominio } from '../../../settings';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
-import { limpiarSeleccionVisitas, marcarVisitaComoEntregada } from '../../store/slice/visita.slice';
+import { limpiarSeleccionVisitas, marcarVisitaComoEntregada, marcarVisitaConError } from '../../store/slice/visita.slice';
 import { FormDataBuilder } from '../../utils/form-data-builder.util';
 import { useToast } from '../../../../shared/hooks/use-toast.hook';
 
@@ -91,6 +91,8 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
             dispatch(marcarVisitaComoEntregada(visitaId));
             successCount++;
           } catch (visitaError) {
+            console.error(`Error al enviar la visita ${visitaId}:`, visitaError);
+            dispatch(marcarVisitaConError(visitaId));
             toast.error(`Error al enviar la visita ${visitaId}: ${visitaError}`);
             errorCount++;
           }

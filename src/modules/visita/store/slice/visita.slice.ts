@@ -53,6 +53,13 @@ const visitaSlice = createSlice({
         state.visitas[index].estado_entregado = true;
       }
     },
+    marcarVisitaConError: (state, action) => {
+      const visitaId = action.payload;
+      const index = state.visitas.findIndex(visita => visita.id === visitaId);
+      if (index > -1) {
+        state.visitas[index].estado_error = true;
+      }
+    },
   },
   extraReducers(builder) {
     builder.addCase(cargarVisitasThunk.pending, state => {
@@ -74,6 +81,7 @@ export const {
   seleccionarTodasVisitas, 
   limpiarSeleccionVisitas, 
   seleccionarMultiplesVisitas,
-  marcarVisitaComoEntregada 
+  marcarVisitaComoEntregada,
+  marcarVisitaConError 
 } = visitaSlice.actions;
 export default visitaSlice.reducer;
