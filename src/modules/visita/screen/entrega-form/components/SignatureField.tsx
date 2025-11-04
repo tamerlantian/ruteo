@@ -41,7 +41,6 @@ export const SignatureField: React.FC<SignatureFieldProps> = ({
         render={({ field: { onChange } }) => (
           <SignatureCapture
             onSignatureCapture={(signature: string) => {
-              console.log('Signature captured in field:', signature.substring(0, 50) + '...');
               onChange(signature);
             }}
             onSignatureClear={() => {

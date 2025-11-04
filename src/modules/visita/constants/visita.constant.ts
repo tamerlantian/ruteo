@@ -49,31 +49,25 @@ export const visitaFormValidationRules = {
   },
   firma: {
     validate: (value: string) => {
-      console.log('Validating signature:', value ? `${value.substring(0, 50)}... (length: ${value.length})` : 'empty');
       
       // Si no hay firma, es válido (campo opcional)
       if (!value || value.trim() === '') {
-        console.log('No signature provided - valid (optional field)');
         return true;
       }
       
       // Si hay firma, validar que sea un base64 válido
       if (!value.startsWith('data:image/') && !value.includes('base64')) {
-        console.log('Invalid signature format:', value.substring(0, 100));
         return 'Formato de firma inválido';
       }
       
-      console.log('Signature validation passed');
       return true;
     }
   },
   fotos: {
     validate: (value: PhotoData[]) => {
-      console.log('Validating photos:', value ? value.length : 0, 'photos');
       
       // Si no hay fotos, es válido (campo opcional)
       if (!value || value.length === 0) {
-        console.log('No photos provided - valid (optional field)');
         return true;
       }
       
@@ -81,7 +75,6 @@ export const visitaFormValidationRules = {
         return 'No puedes agregar más de 5 fotos';
       }
       
-      console.log('Photos validation passed');
       return true;
     }
   }

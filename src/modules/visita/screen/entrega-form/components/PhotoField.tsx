@@ -43,8 +43,6 @@ export const PhotoField: React.FC<PhotoFieldProps> = ({
           <PhotoCapture
             photos={value || []}
             onPhotosChange={(photos: PhotoData[]) => {
-              console.log('PhotoField - Photos updated:', photos.length, 'photos');
-              console.log('PhotoField - Photos data:', photos.map(p => ({ uri: p.uri, fileName: p.fileName })));
               onChange(photos);
             }}
             maxPhotos={maxPhotos}

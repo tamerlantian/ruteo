@@ -39,8 +39,6 @@ export const usePhotoCapture = (maxPhotos: number = 5) => {
       }
 
       // Implementación real con react-native-image-picker
-      console.log('Opening camera directly...');
-      
       const options = {
         mediaType: 'photo' as MediaType,
         quality: 0.8 as PhotoQuality,
@@ -53,7 +51,6 @@ export const usePhotoCapture = (maxPhotos: number = 5) => {
       return new Promise((resolve) => {
         launchCamera(options, (response: ImagePickerResponse) => {
           if (response.didCancel) {
-            console.log('Camera cancelled by user');
             resolve(null);
             return;
           }
@@ -76,10 +73,8 @@ export const usePhotoCapture = (maxPhotos: number = 5) => {
               height: asset.height || 0,
               timestamp: Date.now(),
             };
-            console.log('Photo captured from camera:', photoData.fileName, photoData.uri);
             resolve(photoData);
           } else {
-            console.log('No photo captured');
             resolve(null);
           }
         });
@@ -109,7 +104,6 @@ export const usePhotoCapture = (maxPhotos: number = 5) => {
       if (newPhoto) {
         const updatedPhotos = [...photos, newPhoto];
         onPhotosChange(updatedPhotos);
-        console.log('Photo added:', newPhoto.uri);
       }
     },
     [maxPhotos, openCamera]
@@ -128,7 +122,6 @@ export const usePhotoCapture = (maxPhotos: number = 5) => {
             onPress: () => {
               const updatedPhotos = photos.filter((_, i) => i !== index);
               onPhotosChange(updatedPhotos);
-              console.log('Photo removed at index:', index);
             },
           },
         ]

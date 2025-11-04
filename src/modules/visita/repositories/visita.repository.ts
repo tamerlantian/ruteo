@@ -56,8 +56,12 @@ export class VisitaRepository extends HttpBaseRepository {
     schemaName: string,
     payloadVisita: CrearVisita,
   ): Promise<VisitaResponse[]> {
-    const url = await buildUrlWithSubdomain(schemaName, 'ruteo/visita/entrega/');
-    return this.post<VisitaResponse[]>(url, payloadVisita);
+    try {
+      const url = await buildUrlWithSubdomain(schemaName, 'ruteo/visita/entrega/');
+      return this.post<VisitaResponse[]>(url, payloadVisita);
+    } catch (error) {
+      throw error;
+    }
   }
 }
 
