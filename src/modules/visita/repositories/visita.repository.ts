@@ -63,6 +63,24 @@ export class VisitaRepository extends HttpBaseRepository {
       throw error;
     }
   }
+
+  /**
+   * Entrega una visita usando multipart/form-data para archivos
+   * @param schemaName Nombre del schema
+   * @param formData FormData con los datos de la visita y archivos
+   * @returns Promise con la respuesta de la entrega
+   */
+  async entregaVisitaMultipart(
+    schemaName: string,
+    formData: FormData,
+  ): Promise<VisitaResponse[]> {
+    try {
+      const url = await buildUrlWithSubdomain(schemaName, 'ruteo/visita/entrega/');
+      return this.postMultipart<VisitaResponse[]>(url, formData);
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export const visitaRepository = VisitaRepository.getInstance();

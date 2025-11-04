@@ -3,17 +3,14 @@ import { useForm } from 'react-hook-form';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParamList } from '../../../../navigation/types';
-import {
-  CrearVisita,
-  EntregaFormData,
-  Media,
-  PhotoData,
-} from '../../interfaces/visita.interface';
+import { EntregaFormData } from '../../interfaces/visita.interface';
 import { visitaRepository } from '../../repositories/visita.repository';
 import { visitaFormValidationRules } from '../../constants/visita.constant';
 import { selectSubdominio } from '../../../settings';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { limpiarSeleccionVisitas } from '../../store/slice/visita.slice';
+import { FormDataBuilder } from '../../utils/form-data-builder.util';
+import { dateUtil } from '../../../../shared/utils/date.util';
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -49,55 +46,49 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
 
   // === ACCIONES DEL FORMULARIO ===
 
-  const processPhotos = (photos: PhotoData[]): Media[] => {
-    return photos.map((photo, index) => ({
-      uri: photo.uri,
-      name: `image-${index}.jpg`,
-      type: 'image/jpeg',
-    }));
-  };
-
   const onSubmit = useCallback(
     async (data: EntregaFormData) => {
-      const fotos = processPhotos(data.fotos || []);
       const visitaId = Number(visitasSeleccionadas[0]);
-      let firma: Media | null = null;
 
-      if (data.firma) {
-        firma = {
-          uri: data.firma,
-          name: 'firma.jpg',
-          type: 'image/jpeg',
-        };
+      // Validate form data before processing
+      const validation = FormDataBuilder.validateFormData(data, visitaId);
+      if (!validation.isValid) {
+        console.error('Validation error:', validation.error);
+        // TODO: Show error to user
+        return;
       }
-
-      const payloadVisita: CrearVisita = {
-        id: visitaId,
-        fecha_entrega: new Date().toISOString(),
-        imagenes: fotos,
-        firmas: firma ? [firma] : [],
-        datos_adicionales: {
-          recibe: data.recibe,
-          recibeParentesco: '',
-          recibeNumeroIdentificacion: data.numeroIdentificacion,
-          recibeCelular: data.celular,
-        },
-      };
 
       try {
-        if (subdominio) {
-          // dispatch(limpiarSeleccionVisitas());
-          console.log('Enviando visita:', payloadVisita);
-          await visitaRepository.entregaVisita(subdominio, payloadVisita);
-        } else {
-          console.log('No se proporcionó un subdominio');
+        if (!subdominio) {
+          console.error('No se proporcionó un subdominio');
+          // TODO: Show error to user
+          return;
         }
+
+        // Build FormData for multipart submission
+        const formData = FormDataBuilder.buildVisitaFormData(data, visitaId);
+        
+        // Log FormData for debugging
+        FormDataBuilder.logFormData(formData, 'Entrega Visita');
+        
+        console.log('Enviando visita con FormData...');
+        console.log('Fecha de entrega formateada:', new Date().toISOString(), '→', dateUtil.getCurrentForAPI());
+        
+        // Submit using multipart method
+        const response = await visitaRepository.entregaVisitaMultipart(subdominio, formData);
+        
+        console.log('Visita enviada exitosamente:', response);
+        
+        // Clear selections after successful submission
+        dispatch(limpiarSeleccionVisitas());
+        
+        // Navigate back to home
+        navigation.navigate('HomeTabs');
+        
       } catch (error) {
-        console.log('Error al enviar la visita:', error);
+        console.error('Error al enviar la visita:', error);
+        // TODO: Show error to user with proper error handling
       }
-
-
-      // navigation.navigate('HomeTabs');
     },
     [navigation, visitasSeleccionadas, subdominio, dispatch],
   );
@@ -130,27 +121,6 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
     return value != null && value !== '';
   }).length;
   const totalFields = Object.keys(formValues).length;
-  const progressPercentage = (completedFields / totalFields) * 100;
-
-  // Debug: Log form values para verificar la firma y fotos
-  // console.log('Form values:', {
-  //   recibe: formValues.recibe?.substring(0, 20) + '...',
-  //   numeroIdentificacion: formValues.numeroIdentificacion,
-  //   celular: formValues.celular,
-  //   firma: formValues.firma
-  //     ? `${formValues.firma.substring(0, 30)}... (length: ${
-  //         formValues.firma.length
-  //       })`
-  //     : 'empty',
-  //   fotos: formValues.fotos || [],
-  //   isValid,
-  //   isDirty,
-  //   allRequiredFieldsFilled,
-  //   canSubmit,
-  //   completedFields,
-  //   totalFields,
-  //   errors: Object.keys(errors),
-  // });
 
   return {
     // Form control
@@ -167,7 +137,6 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
     // Progress info
     completedFields,
     totalFields,
-    progressPercentage,
 
     // Actions
     onSubmit: handleSubmit(onSubmit),

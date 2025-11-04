@@ -265,4 +265,26 @@ export class HttpBaseRepository {
     const response = await this.axiosInstance.delete<T>(url, config);
     return response.data;
   }
+
+  /**
+   * POST method for multipart/form-data uploads
+   * @param endpoint API endpoint or complete URL
+   * @param formData FormData object containing files and data
+   * @param options Additional request options
+   * @returns Promise with the response data
+   */
+  public async postMultipart<T>(endpoint: string, formData: FormData, options: RequestOptions = {}): Promise<T> {
+    const url = this.buildUrl(endpoint);
+    const config: AxiosRequestConfig = {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        ...options.headers,
+      },
+      params: options.params,
+      timeout: options.timeout || 30000, // Increased timeout for file uploads
+    };
+
+    const response = await this.axiosInstance.post<T>(url, formData, config);
+    return response.data;
+  }
 }
