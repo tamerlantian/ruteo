@@ -11,7 +11,7 @@ import {
 } from '../../constants/visita.constant';
 import { selectSubdominio } from '../../../settings';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
-import { limpiarSeleccionVisitas } from '../../store/slice/visita.slice';
+import { limpiarSeleccionVisitas, marcarVisitaComoEntregada } from '../../store/slice/visita.slice';
 import { FormDataBuilder } from '../../utils/form-data-builder.util';
 import { useToast } from '../../../../shared/hooks/use-toast.hook';
 
@@ -54,13 +54,11 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
   const onSubmit = useCallback(
     async (data: EntregaFormData) => {
       if (!visitasSeleccionadas || visitasSeleccionadas.length === 0) {
-        console.error('No hay visitas seleccionadas');
         toast.error('No hay visitas seleccionadas');
         return;
       }
 
       if (!subdominio) {
-        console.error('No se proporcionó un subdominio');
         toast.error('No se proporcionó un subdominio');
         return;
       }
@@ -90,10 +88,10 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
 
             // Submit using multipart method
             await visitaRepository.entregaVisitaMultipart(subdominio, formData);
+            dispatch(marcarVisitaComoEntregada(visitaId));
             successCount++;
-            console.log(`Visita ${visitaId} enviada exitosamente`);
           } catch (visitaError) {
-            console.error(`Error al enviar la visita ${visitaId}:`, visitaError);
+            toast.error(`Error al enviar la visita ${visitaId}: ${visitaError}`);
             errorCount++;
           }
         }

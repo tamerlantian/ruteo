@@ -8,6 +8,7 @@ import { removerVisitas, limpiarSeleccionVisitas } from '../../store/slice/visit
 import { VisitaResponse } from '../../interfaces/visita.interface';
 import { MainStackParamList } from '../../../../navigation/types';
 import { LIST_OPTIMIZATION_CONFIG } from '../../constants/visita.constant';
+import { FilterType } from '../../components/filter-badges/filter-badges.component';
 
 /**
  * ViewModel para la pantalla de Visitas
@@ -28,6 +29,7 @@ export const useVisitasViewModel = () => {
   
   // Estados locales
   const [refreshing, setRefreshing] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   
   // Referencias
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -80,7 +82,33 @@ export const useVisitasViewModel = () => {
 
   const keyExtractor = useCallback((item: VisitaResponse) => `visita-${item.id}`, []);
 
+  // === ACCIONES DE FILTRO ===
+  const handleFilterChange = useCallback((filter: FilterType) => {
+    setActiveFilter(filter);
+  }, []);
+
   // === ESTADOS COMPUTADOS ===
+  const visitasPendientes = useMemo(() => 
+    visitas.filter(visita => !visita.estado_entregado), 
+    [visitas]
+  );
+  
+  const visitasEntregadas = useMemo(() => 
+    visitas.filter(visita => visita.estado_entregado), 
+    [visitas]
+  );
+
+  const visitasFiltradas = useMemo(() => {
+    switch (activeFilter) {
+      case 'pending':
+        return visitasPendientes;
+      case 'delivered':
+        return visitasEntregadas;
+      default:
+        return visitas;
+    }
+  }, [activeFilter, visitas, visitasPendientes, visitasEntregadas]);
+
   const hasVisitas = useMemo(() => visitas.length > 0, [visitas.length]);
   const hasSelectedVisitas = useMemo(() => totalSeleccionadas > 0, [totalSeleccionadas]);
   const selectionCounterText = useMemo(() => 
@@ -96,7 +124,8 @@ export const useVisitasViewModel = () => {
 
   return {
     // Estados
-    visitas,
+    visitas: visitasFiltradas,
+    allVisitas: visitas,
     isLoading,
     isSuccess,
     totalSeleccionadas,
@@ -104,6 +133,12 @@ export const useVisitasViewModel = () => {
     hasVisitas,
     hasSelectedVisitas,
     selectionCounterText,
+    
+    // Filter states
+    activeFilter,
+    pendingCount: visitasPendientes.length,
+    deliveredCount: visitasEntregadas.length,
+    totalCount: visitas.length,
     
     // Referencias
     bottomSheetRef,
@@ -119,6 +154,9 @@ export const useVisitasViewModel = () => {
     
     // Acciones de Lista
     onRefresh,
+    
+    // Acciones de Filtro
+    onFilterChange: handleFilterChange,
     
     // Optimizaciones de FlatList
     getItemLayout,

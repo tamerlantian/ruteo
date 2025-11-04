@@ -29,6 +29,7 @@ export interface VisitaResponse {
   estado_devolucion: boolean;
   estado_entregado: boolean;
   estado_despacho: boolean;
+  estado_error?: boolean;
 }
 
 export interface Visita {

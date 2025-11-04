@@ -38,6 +38,11 @@ export const VisitasScreen = () => {
             selectionCounterText={viewModel.selectionCounterText}
             hasVisitas={viewModel.hasVisitas}
             onOpenDevModeSheet={viewModel.openDevModeSheet}
+            activeFilter={viewModel.activeFilter}
+            onFilterChange={viewModel.onFilterChange}
+            pendingCount={viewModel.pendingCount}
+            deliveredCount={viewModel.deliveredCount}
+            totalCount={viewModel.totalCount}
           />
         }
         ListFooterComponent={

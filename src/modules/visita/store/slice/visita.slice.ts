@@ -46,6 +46,13 @@ const visitaSlice = createSlice({
       const idsToAdd = action.payload.filter((id: number) => !state.seleccionadas.includes(id));
       state.seleccionadas.push(...idsToAdd);
     },
+    marcarVisitaComoEntregada: (state, action) => {
+      const visitaId = action.payload;
+      const index = state.visitas.findIndex(visita => visita.id === visitaId);
+      if (index > -1) {
+        state.visitas[index].estado_entregado = true;
+      }
+    },
   },
   extraReducers(builder) {
     builder.addCase(cargarVisitasThunk.pending, state => {
@@ -66,6 +73,7 @@ export const {
   toggleVisitaSeleccion, 
   seleccionarTodasVisitas, 
   limpiarSeleccionVisitas, 
-  seleccionarMultiplesVisitas 
+  seleccionarMultiplesVisitas,
+  marcarVisitaComoEntregada 
 } = visitaSlice.actions;
 export default visitaSlice.reducer;

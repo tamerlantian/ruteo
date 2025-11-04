@@ -1,12 +1,19 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { visitasStyles } from '../../screen/visitas/visitas.style';
+import { FilterBadges, FilterType } from '../filter-badges/filter-badges.component';
 
 interface VisitasHeaderProps {
   totalSeleccionadas: number;
   selectionCounterText: string;
   hasVisitas: boolean;
   onOpenDevModeSheet: () => void;
+  // Filter props
+  activeFilter: FilterType;
+  onFilterChange: (filter: FilterType) => void;
+  pendingCount: number;
+  deliveredCount: number;
+  totalCount: number;
 }
 
 export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
@@ -14,6 +21,11 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
   selectionCounterText,
   hasVisitas,
   onOpenDevModeSheet,
+  activeFilter,
+  onFilterChange,
+  pendingCount,
+  deliveredCount,
+  totalCount,
 }) => {
   return (
     <View style={visitasStyles.header}>
@@ -25,6 +37,17 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
           </Text>
         )}
       </View>
+
+      {/* Filter Badges - Only show when there are visitas */}
+      {hasVisitas && (
+        <FilterBadges
+          activeFilter={activeFilter}
+          onFilterChange={onFilterChange}
+          pendingCount={pendingCount}
+          deliveredCount={deliveredCount}
+          totalCount={totalCount}
+        />
+      )}
             
       {!hasVisitas && (
         <View style={visitasStyles.emptyState}>
