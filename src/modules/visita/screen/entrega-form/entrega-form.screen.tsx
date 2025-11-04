@@ -9,6 +9,7 @@ import { SignatureField } from './components/SignatureField';
 import { PhotoField } from './components/PhotoField';
 import { entregaFormStyles } from './entrega-form.style';
 import { useEntregaFormViewModel } from './entrega-form.view-model';
+import { FormSelectorController } from '../../../../shared/components/ui/form/form-selector/FormSelectorController';
 
 type EntregaFormScreenProps = NativeStackScreenProps<MainStackParamList, 'EntregaForm'>;
 
@@ -96,6 +97,20 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
               error={viewModel.errors.celular}
               keyboardType="phone-pad"
               autoComplete="tel"
+            />
+
+            {/* Campo: Parentesco */}
+            <FormSelectorController
+              control={viewModel.control}
+              name="parentesco"
+              label="Parentesco"
+              placeholder="Seleccionar parentesco"
+              options={viewModel.parentescoOptions}
+              error={viewModel.errors.parentesco}
+              rules={viewModel.visitaFormValidationRules.parentesco}
+              isLoading={viewModel.isLoading}
+              onRetry={viewModel.onRetry}
+              emptyOptionsMessage="No hay opciones disponibles"
             />
 
             {/* Campo: Firma Digital */}

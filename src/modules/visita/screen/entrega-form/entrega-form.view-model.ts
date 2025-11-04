@@ -35,6 +35,7 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
       recibe: '',
       numeroIdentificacion: '',
       celular: '',
+      parentesco: '',
       firma: '',
       fotos: [],
     },

@@ -192,6 +192,7 @@ export interface EntregaFormData {
   recibe: string;
   numeroIdentificacion: string;
   celular: string;
+  parentesco: string;
   firma: string; // Base64 de la firma
   fotos: PhotoData[];
 }
