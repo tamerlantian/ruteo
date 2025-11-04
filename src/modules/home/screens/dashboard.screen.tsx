@@ -1,10 +1,31 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../auth/screens/auth-provider';
+import { FormButton } from '../../../shared/components/ui/button/FormButton';
 
 export const DashboardScreen = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Cerrar Sesión',
+      '¿Estás seguro de que deseas cerrar sesión? Se eliminarán todos los datos locales.',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Cerrar Sesión',
+          style: 'destructive',
+          onPress: () => {
+            logout();
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -37,6 +58,14 @@ export const DashboardScreen = () => {
             <Text style={styles.statNumber}>5</Text>
             <Text style={styles.statLabel}>Pendientes</Text>
           </View>
+        </View>
+
+        <View style={styles.logoutContainer}>
+          <FormButton
+            title="Cerrar Sesión"
+            onPress={handleLogout}
+            style={styles.logoutButton}
+          />
         </View>
       </View>
     </SafeAreaView>
@@ -106,5 +135,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#8e8e93',
     textAlign: 'center',
+  },
+  logoutContainer: {
+    marginTop: 40,
+    paddingHorizontal: 20,
+  },
+  logoutButton: {
+    backgroundColor: '#ff3b30',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
 });
