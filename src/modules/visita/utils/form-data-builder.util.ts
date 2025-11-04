@@ -21,7 +21,7 @@ export class FormDataBuilder {
     // Add additional data
     const datosAdicionales = {
       recibe: data.recibe || '',
-      recibeParentesco: '',
+      recibeParentesco: data.parentesco || '',
       recibeNumeroIdentificacion: data.numeroIdentificacion || '',
       recibeCelular: data.celular || '',
     };

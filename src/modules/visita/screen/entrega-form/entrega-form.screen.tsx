@@ -108,8 +108,6 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
               options={viewModel.parentescoOptions}
               error={viewModel.errors.parentesco}
               rules={viewModel.visitaFormValidationRules.parentesco}
-              isLoading={viewModel.isLoading}
-              onRetry={viewModel.onRetry}
               emptyOptionsMessage="No hay opciones disponibles"
             />
 

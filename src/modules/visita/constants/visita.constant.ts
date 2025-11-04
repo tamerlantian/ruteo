@@ -1,5 +1,10 @@
 import { PhotoData } from "../../../shared/components/ui/photo-capture/PhotoCapture.types";
 
+export const parentescos = [
+  { value: 'ABUELO_A', label: 'ABUELO/A' },
+  { value: 'AMIGO_A', label: 'AMIGO/A' }
+];
+
 export const LIST_OPTIMIZATION_CONFIG = {
   ITEM_HEIGHT: 120,
   INITIAL_NUM_TO_RENDER: 10,
@@ -58,6 +63,22 @@ export const visitaFormValidationRules = {
       // Si hay firma, validar que sea un base64 válido
       if (!value.startsWith('data:image/') && !value.includes('base64')) {
         return 'Formato de firma inválido';
+      }
+      
+      return true;
+    }
+  },
+  parentesco: {
+    validate: (value: string) => {
+      // Si no hay parentesco, es válido (campo opcional)
+      if (!value || value.trim() === '') {
+        return true;
+      }
+      
+      // Validar que el valor esté en la lista de opciones válidas
+      const validValues = parentescos.map(p => p.value);
+      if (!validValues.includes(value)) {
+        return 'Seleccione un parentesco válido';
       }
       
       return true;

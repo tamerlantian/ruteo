@@ -5,12 +5,15 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParamList } from '../../../../navigation/types';
 import { EntregaFormData } from '../../interfaces/visita.interface';
 import { visitaRepository } from '../../repositories/visita.repository';
-import { visitaFormValidationRules } from '../../constants/visita.constant';
+import {
+  visitaFormValidationRules,
+  parentescos,
+} from '../../constants/visita.constant';
 import { selectSubdominio } from '../../../settings';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { limpiarSeleccionVisitas } from '../../store/slice/visita.slice';
 import { FormDataBuilder } from '../../utils/form-data-builder.util';
-import { dateUtil } from '../../../../shared/utils/date.util';
+import { useToast } from '../../../../shared/hooks/use-toast.hook';
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -22,6 +25,7 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
   const navigation = useNavigation<NavigationProp>();
   const subdominio = useAppSelector(selectSubdominio);
   const dispatch = useAppDispatch();
+  const toast = useToast();
 
   // Configuración de React Hook Form
   const {
@@ -68,30 +72,25 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
 
         // Build FormData for multipart submission
         const formData = FormDataBuilder.buildVisitaFormData(data, visitaId);
-        
+
         // Log FormData for debugging
         FormDataBuilder.logFormData(formData, 'Entrega Visita');
-        
-        console.log('Enviando visita con FormData...');
-        console.log('Fecha de entrega formateada:', new Date().toISOString(), '→', dateUtil.getCurrentForAPI());
-        
+
         // Submit using multipart method
-        const response = await visitaRepository.entregaVisitaMultipart(subdominio, formData);
-        
-        console.log('Visita enviada exitosamente:', response);
-        
+        await visitaRepository.entregaVisitaMultipart(subdominio, formData);
+        toast.success('Entrega exitosa');
+
         // Clear selections after successful submission
         dispatch(limpiarSeleccionVisitas());
-        
+
         // Navigate back to home
         navigation.navigate('HomeTabs');
-        
       } catch (error) {
         console.error('Error al enviar la visita:', error);
         // TODO: Show error to user with proper error handling
       }
     },
-    [navigation, visitasSeleccionadas, subdominio, dispatch],
+    [navigation, visitasSeleccionadas, subdominio, dispatch, toast],
   );
 
   const handleCancel = useCallback(() => {
@@ -146,6 +145,9 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
 
     // Validation rules
     visitaFormValidationRules,
+
+    // Options for selectors
+    parentescoOptions: parentescos,
   };
 };
 
