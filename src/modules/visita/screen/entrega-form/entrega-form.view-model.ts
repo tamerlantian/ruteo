@@ -53,41 +53,68 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
 
   const onSubmit = useCallback(
     async (data: EntregaFormData) => {
-      const visitaId = Number(visitasSeleccionadas[0]);
+      if (!visitasSeleccionadas || visitasSeleccionadas.length === 0) {
+        console.error('No hay visitas seleccionadas');
+        toast.error('No hay visitas seleccionadas');
+        return;
+      }
 
-      // Validate form data before processing
-      const validation = FormDataBuilder.validateFormData(data, visitaId);
-      if (!validation.isValid) {
-        console.error('Validation error:', validation.error);
-        // TODO: Show error to user
+      if (!subdominio) {
+        console.error('No se proporcionó un subdominio');
+        toast.error('No se proporcionó un subdominio');
         return;
       }
 
       try {
-        if (!subdominio) {
-          console.error('No se proporcionó un subdominio');
-          // TODO: Show error to user
-          return;
+        let successCount = 0;
+        let errorCount = 0;
+
+        // Iterate through all selected visitas
+        for (const visitaIdStr of visitasSeleccionadas) {
+          const visitaId = Number(visitaIdStr);
+
+          // Validate form data before processing each visita
+          const validation = FormDataBuilder.validateFormData(data, visitaId);
+          if (!validation.isValid) {
+            console.error(`Validation error for visita ${visitaId}:`, validation.error);
+            errorCount++;
+            continue;
+          }
+
+          try {
+            // Build FormData for multipart submission
+            const formData = FormDataBuilder.buildVisitaFormData(data, visitaId);
+
+            // Log FormData for debugging
+            FormDataBuilder.logFormData(formData, `Entrega Visita ${visitaId}`);
+
+            // Submit using multipart method
+            await visitaRepository.entregaVisitaMultipart(subdominio, formData);
+            successCount++;
+            console.log(`Visita ${visitaId} enviada exitosamente`);
+          } catch (visitaError) {
+            console.error(`Error al enviar la visita ${visitaId}:`, visitaError);
+            errorCount++;
+          }
         }
 
-        // Build FormData for multipart submission
-        const formData = FormDataBuilder.buildVisitaFormData(data, visitaId);
+        // Show appropriate success/error messages
+        if (successCount > 0 && errorCount === 0) {
+          toast.success(`${successCount} entrega(s) exitosa(s)`);
+        } else if (successCount > 0 && errorCount > 0) {
+          toast.warning(`${successCount} entrega(s) exitosa(s), ${errorCount} fallida(s)`);
+        } else if (errorCount > 0) {
+          toast.error(`${errorCount} entrega(s) fallida(s)`);
+        }
 
-        // Log FormData for debugging
-        FormDataBuilder.logFormData(formData, 'Entrega Visita');
-
-        // Submit using multipart method
-        await visitaRepository.entregaVisitaMultipart(subdominio, formData);
-        toast.success('Entrega exitosa');
-
-        // Clear selections after successful submission
+        // Clear selections after processing (regardless of success/failure)
         dispatch(limpiarSeleccionVisitas());
 
         // Navigate back to home
         navigation.navigate('HomeTabs');
       } catch (error) {
-        console.error('Error al enviar la visita:', error);
-        // TODO: Show error to user with proper error handling
+        console.error('Error general al procesar las entregas:', error);
+        toast.error('Error al procesar las entregas');
       }
     },
     [navigation, visitasSeleccionadas, subdominio, dispatch, toast],
