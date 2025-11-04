@@ -10,6 +10,7 @@ import { useVisitasViewModel } from './visitas.view-model';
 import { VisitasHeader } from '../../components/visitas-header/visitas-header.component';
 import { VisitasFloatingActions } from '../../components/visita-floating-actions/visitas-floating-actions.component';
 import { VisitasLoadingFooter } from '../../components/visitas-loading-footer/visitas-loading-footer.component';
+import { FormButton } from '../../../../shared/components/ui/button/FormButton';
 
 export const VisitasScreen = () => {
   // Usar el ViewModel para toda la lógica de negocio
@@ -25,6 +26,7 @@ export const VisitasScreen = () => {
 
   return (
     <SafeAreaView style={visitasStyles.container}>
+      <FormButton title="Limpiar" onPress={viewModel.retirarOrden} />
       <FlatList
         data={viewModel.visitas}
         renderItem={renderVisitaItem}

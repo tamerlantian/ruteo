@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppSelector, useAppDispatch } from '../../../../store/hooks';
 import { selectVisitas, selectIsLoading, selectIsSucceeded, selectTotalVisitasSeleccionadas, selectVisitasSeleccionadas } from '../../store/selector/visita.selector';
-import { limpiarSeleccionVisitas } from '../../store/slice/visita.slice';
+import { removerVisitas, limpiarSeleccionVisitas } from '../../store/slice/visita.slice';
 import { VisitaResponse } from '../../interfaces/visita.interface';
 import { MainStackParamList } from '../../../../navigation/types';
 import { LIST_OPTIMIZATION_CONFIG } from '../../constants/visita.constant';
@@ -31,6 +31,11 @@ export const useVisitasViewModel = () => {
   
   // Referencias
   const bottomSheetRef = useRef<BottomSheet>(null);
+
+  const retirarOrden = () => {
+    dispatch(removerVisitas());
+    dispatch(limpiarSeleccionVisitas());
+  }
 
   // === ACCIONES DE BOTTOM SHEET ===
   const openDevModeSheet = useCallback(() => {
@@ -106,6 +111,7 @@ export const useVisitasViewModel = () => {
     // Acciones de Bottom Sheet
     openDevModeSheet,
     closeDevModeSheet,
+    retirarOrden,
     
     // Acciones de Selección
     clearSelection,

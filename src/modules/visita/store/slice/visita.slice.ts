@@ -18,6 +18,9 @@ const visitaSlice = createSlice({
   name: 'visita',
   initialState,
   reducers: {
+    removerVisitas: (state) => {
+      state.visitas = [];
+    },
     toggleVisitaSeleccion: (state, action) => {
       const visitaId = action.payload;
       const index = state.seleccionadas.indexOf(visitaId);
@@ -59,6 +62,7 @@ const visitaSlice = createSlice({
 });
 
 export const { 
+  removerVisitas,
   toggleVisitaSeleccion, 
   seleccionarTodasVisitas, 
   limpiarSeleccionVisitas, 

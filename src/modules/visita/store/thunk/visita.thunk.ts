@@ -1,12 +1,11 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { visitaRepository } from '../../repositories/visita.repository';
-import { updateSettingsThunk } from '../../../settings';
 
 export const cargarVisitasThunk = createAsyncThunk(
   'visita/cargar-orden',
   async (
-    { schemaName, despachoId, ordenCodigo }: { schemaName: string; despachoId: number; ordenCodigo?: string },
-    { rejectWithValue, dispatch },
+    { schemaName, despachoId }: { schemaName: string; despachoId: number; },
+    { rejectWithValue },
   ) => {
     try {
       const visitas = await visitaRepository.getVisitas(
@@ -15,17 +14,6 @@ export const cargarVisitasThunk = createAsyncThunk(
         false,
         false,
       );
-
-      if (visitas && visitas.length > 0) {
-        // Save settings using the new settings slice
-        await dispatch(updateSettingsThunk({
-          subdominio: schemaName,
-          despacho: `${despachoId}`,
-          ...(ordenCodigo && { ordenEntrega: ordenCodigo })
-        }));
-
-        // TODO: await iniciarTareaSeguimientoUbicacion();
-      }
 
       return visitas || [];
     } catch (error: any) {
