@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParamList } from '../../../../navigation/types';
 import { EntregaFormData } from '../../interfaces/visita.interface';
@@ -24,8 +23,7 @@ type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
  * ViewModel para el formulario de entrega
  * Maneja la lógica de validación y envío del formulario
  */
-export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
-  const navigation = useNavigation<NavigationProp>();
+export const useEntregaFormViewModel = (visitasSeleccionadas: string[], navigation: NavigationProp) => {
   const subdominio = useAppSelector(selectSubdominio);
   const dispatch = useAppDispatch();
   const toast = useToast();

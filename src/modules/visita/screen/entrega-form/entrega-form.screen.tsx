@@ -20,7 +20,7 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
   const { visitasSeleccionadas } = route.params;
   
   // Usar el ViewModel para manejar la lógica del formulario
-  const viewModel = useEntregaFormViewModel(visitasSeleccionadas);
+  const viewModel = useEntregaFormViewModel(visitasSeleccionadas, navigation);
 
   // Estado para controlar el scroll durante la firma
   const [scrollEnabled, setScrollEnabled] = useState(true);
