@@ -98,16 +98,23 @@ export const useVisitasViewModel = () => {
     [visitas]
   );
 
+  const visitasConError = useMemo(() => 
+    visitas.filter(visita => visita.estado_error), 
+    [visitas]
+  );
+
   const visitasFiltradas = useMemo(() => {
     switch (activeFilter) {
       case 'pending':
         return visitasPendientes;
       case 'delivered':
         return visitasEntregadas;
+      case 'error':
+        return visitasConError;
       default:
         return visitas;
     }
-  }, [activeFilter, visitas, visitasPendientes, visitasEntregadas]);
+  }, [activeFilter, visitas, visitasPendientes, visitasEntregadas, visitasConError]);
 
   const hasVisitas = useMemo(() => visitas.length > 0, [visitas.length]);
   const hasSelectedVisitas = useMemo(() => totalSeleccionadas > 0, [totalSeleccionadas]);
@@ -138,6 +145,7 @@ export const useVisitasViewModel = () => {
     activeFilter,
     pendingCount: visitasPendientes.length,
     deliveredCount: visitasEntregadas.length,
+    errorCount: visitasConError.length,
     totalCount: visitas.length,
     
     // Referencias

@@ -42,6 +42,7 @@ export const VisitasScreen = () => {
             onFilterChange={viewModel.onFilterChange}
             pendingCount={viewModel.pendingCount}
             deliveredCount={viewModel.deliveredCount}
+            errorCount={viewModel.errorCount}
             totalCount={viewModel.totalCount}
           />
         }

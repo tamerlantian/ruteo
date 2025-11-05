@@ -13,6 +13,7 @@ interface VisitasHeaderProps {
   onFilterChange: (filter: FilterType) => void;
   pendingCount: number;
   deliveredCount: number;
+  errorCount: number;
   totalCount: number;
 }
 
@@ -25,6 +26,7 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
   onFilterChange,
   pendingCount,
   deliveredCount,
+  errorCount,
   totalCount,
 }) => {
   return (
@@ -45,6 +47,7 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
           onFilterChange={onFilterChange}
           pendingCount={pendingCount}
           deliveredCount={deliveredCount}
+          errorCount={errorCount}
           totalCount={totalCount}
         />
       )}

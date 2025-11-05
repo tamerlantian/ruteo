@@ -1,13 +1,14 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 
-export type FilterType = 'all' | 'pending' | 'delivered';
+export type FilterType = 'all' | 'pending' | 'delivered' | 'error';
 
 interface FilterBadgesProps {
   activeFilter: FilterType;
   onFilterChange: (filter: FilterType) => void;
   pendingCount: number;
   deliveredCount: number;
+  errorCount: number;
   totalCount: number;
 }
 
@@ -16,16 +17,23 @@ export const FilterBadges: React.FC<FilterBadgesProps> = ({
   onFilterChange,
   pendingCount,
   deliveredCount,
+  errorCount,
   totalCount,
 }) => {
   const filters = [
     { key: 'all' as FilterType, label: 'Todas', count: totalCount },
     { key: 'pending' as FilterType, label: 'Pendientes', count: pendingCount },
     { key: 'delivered' as FilterType, label: 'Entregadas', count: deliveredCount },
+    { key: 'error' as FilterType, label: 'Con Error', count: errorCount },
   ];
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.scrollContainer}
+      style={styles.container}
+    >
       {filters.map((filter) => (
         <TouchableOpacity
           key={filter.key}
@@ -63,15 +71,17 @@ export const FilterBadges: React.FC<FilterBadgesProps> = ({
           )}
         </TouchableOpacity>
       ))}
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    paddingVertical: 12,
+  },
+  scrollContainer: {
     flexDirection: 'row',
     paddingHorizontal: 16,
-    paddingVertical: 12,
     gap: 8,
   },
   badge: {
