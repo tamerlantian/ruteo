@@ -13,68 +13,79 @@ import { VisitasLoadingFooter } from '../../components/visitas-loading-footer/vi
 import { FormButton } from '../../../../shared/components/ui/button/FormButton';
 
 export const VisitasScreen = () => {
-  // Usar el ViewModel para toda la lógica de negocio
-  const viewModel = useVisitasViewModel();
+  const {
+    retirarOrden,
+    openDevModeSheet,
+    visitas,
+    keyExtractor,
+    getItemLayout,
+    onRefresh,
+    refreshing,
+    isLoading,
+    hasVisitas,
+    activeFilter,
+    pendingCount,
+    errorCount,
+    listConfig,
+    bottomSheetRef,
+    clearSelection,
+    deliverSelectedVisitas,
+    onFilterChange,
+    totalSeleccionadas,
+  } = useVisitasViewModel();
 
-  // Componente de renderizado de items memoizado
-  const renderVisitaItem: ListRenderItem<VisitaResponse> = useCallback(({ item, index }) => (
-    <VisitaCardComponent 
-      visita={item} 
-      index={index}
-    />
-  ), []);
+  const renderVisitaItem: ListRenderItem<VisitaResponse> = useCallback(
+    ({ item, index }) => <VisitaCardComponent visita={item} index={index} />,
+    [],
+  );
 
   return (
     <SafeAreaView style={visitasStyles.container}>
-      <FormButton title="Limpiar" onPress={viewModel.retirarOrden} />
+      <FormButton title="Limpiar" onPress={retirarOrden} />
       <FlatList
-        data={viewModel.visitas}
+        data={visitas}
         renderItem={renderVisitaItem}
-        keyExtractor={viewModel.keyExtractor}
-        getItemLayout={viewModel.getItemLayout}
+        keyExtractor={keyExtractor}
+        getItemLayout={getItemLayout}
         ListHeaderComponent={
           <VisitasHeader
-            hasVisitas={viewModel.hasVisitas}
-            onOpenDevModeSheet={viewModel.openDevModeSheet}
-            activeFilter={viewModel.activeFilter}
-            onFilterChange={viewModel.onFilterChange}
-            pendingCount={viewModel.pendingCount}
-            errorCount={viewModel.errorCount}
+            hasVisitas={hasVisitas}
+            onOpenDevModeSheet={openDevModeSheet}
+            activeFilter={activeFilter}
+            onFilterChange={onFilterChange}
+            pendingCount={pendingCount}
+            errorCount={errorCount}
           />
         }
-        ListFooterComponent={
-          <VisitasLoadingFooter isLoading={viewModel.isLoading} />
-        }
-        
+        ListFooterComponent={<VisitasLoadingFooter isLoading={isLoading} />}
         // Optimizaciones de rendimiento críticas
         removeClippedSubviews={true}
-        maxToRenderPerBatch={viewModel.listConfig.MAX_TO_RENDER_PER_BATCH}
-        initialNumToRender={viewModel.listConfig.INITIAL_NUM_TO_RENDER}
-        windowSize={viewModel.listConfig.WINDOW_SIZE}
-        updateCellsBatchingPeriod={viewModel.listConfig.UPDATE_CELLS_BATCHING_PERIOD}
-        
+        maxToRenderPerBatch={listConfig.MAX_TO_RENDER_PER_BATCH}
+        initialNumToRender={listConfig.INITIAL_NUM_TO_RENDER}
+        windowSize={listConfig.WINDOW_SIZE}
+        updateCellsBatchingPeriod={listConfig.UPDATE_CELLS_BATCHING_PERIOD}
         // Pull to refresh
-        refreshing={viewModel.refreshing}
-        onRefresh={viewModel.onRefresh}
-        
+        refreshing={refreshing}
+        onRefresh={onRefresh}
         // Estilos
         style={visitasStyles.flatList}
         contentContainerStyle={visitasStyles.contentContainer}
         showsVerticalScrollIndicator={false}
-        
         // Optimización adicional para listas grandes
         legacyImplementation={false}
       />
 
       {/* Floating Action Bar */}
       <VisitasFloatingActions
-        totalSeleccionadas={viewModel.totalSeleccionadas}
-        onClearSelection={viewModel.clearSelection}
-        onDeliverVisitas={viewModel.deliverSelectedVisitas}
+        totalSeleccionadas={totalSeleccionadas}
+        onClearSelection={clearSelection}
+        onDeliverVisitas={deliverSelectedVisitas}
       />
 
-      {/* Bottom Sheet para el selector de modo desarrollador */}
-      <CustomBottomSheet ref={viewModel.bottomSheetRef} initialSnapPoints={['30%']}>
+      <CustomBottomSheet
+        ref={bottomSheetRef}
+        initialSnapPoints={['30%']}
+      >
         <CargarOrdenComponent />
       </CustomBottomSheet>
     </SafeAreaView>
