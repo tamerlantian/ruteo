@@ -18,7 +18,7 @@ export const FilterBadges: React.FC<FilterBadgesProps> = ({
 }) => {
   const filters = [
     { key: 'pending' as FilterType, label: 'Pendientes', count: pendingCount },
-    { key: 'error' as FilterType, label: 'Con Error', count: errorCount },
+    { key: 'error' as FilterType, label: 'Error', count: errorCount },
   ];
 
   return (

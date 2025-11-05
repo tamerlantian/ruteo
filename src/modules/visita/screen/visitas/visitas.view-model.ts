@@ -114,8 +114,9 @@ export const useVisitasViewModel = () => {
 
   // === ACCIONES DE FILTRO ===
   const handleFilterChange = useCallback((filter: FilterType) => {
+    dispatch(limpiarSeleccionVisitas());
     setActiveFilter(filter);
-  }, []);
+  }, [dispatch]);
 
   // === ESTADOS COMPUTADOS ===
   const visitasFiltradas = useMemo(() => {
