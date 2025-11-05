@@ -1,5 +1,5 @@
-import { createSlice } from '@reduxjs/toolkit';
-import { VisitaResponse } from '../../interfaces/visita.interface';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { VisitaResponse, EntregaFormData } from '../../interfaces/visita.interface';
 import { cargarVisitasThunk } from '../thunk/visita.thunk';
 
 interface VisitaState {
@@ -60,6 +60,24 @@ const visitaSlice = createSlice({
         state.visitas[index].estado_error = true;
       }
     },
+    guardarDatosFormularioEnVisita: (
+      state, 
+      action: PayloadAction<{ visitaId: number; datosFormulario: EntregaFormData }>
+    ) => {
+      const { visitaId, datosFormulario } = action.payload;
+      const index = state.visitas.findIndex(visita => visita.id === visitaId);
+      if (index > -1) {
+        state.visitas[index].datos_formulario_guardados = datosFormulario;
+      }
+    },
+    limpiarDatosFormularioDeVisita: (state, action: PayloadAction<number>) => {
+      const visitaId = action.payload;
+      const index = state.visitas.findIndex(visita => visita.id === visitaId);
+      if (index > -1) {
+        state.visitas[index].datos_formulario_guardados = undefined;
+        state.visitas[index].estado_error = false;
+      }
+    },
   },
   extraReducers(builder) {
     builder.addCase(cargarVisitasThunk.pending, state => {
@@ -82,6 +100,8 @@ export const {
   limpiarSeleccionVisitas, 
   seleccionarMultiplesVisitas,
   marcarVisitaComoEntregada,
-  marcarVisitaConError 
+  marcarVisitaConError,
+  guardarDatosFormularioEnVisita,
+  limpiarDatosFormularioDeVisita
 } = visitaSlice.actions;
 export default visitaSlice.reducer;

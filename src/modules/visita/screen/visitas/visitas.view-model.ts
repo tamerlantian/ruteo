@@ -3,12 +3,20 @@ import BottomSheet from '@gorhom/bottom-sheet';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppSelector, useAppDispatch } from '../../../../store/hooks';
-import { selectVisitas, selectIsLoading, selectIsSucceeded, selectTotalVisitasSeleccionadas, selectVisitasSeleccionadas } from '../../store/selector/visita.selector';
+import { 
+  selectVisitas, 
+  selectIsLoading, 
+  selectIsSucceeded, 
+  selectTotalVisitasSeleccionadas, 
+  selectVisitasSeleccionadas,
+  selectVisitasSeleccionadasConDatosGuardados
+} from '../../store/selector/visita.selector';
 import { removerVisitas, limpiarSeleccionVisitas } from '../../store/slice/visita.slice';
 import { VisitaResponse } from '../../interfaces/visita.interface';
 import { MainStackParamList } from '../../../../navigation/types';
 import { LIST_OPTIMIZATION_CONFIG } from '../../constants/visita.constant';
 import { FilterType } from '../../components/filter-badges/filter-badges.component';
+import { useRetryVisitas } from '../../hooks/use-retry-visitas.hook';
 
 /**
  * ViewModel para la pantalla de Visitas
@@ -26,6 +34,10 @@ export const useVisitasViewModel = () => {
   const isSuccess = useAppSelector(selectIsSucceeded);
   const totalSeleccionadas = useAppSelector(selectTotalVisitasSeleccionadas);
   const visitasSeleccionadas = useAppSelector(selectVisitasSeleccionadas);
+  const visitasSeleccionadasConDatosGuardados = useAppSelector(selectVisitasSeleccionadasConDatosGuardados);
+  
+  // Hook para reintento de visitas
+  const { reintentarVisitasConError } = useRetryVisitas();
   
   // Estados locales
   const [refreshing, setRefreshing] = useState(false);
@@ -66,6 +78,17 @@ export const useVisitasViewModel = () => {
       visitasSeleccionadas: visitasSeleccionadas.map(id => id.toString()),
     });
   }, [navigation, visitasSeleccionadas]);
+
+  const retrySelectedVisitas = useCallback(() => {
+    if (visitasSeleccionadasConDatosGuardados.length === 0) {
+      console.warn('No hay visitas con error y datos guardados para reintentar');
+      return;
+    }
+
+    // Usar el selector que ya filtra las visitas con error y datos guardados
+    const visitasConErrorIds = visitasSeleccionadasConDatosGuardados.map(visita => visita.id);
+    reintentarVisitasConError(visitasConErrorIds);
+  }, [visitasSeleccionadasConDatosGuardados, reintentarVisitasConError]);
 
   // === ACCIONES DE LISTA ===
   const onRefresh = useCallback(() => {
@@ -113,6 +136,9 @@ export const useVisitasViewModel = () => {
   const hasVisitas = useMemo(() => visitas.length > 0, [visitas.length]);
   const hasSelectedVisitas = useMemo(() => totalSeleccionadas > 0, [totalSeleccionadas]);
 
+  // Usar el selector para obtener el conteo de visitas con error seleccionadas
+  const totalConErrorSeleccionadas = visitasSeleccionadasConDatosGuardados.length;
+
   // === EFECTOS SECUNDARIOS ===
   // Cerrar bottom sheet cuando la operación sea exitosa
   if (isSuccess) {
@@ -126,6 +152,7 @@ export const useVisitasViewModel = () => {
     isLoading,
     isSuccess,
     totalSeleccionadas,
+    totalConErrorSeleccionadas,
     refreshing,
     hasVisitas,
     hasSelectedVisitas,
@@ -147,6 +174,7 @@ export const useVisitasViewModel = () => {
     // Acciones de Selección
     clearSelection,
     deliverSelectedVisitas,
+    retrySelectedVisitas,
     
     // Acciones de Lista
     onRefresh,

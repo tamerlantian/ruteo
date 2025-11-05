@@ -30,8 +30,10 @@ export const VisitasScreen = () => {
     bottomSheetRef,
     clearSelection,
     deliverSelectedVisitas,
+    retrySelectedVisitas,
     onFilterChange,
     totalSeleccionadas,
+    totalConErrorSeleccionadas,
   } = useVisitasViewModel();
 
   const renderVisitaItem: ListRenderItem<VisitaResponse> = useCallback(
@@ -78,8 +80,11 @@ export const VisitasScreen = () => {
       {/* Floating Action Bar */}
       <VisitasFloatingActions
         totalSeleccionadas={totalSeleccionadas}
+        totalConError={totalConErrorSeleccionadas}
+        activeFilter={activeFilter}
         onClearSelection={clearSelection}
         onDeliverVisitas={deliverSelectedVisitas}
+        onRetryVisitas={retrySelectedVisitas}
       />
 
       <CustomBottomSheet

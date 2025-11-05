@@ -30,6 +30,8 @@ export interface VisitaResponse {
   estado_entregado: boolean;
   estado_despacho: boolean;
   estado_error?: boolean;
+  // Datos del formulario guardados para reintento
+  datos_formulario_guardados?: EntregaFormData;
 }
 
 export interface Visita {

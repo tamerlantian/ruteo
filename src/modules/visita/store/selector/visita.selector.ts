@@ -10,7 +10,7 @@ export const selectVisitas = createSelector(
 
 export const selectVisitasPendientes = createSelector(
   selectVisitasRootState,
-  ({ visitas }) => visitas.filter(visita => !visita.estado_entregado),
+  ({ visitas }) => visitas.filter(visita => !visita.estado_entregado && !visita.estado_error),
 );
 
 export const selectIsLoading = createSelector(
@@ -52,4 +52,32 @@ export const selectTodasVisitasSeleccionadas = createSelector(
 export const selectHayVisitasSeleccionadas = createSelector(
   selectVisitasSeleccionadas,
   seleccionadas => seleccionadas.length > 0,
+);
+
+// Selector para obtener visitas con error
+export const selectVisitasConError = createSelector(
+  selectVisitasRootState,
+  ({ visitas }) => visitas.filter(visita => visita.estado_error),
+);
+
+// Selector para obtener una visita específica por ID
+export const selectVisitaPorId = (visitaId: number) =>
+  createSelector(selectVisitas, visitas =>
+    visitas.find(visita => visita.id === visitaId),
+  );
+
+// Selector para obtener los datos del formulario guardados de una visita específica
+export const selectDatosFormularioGuardados = (visitaId: number) =>
+  createSelector(selectVisitaPorId(visitaId), visita =>
+    visita?.datos_formulario_guardados,
+  );
+
+// Selector para verificar si las visitas seleccionadas tienen datos guardados para reintento
+export const selectVisitasSeleccionadasConDatosGuardados = createSelector(
+  [selectVisitas, selectVisitasSeleccionadas],
+  (visitas, seleccionadas) =>
+    visitas
+      .filter(visita => seleccionadas.includes(visita.id))
+      // .filter(visita => visita.estado_error && visita.datos_formulario_guardados),
+      .filter(visita => visita.estado_error)
 );

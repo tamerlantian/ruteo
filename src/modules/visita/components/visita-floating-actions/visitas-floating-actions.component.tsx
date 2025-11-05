@@ -1,18 +1,25 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { visitasStyles } from '../../screen/visitas/visitas.style';
+import { FilterType } from '../filter-badges/filter-badges.component';
 
 interface VisitasFloatingActionsProps {
   totalSeleccionadas: number;
+  totalConError?: number;
+  activeFilter: FilterType;
   onClearSelection: () => void;
   onDeliverVisitas: () => void;
+  onRetryVisitas?: () => void;
   // onNovedadVisitas?: () => void; // Para futuro uso
 }
 
 export const VisitasFloatingActions: React.FC<VisitasFloatingActionsProps> = ({
   totalSeleccionadas,
+  totalConError = 0,
+  activeFilter,
   onClearSelection,
   onDeliverVisitas,
+  onRetryVisitas,
   // onNovedadVisitas,
 }) => {
   if (totalSeleccionadas === 0) {
@@ -29,14 +36,26 @@ export const VisitasFloatingActions: React.FC<VisitasFloatingActionsProps> = ({
       </TouchableOpacity>
       
       <View style={visitasStyles.actionButtonsContainer}>
-        <TouchableOpacity 
-          style={visitasStyles.primaryActionButton}
-          onPress={onDeliverVisitas}
-        >
-          <Text style={visitasStyles.primaryActionText}>
-            Entregar ({totalSeleccionadas})
-          </Text>
-        </TouchableOpacity>
+        {/* Mostrar botón según el filtro activo y disponibilidad de datos */}
+        {activeFilter === 'error' && totalConError > 0 && onRetryVisitas ? (
+          <TouchableOpacity 
+            style={visitasStyles.secondaryActionButton}
+            onPress={onRetryVisitas}
+          >
+            <Text style={visitasStyles.secondaryActionText}>
+              Reintentar ({totalConError})
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity 
+            style={visitasStyles.primaryActionButton}
+            onPress={onDeliverVisitas}
+          >
+            <Text style={visitasStyles.primaryActionText}>
+              Entregar ({totalSeleccionadas})
+            </Text>
+          </TouchableOpacity>
+        )}
         
         {/* Espacio reservado para futuro botón Novedad */}
         {/* 
