@@ -71,11 +71,10 @@ export const FilterBadges: React.FC<FilterBadgesProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 12,
+    paddingTop: 12,
   },
   scrollContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
     gap: 8,
   },
   badge: {
