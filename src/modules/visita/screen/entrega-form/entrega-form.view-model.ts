@@ -111,8 +111,6 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[], navigati
         // Procesar todas las visitas usando el hook compartido (pasando datos directamente)
         setIsSubmitting(true);
         const visitaIds = visitasSeleccionadas.map(id => parseInt(id, 10));
-        console.log('🚀 Procesando visitas con datos del formulario:', visitaIds);
-        console.log('📋 Datos del formulario:', data);
         
         // Guardar datos en Redux para posibles reintentos futuros
         visitaIds.forEach(visitaId => {
