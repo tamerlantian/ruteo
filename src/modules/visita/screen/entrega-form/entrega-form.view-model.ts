@@ -4,23 +4,19 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParamList } from '../../../../navigation/types';
 import { EntregaFormData } from '../../interfaces/visita.interface';
-import { visitaRepository } from '../../repositories/visita.repository';
 import {
   visitaFormValidationRules,
   parentescos,
 } from '../../constants/visita.constant';
 import { selectSubdominio } from '../../../settings';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
-import { selectVisitas } from '../../store/selector/visita.selector';
+// selectVisitas no necesario - useVisitaProcessing tiene su propio selector
 import { 
   limpiarSeleccionVisitas, 
-  marcarVisitaComoEntregada, 
-  marcarVisitaConError,
   guardarDatosFormularioEnVisita,
-  limpiarDatosFormularioDeVisita
 } from '../../store/slice/visita.slice';
-import { FormDataBuilder } from '../../utils/form-data-builder.util';
 import { useToast } from '../../../../shared/hooks/use-toast.hook';
+import { useVisitaProcessing } from '../../hooks/use-visita-processing.hook';
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -31,9 +27,9 @@ type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
   const navigation = useNavigation<NavigationProp>();
   const subdominio = useAppSelector(selectSubdominio);
-  const visitas = useAppSelector(selectVisitas);
   const dispatch = useAppDispatch();
   const toast = useToast();
+  const { procesarVisitasEnLote } = useVisitaProcessing();
 
   // Configuración de React Hook Form
   const {
@@ -76,181 +72,23 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
     return true;
   }, [visitasSeleccionadas, subdominio, toast]);
 
-  /**
-   * Procesa una visita individual
-   * @param data - Datos del formulario
-   * @param visitaId - ID de la visita a procesar
-   * @returns Promise<boolean> - true si fue exitoso, false si falló
-   */
-  const procesarVisitaIndividual = useCallback(
-    async (data: EntregaFormData, visitaId: number): Promise<boolean> => {
-      try {
-        // Validar datos del formulario para esta visita
-        const validation = FormDataBuilder.validateFormData(data, visitaId);
-        if (!validation.isValid) {
-          console.error(`Validation error for visita ${visitaId}:`, validation.error);
-          return false;
-        }
-
-        // Guardar datos del formulario ANTES del envío para posible reintento
-        dispatch(guardarDatosFormularioEnVisita({ visitaId, datosFormulario: data }));
-
-        // Construir FormData para envío multipart
-        const formData = FormDataBuilder.buildVisitaFormData(data, visitaId);
-
-        // Log para debugging
-        FormDataBuilder.logFormData(formData, `Entrega Visita ${visitaId}`);
-
-        // Enviar usando método multipart
-        await visitaRepository.entregaVisitaMultipart(subdominio!, formData);
-        
-        // Si fue exitoso, marcar como entregada y limpiar datos guardados
-        dispatch(marcarVisitaComoEntregada(visitaId));
-        dispatch(limpiarDatosFormularioDeVisita(visitaId));
-        
-        return true;
-      } catch (visitaError) {
-        console.error(`Error al enviar la visita ${visitaId}:`, visitaError);
-        dispatch(marcarVisitaConError(visitaId));
-        toast.error(`Error al enviar la visita ${visitaId}: ${visitaError}`);
-        return false;
-      }
-    },
-    [subdominio, dispatch, toast],
-  );
-
-  /**
-   * Procesa todas las visitas seleccionadas
-   * @param data - Datos del formulario
-   * @returns Promise<{successCount: number, errorCount: number}>
-   */
-  const procesarTodasLasVisitas = useCallback(
-    async (data: EntregaFormData) => {
-      let successCount = 0;
-      let errorCount = 0;
-
-      for (const visitaIdStr of visitasSeleccionadas) {
-        const visitaId = Number(visitaIdStr);
-        const wasSuccessful = await procesarVisitaIndividual(data, visitaId);
-        
-        if (wasSuccessful) {
-          successCount++;
-        } else {
-          errorCount++;
-        }
-      }
-
-      return { successCount, errorCount };
-    },
-    [visitasSeleccionadas, procesarVisitaIndividual],
-  );
-
-  /**
-   * Muestra mensajes de resultado basados en el conteo de éxitos y errores
-   */
-  const mostrarMensajesDeResultado = useCallback(
-    (successCount: number, errorCount: number) => {
-      if (successCount > 0 && errorCount === 0) {
-        toast.success(`${successCount} entrega(s) exitosa(s)`);
-      } else if (successCount > 0 && errorCount > 0) {
-        toast.warning(`${successCount} entrega(s) exitosa(s), ${errorCount} fallida(s)`);
-      } else if (errorCount > 0) {
-        toast.error(`${errorCount} entrega(s) fallida(s)`);
-      }
-    },
-    [toast],
-  );
-
-  /**
-   * Procesa una visita individual usando los datos guardados previamente
-   * @param visitaId - ID de la visita a procesar
-   * @returns Promise<boolean> - true si fue exitoso, false si falló
-   */
-  const procesarVisitaIndividualConDatosGuardados = useCallback(
-    async (visitaId: number): Promise<boolean> => {
-      try {
-        // Buscar la visita y sus datos guardados
-        const visita = visitas.find(v => v.id === visitaId);
-        if (!visita || !visita.datos_formulario_guardados) {
-          console.error(`No se encontraron datos guardados para la visita ${visitaId}`);
-          return false;
-        }
-
-        const datosGuardados = visita.datos_formulario_guardados;
-
-        // Validar datos del formulario
-        const validation = FormDataBuilder.validateFormData(datosGuardados, visitaId);
-        if (!validation.isValid) {
-          console.error(`Validation error for visita ${visitaId}:`, validation.error);
-          return false;
-        }
-
-        // Construir FormData para envío multipart
-        const formData = FormDataBuilder.buildVisitaFormData(datosGuardados, visitaId);
-
-        // Log para debugging
-        FormDataBuilder.logFormData(formData, `Reintento Visita ${visitaId}`);
-
-        // Enviar usando método multipart
-        await visitaRepository.entregaVisitaMultipart(subdominio!, formData);
-        
-        // Si fue exitoso, marcar como entregada y limpiar datos guardados
-        dispatch(marcarVisitaComoEntregada(visitaId));
-        dispatch(limpiarDatosFormularioDeVisita(visitaId));
-        
-        return true;
-      } catch (visitaError) {
-        console.error(`Error al reintentar la visita ${visitaId}:`, visitaError);
-        toast.error(`Error al reintentar la visita ${visitaId}: ${visitaError}`);
-        return false;
-      }
-    },
-    [visitas, subdominio, dispatch, toast],
-  );
+  // === FUNCIONES AUXILIARES ===
 
   /**
    * Reintenta el envío de visitas con error usando los datos guardados
+   * Refactorizado para usar el hook compartido de procesamiento
    * @param visitasConError - Array de IDs de visitas con error
    */
   const reintentarVisitasConError = useCallback(
     async (visitasConError: number[]) => {
-      if (visitasConError.length === 0) {
-        toast.warning('No hay visitas con error para reintentar');
-        return;
-      }
-
-      if (!subdominio) {
-        toast.error('No se proporcionó un subdominio');
-        return;
-      }
-
-      try {
-        let successCount = 0;
-        let errorCount = 0;
-
-        for (const visitaId of visitasConError) {
-          const wasSuccessful = await procesarVisitaIndividualConDatosGuardados(visitaId);
-          
-          if (wasSuccessful) {
-            successCount++;
-          } else {
-            errorCount++;
-          }
-        }
-
-        // Mostrar mensajes de resultado
-        mostrarMensajesDeResultado(successCount, errorCount);
-
-        // Si todas fueron exitosas, limpiar selecciones
-        if (errorCount === 0) {
-          dispatch(limpiarSeleccionVisitas());
-        }
-      } catch (error) {
-        console.error('Error general al reintentar las entregas:', error);
-        toast.error('Error al reintentar las entregas');
-      }
+      await procesarVisitasEnLote(visitasConError, {
+        markErrorOnFailure: false, // No marcar error adicional en reintentos
+        logPrefix: 'Reintento',
+        messagePrefix: 'entrega',
+        clearSelectionsOnSuccess: true,
+      });
     },
-    [subdominio, dispatch, toast, mostrarMensajesDeResultado, procesarVisitaIndividualConDatosGuardados],
+    [procesarVisitasEnLote],
   );
 
   /**
@@ -271,11 +109,22 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
       }
 
       try {
-        // Procesar todas las visitas
-        const { successCount, errorCount } = await procesarTodasLasVisitas(data);
+        // Procesar todas las visitas usando el hook compartido (pasando datos directamente)
+        const visitaIds = visitasSeleccionadas.map(id => parseInt(id, 10));
+        console.log('🚀 Procesando visitas con datos del formulario:', visitaIds);
+        console.log('📋 Datos del formulario:', data);
+        
+        // Guardar datos en Redux para posibles reintentos futuros
+        visitaIds.forEach(visitaId => {
+          dispatch(guardarDatosFormularioEnVisita({ visitaId, datosFormulario: data }));
+        });
 
-        // Mostrar mensajes de resultado
-        mostrarMensajesDeResultado(successCount, errorCount);
+        await procesarVisitasEnLote(visitaIds, {
+          markErrorOnFailure: true,
+          logPrefix: 'Entrega',
+          messagePrefix: 'entrega',
+          clearSelectionsOnSuccess: true,
+        }, data);
 
         // Finalizar proceso
         finalizarProceso();
@@ -286,8 +135,9 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
     },
     [
       validateInitialConditions,
-      procesarTodasLasVisitas,
-      mostrarMensajesDeResultado,
+      visitasSeleccionadas,
+      dispatch,
+      procesarVisitasEnLote,
       finalizarProceso,
       toast,
     ],

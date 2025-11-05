@@ -68,6 +68,9 @@ const visitaSlice = createSlice({
       const index = state.visitas.findIndex(visita => visita.id === visitaId);
       if (index > -1) {
         state.visitas[index].datos_formulario_guardados = datosFormulario;
+        console.log(`💾 Datos de formulario guardados para visita ${visitaId}:`, datosFormulario);
+      } else {
+        console.error(`❌ No se pudo guardar datos para visita ${visitaId} - visita no encontrada`);
       }
     },
     limpiarDatosFormularioDeVisita: (state, action: PayloadAction<number>) => {
@@ -85,7 +88,12 @@ const visitaSlice = createSlice({
     });
     builder.addCase(cargarVisitasThunk.fulfilled, (state, { payload }) => {
       state.status = 'succeeded';
-      state.visitas = payload;
+      // Inicializar propiedades adicionales que no vienen de la API
+      state.visitas = payload.map(visita => ({
+        ...visita,
+        datos_formulario_guardados: undefined,
+        estado_error: false,
+      }));
     });
     builder.addCase(cargarVisitasThunk.rejected, state => {
       state.status = 'failed';
