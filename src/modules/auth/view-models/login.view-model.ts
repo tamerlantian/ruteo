@@ -4,13 +4,11 @@ import { LoginCredentials } from '../models/Auth';
 import { authController } from '../controllers/auth.controller';
 import { authKeys } from '../constants/auth-keys';
 import { ApiErrorResponse } from '../../../core/interfaces/api.interface';
-// import { useNavigation } from '@react-navigation/native';
 
 // Hook para manejar el login
 export const useLogin = () => {
   const queryClient = useQueryClient();
   const toast = useToast();
-  // const navigation = useNavigation();
 
   const loginMutation = useMutation({
     mutationFn: (credentials: LoginCredentials) => authController.login(credentials),
@@ -32,7 +30,7 @@ export const useLogin = () => {
   });
 
   return {
-    login: loginMutation.mutate,
+    login: loginMutation.mutateAsync,
     isLoading: loginMutation.isPending,
     isError: loginMutation.isError,
     error: loginMutation.error,

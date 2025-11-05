@@ -50,7 +50,7 @@ export const useLogout = () => {
   });
 
   return {
-    logout: logoutMutation.mutate,
+    logout: logoutMutation.mutateAsync,
     isLoading: logoutMutation.isPending,
     isError: logoutMutation.isError,
     error: logoutMutation.error,

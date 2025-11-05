@@ -15,9 +15,13 @@ import { loginStyles } from '../styles/login.style';
 import { useLogin } from '../view-models/login.view-model';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { AuthStackParamList } from '../../../navigation/types';
+import { AuthStackParamList, RootStackParamList } from '../../../navigation/types';
+import { CompositeNavigationProp } from '@react-navigation/native';
 
-type LoginScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
+type LoginScreenNavigationProp = CompositeNavigationProp<
+  NativeStackNavigationProp<AuthStackParamList, 'Login'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 export const LoginScreen = () => {
   // ViewModel para login
@@ -55,8 +59,15 @@ export const LoginScreen = () => {
   });
 
   // Manejar envío del formulario
-  const onSubmit = (data: LoginFormValues) => {
-    login(data);
+  const onSubmit = async (data: LoginFormValues) => {
+    try {
+      await login(data);
+      // Si el login es exitoso, redirigir al stack principal
+      // navigation.navigate('Main');
+    } catch (error) {
+      console.error('Error durante el login:', error);
+      // El error ya se maneja en el hook useLogin con toast
+    }
   };
 
   // Mostrar loading mientras se inicializa el contexto de modo desarrollador

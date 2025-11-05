@@ -4,17 +4,31 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { useAuth } from '../../auth/screens/auth-provider';
 import { usePermissions } from '../../../shared/hooks/usePermissions';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../../navigation/types';
+
+type HomeNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export const HomeScreen = () => {
   const { logout, user } = useAuth();
+  const navigation = useNavigation<HomeNavigationProp>();
   const { 
     permissionsGranted, 
     permissionsChecked, 
     isRequestingPermissions 
   } = usePermissions();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Si el logout es exitoso, redirigir al stack de autenticación
+      navigation.navigate('Auth');
+    } catch (error) {
+      console.error('Error durante el logout:', error);
+      // Aún si hay error, intentar redirigir (el logout puede haber limpiado datos localmente)
+      navigation.navigate('Auth');
+    }
   };
 
   return (
