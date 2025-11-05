@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParamList } from '../../../../navigation/types';
@@ -25,6 +25,7 @@ type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
  */
 export const useEntregaFormViewModel = (visitasSeleccionadas: string[], navigation: NavigationProp) => {
   const subdominio = useAppSelector(selectSubdominio);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const dispatch = useAppDispatch();
   const toast = useToast();
   const { procesarVisitasEnLote } = useVisitaProcessing();
@@ -108,6 +109,7 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[], navigati
 
       try {
         // Procesar todas las visitas usando el hook compartido (pasando datos directamente)
+        setIsSubmitting(true);
         const visitaIds = visitasSeleccionadas.map(id => parseInt(id, 10));
         console.log('🚀 Procesando visitas con datos del formulario:', visitaIds);
         console.log('📋 Datos del formulario:', data);
@@ -129,6 +131,8 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[], navigati
       } catch (error) {
         console.error('Error general al procesar las entregas:', error);
         toast.error('Error al procesar las entregas');
+      } finally {
+        setIsSubmitting(false);
       }
     },
     [
@@ -194,6 +198,7 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[], navigati
 
     // Validation rules
     visitaFormValidationRules,
+    isSubmitting,
 
     // Options for selectors
     parentescoOptions: parentescos,

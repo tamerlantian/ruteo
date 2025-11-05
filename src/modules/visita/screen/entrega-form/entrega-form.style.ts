@@ -87,7 +87,6 @@ export const entregaFormStyles = StyleSheet.create({
     fontFamily: 'monospace',
   },
   footer: {
-    flexDirection: 'row',
     paddingHorizontal: 20,
     paddingVertical: 16,
     paddingBottom: 32,

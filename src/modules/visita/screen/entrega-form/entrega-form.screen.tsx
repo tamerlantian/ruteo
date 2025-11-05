@@ -1,5 +1,12 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MainStackParamList } from '../../../../navigation/types';
@@ -10,15 +17,19 @@ import { PhotoField } from './components/PhotoField';
 import { entregaFormStyles } from './entrega-form.style';
 import { useEntregaFormViewModel } from './entrega-form.view-model';
 import { FormSelectorController } from '../../../../shared/components/ui/form/form-selector/FormSelectorController';
+import { FormButton } from '../../../../shared/components/ui/button/FormButton';
 
-type EntregaFormScreenProps = NativeStackScreenProps<MainStackParamList, 'EntregaForm'>;
+type EntregaFormScreenProps = NativeStackScreenProps<
+  MainStackParamList,
+  'EntregaForm'
+>;
 
-export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({ 
-  navigation, 
-  route 
+export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
+  navigation,
+  route,
 }) => {
   const { visitasSeleccionadas } = route.params;
-  
+
   // Usar el ViewModel para manejar la lógica del formulario
   const viewModel = useEntregaFormViewModel(visitasSeleccionadas, navigation);
 
@@ -34,27 +45,29 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
     <SafeAreaView style={entregaFormStyles.container}>
       {/* Header */}
       <View style={entregaFormStyles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={entregaFormStyles.backButton}
           onPress={handleGoBack}
         >
           <Ionicons name="arrow-back" size={24} color="#007aff" />
         </TouchableOpacity>
-        
+
         <View style={entregaFormStyles.headerContent}>
           <Text style={entregaFormStyles.title}>Formulario de Entrega</Text>
           <Text style={entregaFormStyles.subtitle}>
-            {visitasSeleccionadas.length} visita{visitasSeleccionadas.length !== 1 ? 's' : ''} seleccionada{visitasSeleccionadas.length !== 1 ? 's' : ''}
+            {visitasSeleccionadas.length} visita
+            {visitasSeleccionadas.length !== 1 ? 's' : ''} seleccionada
+            {visitasSeleccionadas.length !== 1 ? 's' : ''}
           </Text>
         </View>
       </View>
 
       {/* Content */}
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={entregaFormStyles.keyboardContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <ScrollView 
+        <ScrollView
           ref={scrollViewRef}
           style={entregaFormStyles.scrollContainer}
           contentContainerStyle={entregaFormStyles.scrollContent}
@@ -157,28 +170,37 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
 
       {/* Footer Actions */}
       <View style={entregaFormStyles.footer}>
-        <TouchableOpacity 
+        {/* <TouchableOpacity
           style={entregaFormStyles.cancelButton}
           onPress={handleGoBack}
         >
           <Text style={entregaFormStyles.cancelButtonText}>Cancelar</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
+        </TouchableOpacity> */}
+
+        {/* <TouchableOpacity
           style={[
             entregaFormStyles.submitButton,
-            !viewModel.canSubmit && entregaFormStyles.submitButtonDisabled
+            !viewModel.canSubmit && entregaFormStyles.submitButtonDisabled,
           ]}
           onPress={viewModel.onSubmit}
           disabled={!viewModel.canSubmit}
         >
-          <Text style={[
-            entregaFormStyles.submitButtonText,
-            !viewModel.canSubmit && entregaFormStyles.submitButtonTextDisabled
-          ]}>
+          <Text
+            style={[
+              entregaFormStyles.submitButtonText,
+              !viewModel.canSubmit &&
+                entregaFormStyles.submitButtonTextDisabled,
+            ]}
+          >
             {viewModel.canSubmit ? 'Procesar Entrega' : 'Complete los campos'}
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
+        <FormButton
+          title="Enviar"
+          disabled={viewModel.isSubmitting}
+          isLoading={viewModel.isSubmitting}
+          onPress={viewModel.onSubmit}
+        />
       </View>
     </SafeAreaView>
   );
