@@ -29,7 +29,7 @@ export const useVisitasViewModel = () => {
   
   // Estados locales
   const [refreshing, setRefreshing] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [activeFilter, setActiveFilter] = useState<FilterType>('pending');
   
   // Referencias
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -61,6 +61,7 @@ export const useVisitasViewModel = () => {
 
     // Navegar al formulario de entrega con las visitas seleccionadas
     // Convertir los IDs de number a string para la navegación
+    // TODO: rectificar si es la mejor manera o simplemente tomar los ids del slice
     navigation.navigate('EntregaForm', {
       visitasSeleccionadas: visitasSeleccionadas.map(id => id.toString()),
     });
@@ -92,11 +93,6 @@ export const useVisitasViewModel = () => {
     visitas.filter(visita => !visita.estado_entregado), 
     [visitas]
   );
-  
-  const visitasEntregadas = useMemo(() => 
-    visitas.filter(visita => visita.estado_entregado), 
-    [visitas]
-  );
 
   const visitasConError = useMemo(() => 
     visitas.filter(visita => visita.estado_error), 
@@ -107,21 +103,15 @@ export const useVisitasViewModel = () => {
     switch (activeFilter) {
       case 'pending':
         return visitasPendientes;
-      case 'delivered':
-        return visitasEntregadas;
       case 'error':
         return visitasConError;
       default:
-        return visitas;
+        return visitasPendientes; // Default to pending
     }
-  }, [activeFilter, visitas, visitasPendientes, visitasEntregadas, visitasConError]);
+  }, [activeFilter, visitasPendientes, visitasConError]);
 
   const hasVisitas = useMemo(() => visitas.length > 0, [visitas.length]);
   const hasSelectedVisitas = useMemo(() => totalSeleccionadas > 0, [totalSeleccionadas]);
-  const selectionCounterText = useMemo(() => 
-    `${totalSeleccionadas} seleccionada${totalSeleccionadas !== 1 ? 's' : ''}`,
-    [totalSeleccionadas]
-  );
 
   // === EFECTOS SECUNDARIOS ===
   // Cerrar bottom sheet cuando la operación sea exitosa
@@ -139,12 +129,10 @@ export const useVisitasViewModel = () => {
     refreshing,
     hasVisitas,
     hasSelectedVisitas,
-    selectionCounterText,
     
     // Filter states
     activeFilter,
     pendingCount: visitasPendientes.length,
-    deliveredCount: visitasEntregadas.length,
     errorCount: visitasConError.length,
     totalCount: visitas.length,
     

@@ -34,16 +34,12 @@ export const VisitasScreen = () => {
         getItemLayout={viewModel.getItemLayout}
         ListHeaderComponent={
           <VisitasHeader
-            totalSeleccionadas={viewModel.totalSeleccionadas}
-            selectionCounterText={viewModel.selectionCounterText}
             hasVisitas={viewModel.hasVisitas}
             onOpenDevModeSheet={viewModel.openDevModeSheet}
             activeFilter={viewModel.activeFilter}
             onFilterChange={viewModel.onFilterChange}
             pendingCount={viewModel.pendingCount}
-            deliveredCount={viewModel.deliveredCount}
             errorCount={viewModel.errorCount}
-            totalCount={viewModel.totalCount}
           />
         }
         ListFooterComponent={

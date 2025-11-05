@@ -1,29 +1,23 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 
-export type FilterType = 'all' | 'pending' | 'delivered' | 'error';
+export type FilterType = 'pending' | 'error';
 
 interface FilterBadgesProps {
   activeFilter: FilterType;
   onFilterChange: (filter: FilterType) => void;
   pendingCount: number;
-  deliveredCount: number;
   errorCount: number;
-  totalCount: number;
 }
 
 export const FilterBadges: React.FC<FilterBadgesProps> = ({
   activeFilter,
   onFilterChange,
   pendingCount,
-  deliveredCount,
   errorCount,
-  totalCount,
 }) => {
   const filters = [
-    { key: 'all' as FilterType, label: 'Todas', count: totalCount },
     { key: 'pending' as FilterType, label: 'Pendientes', count: pendingCount },
-    { key: 'delivered' as FilterType, label: 'Entregadas', count: deliveredCount },
     { key: 'error' as FilterType, label: 'Con Error', count: errorCount },
   ];
 
