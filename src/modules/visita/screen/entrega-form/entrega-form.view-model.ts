@@ -49,75 +49,144 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[]) => {
   // Observar cambios en los campos para feedback visual
   const formValues = watch();
 
+  // === FUNCIONES AUXILIARES ===
+
+  /**
+   * Valida los datos iniciales antes de procesar las entregas
+   */
+  const validateInitialConditions = useCallback(() => {
+    if (!visitasSeleccionadas || visitasSeleccionadas.length === 0) {
+      toast.error('No hay visitas seleccionadas');
+      return false;
+    }
+
+    if (!subdominio) {
+      toast.error('No se proporcionó un subdominio');
+      return false;
+    }
+
+    return true;
+  }, [visitasSeleccionadas, subdominio, toast]);
+
+  /**
+   * Procesa una visita individual
+   * @param data - Datos del formulario
+   * @param visitaId - ID de la visita a procesar
+   * @returns Promise<boolean> - true si fue exitoso, false si falló
+   */
+  const procesarVisitaIndividual = useCallback(
+    async (data: EntregaFormData, visitaId: number): Promise<boolean> => {
+      try {
+        // Validar datos del formulario para esta visita
+        const validation = FormDataBuilder.validateFormData(data, visitaId);
+        if (!validation.isValid) {
+          console.error(`Validation error for visita ${visitaId}:`, validation.error);
+          return false;
+        }
+
+        // Construir FormData para envío multipart
+        const formData = FormDataBuilder.buildVisitaFormData(data, visitaId);
+
+        // Log para debugging
+        FormDataBuilder.logFormData(formData, `Entrega Visita ${visitaId}`);
+
+        // Enviar usando método multipart
+        await visitaRepository.entregaVisitaMultipart(subdominio!, formData);
+        
+        // Marcar como entregada en el estado
+        dispatch(marcarVisitaComoEntregada(visitaId));
+        
+        return true;
+      } catch (visitaError) {
+        console.error(`Error al enviar la visita ${visitaId}:`, visitaError);
+        dispatch(marcarVisitaConError(visitaId));
+        toast.error(`Error al enviar la visita ${visitaId}: ${visitaError}`);
+        return false;
+      }
+    },
+    [subdominio, dispatch, toast],
+  );
+
+  /**
+   * Procesa todas las visitas seleccionadas
+   * @param data - Datos del formulario
+   * @returns Promise<{successCount: number, errorCount: number}>
+   */
+  const procesarTodasLasVisitas = useCallback(
+    async (data: EntregaFormData) => {
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const visitaIdStr of visitasSeleccionadas) {
+        const visitaId = Number(visitaIdStr);
+        const wasSuccessful = await procesarVisitaIndividual(data, visitaId);
+        
+        if (wasSuccessful) {
+          successCount++;
+        } else {
+          errorCount++;
+        }
+      }
+
+      return { successCount, errorCount };
+    },
+    [visitasSeleccionadas, procesarVisitaIndividual],
+  );
+
+  /**
+   * Muestra mensajes de resultado basados en el conteo de éxitos y errores
+   */
+  const mostrarMensajesDeResultado = useCallback(
+    (successCount: number, errorCount: number) => {
+      if (successCount > 0 && errorCount === 0) {
+        toast.success(`${successCount} entrega(s) exitosa(s)`);
+      } else if (successCount > 0 && errorCount > 0) {
+        toast.warning(`${successCount} entrega(s) exitosa(s), ${errorCount} fallida(s)`);
+      } else if (errorCount > 0) {
+        toast.error(`${errorCount} entrega(s) fallida(s)`);
+      }
+    },
+    [toast],
+  );
+
+  /**
+   * Finaliza el proceso de entrega limpiando selecciones y navegando
+   */
+  const finalizarProceso = useCallback(() => {
+    dispatch(limpiarSeleccionVisitas());
+    navigation.goBack();
+  }, [dispatch, navigation]);
+
   // === ACCIONES DEL FORMULARIO ===
 
   const onSubmit = useCallback(
     async (data: EntregaFormData) => {
-      if (!visitasSeleccionadas || visitasSeleccionadas.length === 0) {
-        toast.error('No hay visitas seleccionadas');
-        return;
-      }
-
-      if (!subdominio) {
-        toast.error('No se proporcionó un subdominio');
+      // Validar condiciones iniciales
+      if (!validateInitialConditions()) {
         return;
       }
 
       try {
-        let successCount = 0;
-        let errorCount = 0;
+        // Procesar todas las visitas
+        const { successCount, errorCount } = await procesarTodasLasVisitas(data);
 
-        // Iterate through all selected visitas
-        for (const visitaIdStr of visitasSeleccionadas) {
-          const visitaId = Number(visitaIdStr);
+        // Mostrar mensajes de resultado
+        mostrarMensajesDeResultado(successCount, errorCount);
 
-          // Validate form data before processing each visita
-          const validation = FormDataBuilder.validateFormData(data, visitaId);
-          if (!validation.isValid) {
-            console.error(`Validation error for visita ${visitaId}:`, validation.error);
-            errorCount++;
-            continue;
-          }
-
-          try {
-            // Build FormData for multipart submission
-            const formData = FormDataBuilder.buildVisitaFormData(data, visitaId);
-
-            // Log FormData for debugging
-            FormDataBuilder.logFormData(formData, `Entrega Visita ${visitaId}`);
-
-            // Submit using multipart method
-            await visitaRepository.entregaVisitaMultipart(subdominio, formData);
-            dispatch(marcarVisitaComoEntregada(visitaId));
-            successCount++;
-          } catch (visitaError) {
-            console.error(`Error al enviar la visita ${visitaId}:`, visitaError);
-            dispatch(marcarVisitaConError(visitaId));
-            toast.error(`Error al enviar la visita ${visitaId}: ${visitaError}`);
-            errorCount++;
-          }
-        }
-
-        // Show appropriate success/error messages
-        if (successCount > 0 && errorCount === 0) {
-          toast.success(`${successCount} entrega(s) exitosa(s)`);
-        } else if (successCount > 0 && errorCount > 0) {
-          toast.warning(`${successCount} entrega(s) exitosa(s), ${errorCount} fallida(s)`);
-        } else if (errorCount > 0) {
-          toast.error(`${errorCount} entrega(s) fallida(s)`);
-        }
-
-        // Clear selections after processing (regardless of success/failure)
-        dispatch(limpiarSeleccionVisitas());
-
-        // Navigate back to home
-        navigation.navigate('HomeTabs');
+        // Finalizar proceso
+        finalizarProceso();
       } catch (error) {
         console.error('Error general al procesar las entregas:', error);
         toast.error('Error al procesar las entregas');
       }
     },
-    [navigation, visitasSeleccionadas, subdominio, dispatch, toast],
+    [
+      validateInitialConditions,
+      procesarTodasLasVisitas,
+      mostrarMensajesDeResultado,
+      finalizarProceso,
+      toast,
+    ],
   );
 
   const handleCancel = useCallback(() => {
