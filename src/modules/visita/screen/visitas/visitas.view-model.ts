@@ -9,7 +9,9 @@ import {
   selectIsSucceeded, 
   selectTotalVisitasSeleccionadas, 
   selectVisitasSeleccionadas,
-  selectVisitasSeleccionadasConDatosGuardados
+  selectVisitasSeleccionadasConDatosGuardados,
+  selectVisitasPendientes,
+  selectVisitasConError
 } from '../../store/selector/visita.selector';
 import { removerVisitas, limpiarSeleccionVisitas } from '../../store/slice/visita.slice';
 import { VisitaResponse } from '../../interfaces/visita.interface';
@@ -35,6 +37,10 @@ export const useVisitasViewModel = () => {
   const totalSeleccionadas = useAppSelector(selectTotalVisitasSeleccionadas);
   const visitasSeleccionadas = useAppSelector(selectVisitasSeleccionadas);
   const visitasSeleccionadasConDatosGuardados = useAppSelector(selectVisitasSeleccionadasConDatosGuardados);
+  
+  // Usar selectores existentes en lugar de duplicar lógica
+  const visitasPendientes = useAppSelector(selectVisitasPendientes);
+  const visitasConError = useAppSelector(selectVisitasConError);
   
   // Hook para reintento de visitas
   const { reintentarVisitasConError } = useRetryVisitas();
@@ -112,16 +118,6 @@ export const useVisitasViewModel = () => {
   }, []);
 
   // === ESTADOS COMPUTADOS ===
-  const visitasPendientes = useMemo(() => 
-    visitas.filter(visita => !visita.estado_entregado), 
-    [visitas]
-  );
-
-  const visitasConError = useMemo(() => 
-    visitas.filter(visita => visita.estado_error), 
-    [visitas]
-  );
-
   const visitasFiltradas = useMemo(() => {
     switch (activeFilter) {
       case 'pending':
