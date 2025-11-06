@@ -7,6 +7,7 @@ import { FilterBadges, FilterType } from '../filter-badges/filter-badges.compone
 interface VisitasHeaderProps {
   hasVisitas: boolean;
   onOpenDevModeSheet: () => void;
+  onOpenOptionsSheet: () => void;
   activeFilter: FilterType;
   onFilterChange: (filter: FilterType) => void;
   pendingCount: number;
@@ -18,6 +19,7 @@ interface VisitasHeaderProps {
 export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
   hasVisitas,
   onOpenDevModeSheet,
+  onOpenOptionsSheet,
   activeFilter,
   onFilterChange,
   pendingCount,
@@ -29,19 +31,33 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
     <View style={visitasStyles.header}>
       <View style={visitasStyles.titleRow}>
         <Text style={visitasStyles.title}>Visitas</Text>
-        {hasVisitas && totalCount > 0 && (
-          <View style={visitasStyles.summaryContainer}>
-            <Ionicons 
-              name="checkmark-circle" 
-              size={16} 
-              color="#34c759" 
-              style={visitasStyles.summaryIcon}
-            />
-            <Text style={visitasStyles.summaryText}>
-              {deliveredCount} de {totalCount}
-            </Text>
-          </View>
-        )}
+        <View style={visitasStyles.headerActions}>
+          {hasVisitas && totalCount > 0 && (
+            <View style={visitasStyles.summaryContainer}>
+              <Ionicons 
+                name="checkmark-circle" 
+                size={16} 
+                color="#34c759" 
+                style={visitasStyles.summaryIcon}
+              />
+              <Text style={visitasStyles.summaryText}>
+                {deliveredCount} de {totalCount}
+              </Text>
+            </View>
+          )}
+          {hasVisitas && (
+            <TouchableOpacity 
+              style={visitasStyles.optionsButton}
+              onPress={onOpenOptionsSheet}
+            >
+              <Ionicons 
+                name="ellipsis-horizontal" 
+                size={20} 
+                color="#8e8e93" 
+              />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Filter Badges - Only show when there are visitas */}

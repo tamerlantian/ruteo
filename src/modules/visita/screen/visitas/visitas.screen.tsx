@@ -10,10 +10,12 @@ import { useVisitasViewModel } from './visitas.view-model';
 import { VisitasHeader } from '../../components/visitas-header/visitas-header.component';
 import { VisitasFloatingActions } from '../../components/visita-floating-actions/visitas-floating-actions.component';
 import { VisitasLoadingFooter } from '../../components/visitas-loading-footer/visitas-loading-footer.component';
+import { VisitasOptionsComponent } from '../../components/visitas-options/visitas-options.component';
 
 export const VisitasScreen = () => {
   const {
     openDevModeSheet,
+    openOptionsSheet,
     visitas,
     keyExtractor,
     getItemLayout,
@@ -28,6 +30,7 @@ export const VisitasScreen = () => {
     totalCount,
     listConfig,
     bottomSheetRef,
+    optionsBottomSheetRef,
     clearSelection,
     deliverSelectedVisitas,
     retrySelectedVisitas,
@@ -53,6 +56,7 @@ export const VisitasScreen = () => {
           <VisitasHeader
             hasVisitas={hasVisitas}
             onOpenDevModeSheet={openDevModeSheet}
+            onOpenOptionsSheet={openOptionsSheet}
             activeFilter={activeFilter}
             onFilterChange={onFilterChange}
             pendingCount={pendingCount}
@@ -95,6 +99,13 @@ export const VisitasScreen = () => {
         initialSnapPoints={['30%']}
       >
         <CargarOrdenComponent />
+      </CustomBottomSheet>
+
+      <CustomBottomSheet
+        ref={optionsBottomSheetRef}
+        initialSnapPoints={['40%']}
+      >
+        <VisitasOptionsComponent />
       </CustomBottomSheet>
     </SafeAreaView>
   );

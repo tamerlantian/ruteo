@@ -49,6 +49,7 @@ export const useVisitasViewModel = () => {
   
   // Referencias
   const bottomSheetRef = useRef<BottomSheet>(null);
+  const optionsBottomSheetRef = useRef<BottomSheet>(null);
 
   const retirarOrden = () => {
     dispatch(removerVisitas());
@@ -62,6 +63,14 @@ export const useVisitasViewModel = () => {
 
   const closeDevModeSheet = useCallback(() => {
     bottomSheetRef.current?.close();
+  }, []);
+
+  const openOptionsSheet = useCallback(() => {
+    optionsBottomSheetRef.current?.expand();
+  }, []);
+
+  const closeOptionsSheet = useCallback(() => {
+    optionsBottomSheetRef.current?.close();
   }, []);
 
   // === ACCIONES DE SELECCIÓN ===
@@ -158,10 +167,13 @@ export const useVisitasViewModel = () => {
     
     // Referencias
     bottomSheetRef,
+    optionsBottomSheetRef,
     
     // Acciones de Bottom Sheet
     openDevModeSheet,
     closeDevModeSheet,
+    openOptionsSheet,
+    closeOptionsSheet,
     retirarOrden,
     
     // Acciones de Selección
