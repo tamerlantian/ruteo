@@ -10,11 +10,9 @@ import { useVisitasViewModel } from './visitas.view-model';
 import { VisitasHeader } from '../../components/visitas-header/visitas-header.component';
 import { VisitasFloatingActions } from '../../components/visita-floating-actions/visitas-floating-actions.component';
 import { VisitasLoadingFooter } from '../../components/visitas-loading-footer/visitas-loading-footer.component';
-import { FormButton } from '../../../../shared/components/ui/button/FormButton';
 
 export const VisitasScreen = () => {
   const {
-    retirarOrden,
     openDevModeSheet,
     visitas,
     keyExtractor,
@@ -46,7 +44,6 @@ export const VisitasScreen = () => {
 
   return (
     <SafeAreaView style={visitasStyles.container}>
-        {/* <FormButton title="Limpiar" onPress={retirarOrden} /> */}
       <FlatList
         data={visitas}
         renderItem={renderVisitaItem}

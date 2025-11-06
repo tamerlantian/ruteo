@@ -63,7 +63,6 @@ export const visitasStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
   },
   summaryContainer: {
     flexDirection: 'row',
