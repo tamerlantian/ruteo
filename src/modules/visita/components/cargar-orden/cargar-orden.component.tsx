@@ -51,7 +51,7 @@ const CargarOrdenComponent = () => {
 
   return (
     <View>
-      <Text style={styles.title}>Cargar Orden</Text>
+      <Text style={styles.title}>Cargar orden</Text>
       <FormInputController
         control={control}
         name="codigo"
@@ -63,9 +63,9 @@ const CargarOrdenComponent = () => {
         }}
       />
       <FormButton
-        title="Cargar Orden"
+        title="Cargar orden"
         onPress={handleSubmit(onCargarOrden)}
-        disabled={!isValid || isLoading}
+        disabled={!isValid}
         isLoading={isLoading}
       />
     </View>
