@@ -14,6 +14,11 @@ export const selectVisitasPendientes = createSelector(
     visitas.filter(visita => !visita.estado_entregado && !visita.estado_error),
 );
 
+export const selectVisitasEntregadas = createSelector(
+  selectVisitasRootState,
+  ({ visitas }) => visitas.filter(visita => visita.estado_entregado),
+);
+
 export const selectIsLoading = createSelector(
   selectVisitasRootState,
   visita => visita.status === 'loading',

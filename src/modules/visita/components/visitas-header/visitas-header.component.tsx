@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
+import Ionicons from '@react-native-vector-icons/ionicons';
 import { visitasStyles } from '../../screen/visitas/visitas.style';
 import { FilterBadges, FilterType } from '../filter-badges/filter-badges.component';
 
@@ -10,6 +11,8 @@ interface VisitasHeaderProps {
   onFilterChange: (filter: FilterType) => void;
   pendingCount: number;
   errorCount: number;
+  deliveredCount: number;
+  totalCount: number;
 }
 
 export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
@@ -19,11 +22,26 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
   onFilterChange,
   pendingCount,
   errorCount,
+  deliveredCount,
+  totalCount,
 }) => {
   return (
     <View style={visitasStyles.header}>
       <View style={visitasStyles.titleRow}>
         <Text style={visitasStyles.title}>Visitas</Text>
+        {hasVisitas && totalCount > 0 && (
+          <View style={visitasStyles.summaryContainer}>
+            <Ionicons 
+              name="checkmark-circle" 
+              size={16} 
+              color="#34c759" 
+              style={visitasStyles.summaryIcon}
+            />
+            <Text style={visitasStyles.summaryText}>
+              {deliveredCount} de {totalCount}
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Filter Badges - Only show when there are visitas */}

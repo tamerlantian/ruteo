@@ -11,7 +11,8 @@ import {
   selectVisitasSeleccionadas,
   selectVisitasSeleccionadasConDatosGuardados,
   selectVisitasPendientes,
-  selectVisitasConError
+  selectVisitasConError,
+  selectVisitasEntregadas
 } from '../../store/selector/visita.selector';
 import { removerVisitas, limpiarSeleccionVisitas } from '../../store/slice/visita.slice';
 import { VisitaResponse } from '../../interfaces/visita.interface';
@@ -40,6 +41,7 @@ export const useVisitasViewModel = () => {
   const visitasSeleccionadasConDatosGuardados = useAppSelector(selectVisitasSeleccionadasConDatosGuardados);
   const visitasPendientes = useAppSelector(selectVisitasPendientes);
   const visitasConError = useAppSelector(selectVisitasConError);
+  const visitasEntregadas = useAppSelector(selectVisitasEntregadas);
   
   // Estados locales
   const [refreshing, setRefreshing] = useState(false);
@@ -151,6 +153,7 @@ export const useVisitasViewModel = () => {
     activeFilter,
     pendingCount: visitasPendientes.length,
     errorCount: visitasConError.length,
+    deliveredCount: visitasEntregadas.length,
     totalCount: visitas.length,
     
     // Referencias

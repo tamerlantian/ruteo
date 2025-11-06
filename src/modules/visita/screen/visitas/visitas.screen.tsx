@@ -26,6 +26,8 @@ export const VisitasScreen = () => {
     activeFilter,
     pendingCount,
     errorCount,
+    deliveredCount,
+    totalCount,
     listConfig,
     bottomSheetRef,
     clearSelection,
@@ -44,7 +46,7 @@ export const VisitasScreen = () => {
 
   return (
     <SafeAreaView style={visitasStyles.container}>
-        <FormButton title="Limpiar" onPress={retirarOrden} />
+        {/* <FormButton title="Limpiar" onPress={retirarOrden} /> */}
       <FlatList
         data={visitas}
         renderItem={renderVisitaItem}
@@ -58,6 +60,8 @@ export const VisitasScreen = () => {
             onFilterChange={onFilterChange}
             pendingCount={pendingCount}
             errorCount={errorCount}
+            deliveredCount={deliveredCount}
+            totalCount={totalCount}
           />
         }
         ListFooterComponent={<VisitasLoadingFooter isLoading={isLoading} />}

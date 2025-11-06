@@ -65,6 +65,23 @@ export const visitasStyles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
+  summaryContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  summaryIcon: {
+    marginRight: 2,
+  },
+  summaryText: {
+    fontSize: 14,
+    color: '#8e8e93',
+    fontWeight: '500',
+  },
   selectionCounter: {
     fontSize: 14,
     color: '#007aff',
