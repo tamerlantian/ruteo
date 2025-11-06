@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { visitasStyles } from '../../screen/visitas/visitas.style';
 import { FilterType } from '../filter-badges/filter-badges.component';
+import { FormButton } from '../../../../shared/components/ui/button/FormButton';
 
 interface VisitasFloatingActionsProps {
   totalSeleccionadas: number;
@@ -38,14 +39,19 @@ export const VisitasFloatingActions: React.FC<VisitasFloatingActionsProps> = ({
       <View style={visitasStyles.actionButtonsContainer}>
         {/* Mostrar botón según el filtro activo y disponibilidad de datos */}
         {activeFilter === 'error' && totalConError > 0 && onRetryVisitas ? (
-          <TouchableOpacity 
-            style={visitasStyles.secondaryActionButton}
+          // <TouchableOpacity 
+          //   style={visitasStyles.secondaryActionButton}
+          //   onPress={onRetryVisitas}
+          // >
+          //   <Text style={visitasStyles.secondaryActionText}>
+          //     Reintentar ({totalConError})
+          //   </Text>
+          // </TouchableOpacity>
+          <FormButton
+            title={`Reintentar (${totalConError})`}
             onPress={onRetryVisitas}
-          >
-            <Text style={visitasStyles.secondaryActionText}>
-              Reintentar ({totalConError})
-            </Text>
-          </TouchableOpacity>
+            style={visitasStyles.secondaryActionButton}
+          />
         ) : (
           <TouchableOpacity 
             style={visitasStyles.primaryActionButton}
