@@ -28,6 +28,7 @@ type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
 export const useVisitasViewModel = () => {
   const dispatch = useAppDispatch();
+  const { reintentarVisitasConError, isRetryLoading } = useRetryVisitas();
   const navigation = useNavigation<NavigationProp>();
   
   // Estados del store
@@ -37,13 +38,8 @@ export const useVisitasViewModel = () => {
   const totalSeleccionadas = useAppSelector(selectTotalVisitasSeleccionadas);
   const visitasSeleccionadas = useAppSelector(selectVisitasSeleccionadas);
   const visitasSeleccionadasConDatosGuardados = useAppSelector(selectVisitasSeleccionadasConDatosGuardados);
-  
-  // Usar selectores existentes en lugar de duplicar lógica
   const visitasPendientes = useAppSelector(selectVisitasPendientes);
   const visitasConError = useAppSelector(selectVisitasConError);
-  
-  // Hook para reintento de visitas
-  const { reintentarVisitasConError, isRetryLoading } = useRetryVisitas();
   
   // Estados locales
   const [refreshing, setRefreshing] = useState(false);
@@ -77,9 +73,6 @@ export const useVisitasViewModel = () => {
       return;
     }
 
-    // Navegar al formulario de entrega con las visitas seleccionadas
-    // Convertir los IDs de number a string para la navegación
-    // TODO: rectificar si es la mejor manera o simplemente tomar los ids del slice
     navigation.navigate('EntregaForm', {
       visitasSeleccionadas: visitasSeleccionadas.map(id => id.toString()),
     });
@@ -91,7 +84,6 @@ export const useVisitasViewModel = () => {
       return;
     }
 
-    // Usar el selector que ya filtra las visitas con error y datos guardados
     const visitasConErrorIds = visitasSeleccionadasConDatosGuardados.map(visita => visita.id);
     reintentarVisitasConError(visitasConErrorIds);
   }, [visitasSeleccionadasConDatosGuardados, reintentarVisitasConError]);
@@ -126,7 +118,7 @@ export const useVisitasViewModel = () => {
       case 'error':
         return visitasConError;
       default:
-        return visitasPendientes; // Default to pending
+        return visitasPendientes;
     }
   }, [activeFilter, visitasPendientes, visitasConError]);
 
