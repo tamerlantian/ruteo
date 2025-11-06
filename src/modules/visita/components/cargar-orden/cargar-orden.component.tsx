@@ -19,6 +19,7 @@ const CargarOrdenComponent = () => {
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors, isValid },
   } = useForm<CargarOrdenFormValues>({
     defaultValues: {
@@ -44,6 +45,7 @@ const CargarOrdenComponent = () => {
           despachoId: despacho_id,
         }),
       );
+      reset();
     }
   };
 
@@ -72,7 +74,7 @@ const CargarOrdenComponent = () => {
 
 const styles = StyleSheet.create({
   title: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
 });

@@ -1,70 +1,16 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { LoginScreen } from '../modules/auth/screens/login.screen';
-import { RegisterScreen } from '../modules/auth/screens/register.screen';
-import { HomeTabsNavigator } from '../modules/home/navigation/home-tabs.navigator';
-import { EntregaFormScreen } from '../modules/visita/screen/entrega-form/entrega-form.screen';
-import { AuthStackParamList, MainStackParamList, RootStackParamList } from './types';
-import { useAuth } from '../modules/auth/screens/auth-provider';
+import { RootNavigator } from './navigators';
+import { navigationRef } from '../core/services/navigation.service';
 
-const AuthStack = createNativeStackNavigator<AuthStackParamList>();
-const MainStack = createNativeStackNavigator<MainStackParamList>();
-const RootStack = createNativeStackNavigator<RootStackParamList>();
-
-const AuthNavigator = () => {
-  return (
-    <AuthStack.Navigator 
-      initialRouteName="Login"
-      screenOptions={{
-        headerShown: false, // Ocultar header por defecto
-      }}
-    >
-      <AuthStack.Screen name="Login" component={LoginScreen} />
-      <AuthStack.Screen name="Register" component={RegisterScreen} />
-    </AuthStack.Navigator>
-  );
-};
-
-const MainNavigator = () => {
-  return (
-    <MainStack.Navigator
-      initialRouteName="HomeTabs"
-      screenOptions={{
-        headerShown: false, // Ocultar header por defecto
-      }}
-    >
-      <MainStack.Screen name="HomeTabs" component={HomeTabsNavigator} />
-      <MainStack.Screen 
-        name="EntregaForm" 
-        component={EntregaFormScreen}
-        options={{
-          presentation: 'modal', // Presentación modal para mejor UX
-          gestureEnabled: true,
-        }}
-      />
-    </MainStack.Navigator>
-  );
-};
-
-const AppNavigatorContent: React.FC = () => {
-  const { isAuthenticated } = useAuth();
-
-  return (
-    <RootStack.Navigator screenOptions={{ headerShown: false }}>
-      {isAuthenticated ? (
-        <RootStack.Screen name="Main" component={MainNavigator} />
-      ) : (
-        <RootStack.Screen name="Auth" component={AuthNavigator} />
-      )}
-    </RootStack.Navigator>
-  );
-};
-
+/**
+ * Navegador principal de la aplicación
+ * Punto de entrada para toda la navegación
+ */
 export const AppNavigator: React.FC = () => {
   return (
-    <NavigationContainer>
-      <AppNavigatorContent />
+    <NavigationContainer ref={navigationRef}>
+      <RootNavigator />
     </NavigationContainer>
   );
 };

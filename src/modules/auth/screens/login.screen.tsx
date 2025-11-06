@@ -8,25 +8,23 @@ import { Ionicons } from '@react-native-vector-icons/ionicons';
 import BottomSheet from '@gorhom/bottom-sheet';
 import React, { useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LoginFormValues } from '../interfaces/auth.interface';
 import { loginStyles } from '../styles/login.style';
 import { useLogin } from '../view-models/login.view-model';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { AuthStackParamList, RootStackParamList } from '../../../navigation/types';
-import { CompositeNavigationProp } from '@react-navigation/native';
-
-type LoginScreenNavigationProp = CompositeNavigationProp<
-  NativeStackNavigationProp<AuthStackParamList, 'Login'>,
-  NativeStackNavigationProp<RootStackParamList>
->;
+import { useAuthNavigation } from '../../../navigation/hooks';
 
 export const LoginScreen = () => {
   // ViewModel para login
   const { login, isLoading } = useLogin();
-  const navigation = useNavigation<LoginScreenNavigationProp>();
+  const navigation = useAuthNavigation();
 
   // Contexto de modo desarrollador
   const { isLoading: isDevModeLoading, isDeveloperMode } = useDevMode();
@@ -62,8 +60,9 @@ export const LoginScreen = () => {
   const onSubmit = async (data: LoginFormValues) => {
     try {
       await login(data);
-      // Si el login es exitoso, redirigir al stack principal
-      // navigation.navigate('Main');
+      // Si el login es exitoso, el AuthProvider se encargará de la navegación automática
+      // No necesitamos navegar manualmente porque isAuthenticated cambiará a true
+      console.log('Login exitoso, navegación automática por AuthProvider');
     } catch (error) {
       console.error('Error durante el login:', error);
       // El error ya se maneja en el hook useLogin con toast
@@ -73,7 +72,9 @@ export const LoginScreen = () => {
   // Mostrar loading mientras se inicializa el contexto de modo desarrollador
   if (isDevModeLoading) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <SafeAreaView
+        style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+      >
         <ActivityIndicator size="large" color="#0066cc" />
         <Text style={{ marginTop: 16, color: '#666' }}>Inicializando...</Text>
       </SafeAreaView>
@@ -83,7 +84,10 @@ export const LoginScreen = () => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       {/* Botón de modo desarrollador con indicador */}
-      <TouchableOpacity style={loginStyles.devModeButton} onPress={handleOpenDevModeSheet}>
+      <TouchableOpacity
+        style={loginStyles.devModeButton}
+        onPress={handleOpenDevModeSheet}
+      >
         <Ionicons name="settings" size={24} color="#666" />
         {isDeveloperMode && (
           <View
@@ -164,7 +168,9 @@ export const LoginScreen = () => {
               // navigation.navigate('ForgotPassword');
             }}
           >
-            <Text style={loginStyles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
+            <Text style={loginStyles.forgotPasswordText}>
+              ¿Olvidaste tu contraseña?
+            </Text>
           </TouchableOpacity>
 
           {/* Botón de login */}
@@ -200,7 +206,9 @@ export const LoginScreen = () => {
                 marginTop: 16,
               }}
             >
-              <Text style={{ fontSize: 10, color: '#4CAF50', fontWeight: 'bold' }}>
+              <Text
+                style={{ fontSize: 10, color: '#4CAF50', fontWeight: 'bold' }}
+              >
                 MODO DESARROLLO
               </Text>
             </View>
@@ -208,7 +216,10 @@ export const LoginScreen = () => {
         </ScrollView>
 
         {/* Bottom Sheet para el selector de modo desarrollador */}
-        <CustomBottomSheet ref={bottomSheetRef} initialSnapPoints={['30%', '50%']}>
+        <CustomBottomSheet
+          ref={bottomSheetRef}
+          initialSnapPoints={['30%', '50%']}
+        >
           <DevModeSelector onClose={handleCloseDevModeSheet} />
         </CustomBottomSheet>
       </View>

@@ -30,7 +30,7 @@ export const useLogin = () => {
   });
 
   return {
-    login: loginMutation.mutate,
+    login: loginMutation.mutateAsync,
     isLoading: loginMutation.isPending,
     isError: loginMutation.isError,
     error: loginMutation.error,

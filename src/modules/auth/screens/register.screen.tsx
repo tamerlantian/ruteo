@@ -9,7 +9,7 @@ import BottomSheet from '@gorhom/bottom-sheet';
 import CheckBox from '@react-native-community/checkbox';
 import React, { useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import {  ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RegisterFormValues } from '../interfaces/auth.interface';
 import { loginStyles } from '../styles/login.style';
