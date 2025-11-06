@@ -50,6 +50,7 @@ export const useVisitasViewModel = () => {
   // Referencias
   const bottomSheetRef = useRef<BottomSheet>(null);
   const optionsBottomSheetRef = useRef<BottomSheet>(null);
+  const confirmacionBottomSheetRef = useRef<BottomSheet>(null);
 
   const retirarOrden = () => {
     dispatch(removerVisitas());
@@ -72,6 +73,39 @@ export const useVisitasViewModel = () => {
   const closeOptionsSheet = useCallback(() => {
     optionsBottomSheetRef.current?.close();
   }, []);
+
+  const openConfirmacionSheet = useCallback(() => {
+    confirmacionBottomSheetRef.current?.expand();
+  }, []);
+
+  const closeConfirmacionSheet = useCallback(() => {
+    confirmacionBottomSheetRef.current?.close();
+  }, []);
+
+  // === ACCIONES DE DESVINCULACIÓN ===
+  const handleDesvincular = useCallback(() => {
+    // Cerrar el sheet de opciones y abrir el de confirmación
+    optionsBottomSheetRef.current?.close();
+    setTimeout(() => {
+      openConfirmacionSheet();
+    }, 300); // Delay para que se cierre suavemente el anterior
+  }, [openConfirmacionSheet]);
+
+  const confirmarDesvinculacion = useCallback(() => {
+    // Limpiar todas las visitas y selecciones
+    dispatch(removerVisitas());
+    dispatch(limpiarSeleccionVisitas());
+    
+    // Resetear filtro a pending
+    setActiveFilter('pending');
+    
+    // Cerrar el sheet de confirmación
+    closeConfirmacionSheet();
+  }, [dispatch, closeConfirmacionSheet]);
+
+  const cancelarDesvinculacion = useCallback(() => {
+    closeConfirmacionSheet();
+  }, [closeConfirmacionSheet]);
 
   // === ACCIONES DE SELECCIÓN ===
   const clearSelection = useCallback(() => {
@@ -168,12 +202,21 @@ export const useVisitasViewModel = () => {
     // Referencias
     bottomSheetRef,
     optionsBottomSheetRef,
+    confirmacionBottomSheetRef,
     
     // Acciones de Bottom Sheet
     openDevModeSheet,
     closeDevModeSheet,
     openOptionsSheet,
     closeOptionsSheet,
+    openConfirmacionSheet,
+    closeConfirmacionSheet,
+    
+    // Acciones de Desvinculación
+    handleDesvincular,
+    confirmarDesvinculacion,
+    cancelarDesvinculacion,
+    
     retirarOrden,
     
     // Acciones de Selección

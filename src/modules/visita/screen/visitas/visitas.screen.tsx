@@ -11,6 +11,7 @@ import { VisitasHeader } from '../../components/visitas-header/visitas-header.co
 import { VisitasFloatingActions } from '../../components/visita-floating-actions/visitas-floating-actions.component';
 import { VisitasLoadingFooter } from '../../components/visitas-loading-footer/visitas-loading-footer.component';
 import { VisitasOptionsComponent } from '../../components/visitas-options/visitas-options.component';
+import { ConfirmacionDesvincularComponent } from '../../components/confirmacion-desvincular/confirmacion-desvincular.component';
 
 export const VisitasScreen = () => {
   const {
@@ -31,6 +32,10 @@ export const VisitasScreen = () => {
     listConfig,
     bottomSheetRef,
     optionsBottomSheetRef,
+    confirmacionBottomSheetRef,
+    handleDesvincular,
+    confirmarDesvinculacion,
+    cancelarDesvinculacion,
     clearSelection,
     deliverSelectedVisitas,
     retrySelectedVisitas,
@@ -103,9 +108,19 @@ export const VisitasScreen = () => {
 
       <CustomBottomSheet
         ref={optionsBottomSheetRef}
+        initialSnapPoints={['25%']}
+      >
+        <VisitasOptionsComponent onDesvincular={handleDesvincular} />
+      </CustomBottomSheet>
+
+      <CustomBottomSheet
+        ref={confirmacionBottomSheetRef}
         initialSnapPoints={['40%']}
       >
-        <VisitasOptionsComponent />
+        <ConfirmacionDesvincularComponent 
+          onConfirmar={confirmarDesvinculacion}
+          onCancelar={cancelarDesvinculacion}
+        />
       </CustomBottomSheet>
     </SafeAreaView>
   );
