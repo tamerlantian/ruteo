@@ -32,7 +32,13 @@ export class VerticalRepository extends HttpBaseRepository {
    * @returns Promise con la respuesta del login
    */
   async getEntrega(codigo: string): Promise<Entrega> {
-    return this.get<Entrega>(`vertical/entrega/${codigo}/`);
+    try {
+      const response = await this.get<Entrega>(`vertical/entrega/${codigo}/`);
+      return response
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
   }
 }
 

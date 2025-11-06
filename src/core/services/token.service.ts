@@ -1,6 +1,7 @@
 import { IAuthService } from '../interfaces/auth-service.interface';
 import storageService from '../../shared/services/storage.service';
 import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY } from '../../shared/constants/localstorage-keys';
+import { navigate } from '../../navigation/navigators/RootNavigator';
 
 /**
  * Servicio para gestionar tokens de autenticación
@@ -122,6 +123,7 @@ class TokenService {
     try {
       // TODO: implementar redireccionamiento
       // router.replace('/(auth)/login');
+      // navigate('Auth', { screen: 'Login' })
     } catch (error) {
       console.error('Error al redirigir al login:', error);
     }

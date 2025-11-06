@@ -59,8 +59,7 @@ export interface AuthState {
 
 // Interfaz para la respuesta de token refresh
 export interface RefreshTokenResponse {
-  token: string;
-  refreshToken?: string;
+ access: string;
 }
 
 export type ForgotPasswordFormValues = {

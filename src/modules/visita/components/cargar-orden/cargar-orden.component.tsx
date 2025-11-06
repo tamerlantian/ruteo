@@ -8,12 +8,14 @@ import { cargarVisitasThunk } from '../../store/thunk/visita.thunk';
 import { selectIsLoading } from '../../store/selector/visita.selector';
 import { FormButton } from '../../../../shared/components/ui/button/FormButton';
 import { updateSettingsThunk } from '../../../settings';
+import { useToast } from '../../../../shared/hooks/use-toast.hook';
 
 interface CargarOrdenFormValues {
   codigo: string;
 }
 
 const CargarOrdenComponent = () => {
+  const toast = useToast()
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector(selectIsLoading);
   const {
@@ -29,23 +31,28 @@ const CargarOrdenComponent = () => {
   });
 
   const onCargarOrden = async (data: CargarOrdenFormValues) => {
-    const entrega = await verticalRepository.getEntrega(data.codigo);
-    if (entrega) {
-      const { schema_name, despacho_id } = entrega;
-      await dispatch(
-        updateSettingsThunk({
-          subdominio: schema_name,
-          despacho: `${despacho_id}`,
-          ordenEntrega: data.codigo,
-        }),
-      );
-      await dispatch(
-        cargarVisitasThunk({
-          schemaName: schema_name,
-          despachoId: despacho_id,
-        }),
-      );
-      reset();
+    try {
+      const entrega = await verticalRepository.getEntrega(data.codigo);
+      if (entrega) {
+        const { schema_name, despacho_id } = entrega;
+        await dispatch(
+          updateSettingsThunk({
+            subdominio: schema_name,
+            despacho: `${despacho_id}`,
+            ordenEntrega: data.codigo,
+          }),
+        );
+        await dispatch(
+          cargarVisitasThunk({
+            schemaName: schema_name,
+            despachoId: despacho_id,
+          }),
+        );
+        toast.success("Orden cargada correctamente");
+        reset();
+      }
+    } catch (error) {
+      toast.error("La orden no existe");
     }
   };
 

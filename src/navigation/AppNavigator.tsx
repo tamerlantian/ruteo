@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { RootNavigator } from './navigators';
-import { navigationRef } from '../core/services/navigation.service';
+import { navigationRef } from './navigators/RootNavigator';
 
 /**
  * Navegador principal de la aplicación

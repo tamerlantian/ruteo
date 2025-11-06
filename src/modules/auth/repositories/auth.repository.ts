@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { HttpBaseRepository } from '../../../core/repositories/http-base.repository';
 import {
   LoginCredentials,
@@ -6,12 +7,13 @@ import {
   RegisterCredentials,
   RegisterResponse,
 } from '../models/Auth';
+import { IAuthService } from '../../../core/interfaces/auth-service.interface';
 
 /**
  * Repositorio para manejar las operaciones de API relacionadas con autenticación
  * Implementa el patrón Singleton para evitar múltiples instancias
  */
-export class AuthRepository extends HttpBaseRepository {
+export class AuthRepository extends HttpBaseRepository implements IAuthService {
   private static instance: AuthRepository;
 
   /**
@@ -51,15 +53,6 @@ export class AuthRepository extends HttpBaseRepository {
   }
 
   /**
-   * Refresca el token de autenticación
-   * @param refreshToken Token de refresco
-   * @returns Promise con el nuevo token
-   */
-  async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
-    return this.post<RefreshTokenResponse>('seguridad/refresh/', { refreshToken });
-  }
-
-  /**
    * Solicita el cambio de contraseña
    * @param email Correo electrónico del usuario
    * @returns Promise con la confirmación del cambio de contraseña
@@ -74,5 +67,27 @@ export class AuthRepository extends HttpBaseRepository {
    */
   async logout(): Promise<boolean> {
     return this.post<boolean>('seguridad/logout/', {});
+  }
+
+  async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
+    try {
+      // Crear una instancia de axios independiente para evitar ciclos
+      const directAxios = axios.create({
+        baseURL: 'http://reddocapi.online',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      // Hacer la petición directamente sin pasar por apiService
+      const response = await directAxios.post<RefreshTokenResponse>(
+        '/seguridad/token/refresh/',
+        { refresh: refreshToken }
+      );
+      
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
 }
