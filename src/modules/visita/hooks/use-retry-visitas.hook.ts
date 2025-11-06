@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useVisitaProcessing } from './use-visita-processing.hook';
 
 /**
@@ -8,6 +8,7 @@ import { useVisitaProcessing } from './use-visita-processing.hook';
  */
 export const useRetryVisitas = () => {
   const { procesarVisitasEnLote } = useVisitaProcessing();
+  const [isRetryLoading, setIsRetryLoading] = useState(false);
 
   /**
    * Reintenta el envío de visitas con error usando los datos guardados
@@ -15,17 +16,23 @@ export const useRetryVisitas = () => {
    */
   const reintentarVisitasConError = useCallback(
     async (visitasConError: number[]) => {
-      await procesarVisitasEnLote(visitasConError, {
-        markErrorOnFailure: true,
-        logPrefix: 'Reintento',
-        messagePrefix: 'reintento',
-        clearSelectionsOnSuccess: true,
-      });
+      try {
+        setIsRetryLoading(true);
+        await procesarVisitasEnLote(visitasConError, {
+          markErrorOnFailure: true,
+          logPrefix: 'Reintento',
+          messagePrefix: 'reintento',
+          clearSelectionsOnSuccess: true,
+        });
+      } finally {
+        setIsRetryLoading(false);
+      }
     },
     [procesarVisitasEnLote],
   );
 
   return {
     reintentarVisitasConError,
+    isRetryLoading,
   };
 };

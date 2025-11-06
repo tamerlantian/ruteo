@@ -8,6 +8,7 @@ interface VisitasFloatingActionsProps {
   totalSeleccionadas: number;
   totalConError?: number;
   activeFilter: FilterType;
+  isRetryLoading?: boolean;
   onClearSelection: () => void;
   onDeliverVisitas: () => void;
   onRetryVisitas?: () => void;
@@ -18,6 +19,7 @@ export const VisitasFloatingActions: React.FC<VisitasFloatingActionsProps> = ({
   totalSeleccionadas,
   totalConError = 0,
   activeFilter,
+  isRetryLoading = false,
   onClearSelection,
   onDeliverVisitas,
   onRetryVisitas,
@@ -39,18 +41,12 @@ export const VisitasFloatingActions: React.FC<VisitasFloatingActionsProps> = ({
       <View style={visitasStyles.actionButtonsContainer}>
         {/* Mostrar botón según el filtro activo y disponibilidad de datos */}
         {activeFilter === 'error' && totalConError > 0 && onRetryVisitas ? (
-          // <TouchableOpacity 
-          //   style={visitasStyles.secondaryActionButton}
-          //   onPress={onRetryVisitas}
-          // >
-          //   <Text style={visitasStyles.secondaryActionText}>
-          //     Reintentar ({totalConError})
-          //   </Text>
-          // </TouchableOpacity>
           <FormButton
-            title={`Reintentar (${totalConError})`}
+            title={isRetryLoading ? 'Reintentando...' : `Reintentar (${totalConError})`}
             onPress={onRetryVisitas}
             style={visitasStyles.secondaryActionButton}
+            isLoading={isRetryLoading}
+            disabled={isRetryLoading}
           />
         ) : (
           <TouchableOpacity 
@@ -62,20 +58,6 @@ export const VisitasFloatingActions: React.FC<VisitasFloatingActionsProps> = ({
             </Text>
           </TouchableOpacity>
         )}
-        
-        {/* Espacio reservado para futuro botón Novedad */}
-        {/* 
-        {onNovedadVisitas && (
-          <TouchableOpacity 
-            style={visitasStyles.secondaryActionButton}
-            onPress={onNovedadVisitas}
-          >
-            <Text style={visitasStyles.secondaryActionText}>
-              Novedad ({totalSeleccionadas})
-            </Text>
-          </TouchableOpacity>
-        )}
-        */}
       </View>
     </View>
   );

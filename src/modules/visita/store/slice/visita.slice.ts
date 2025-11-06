@@ -60,6 +60,13 @@ const visitaSlice = createSlice({
         state.visitas[index].estado_error = true;
       }
     },
+    desmarcarVisitaConError: (state, action) => {
+      const visitaId = action.payload;
+      const index = state.visitas.findIndex(visita => visita.id === visitaId);
+      if (index > -1) {
+        state.visitas[index].estado_error = false;
+      }
+    },
     guardarDatosFormularioEnVisita: (
       state, 
       action: PayloadAction<{ visitaId: number; datosFormulario: EntregaFormData }>
@@ -110,6 +117,7 @@ export const {
   marcarVisitaComoEntregada,
   marcarVisitaConError,
   guardarDatosFormularioEnVisita,
+  desmarcarVisitaConError,
   limpiarDatosFormularioDeVisita
 } = visitaSlice.actions;
 export default visitaSlice.reducer;

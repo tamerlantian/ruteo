@@ -2,18 +2,19 @@ import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { selectSubdominio } from '../../settings';
 import { selectVisitas } from '../store/selector/visita.selector';
-import { 
-  marcarVisitaComoEntregada, 
-  marcarVisitaConError, 
+import {
+  marcarVisitaComoEntregada,
+  marcarVisitaConError,
   limpiarDatosFormularioDeVisita,
-  limpiarSeleccionVisitas
+  limpiarSeleccionVisitas,
+  desmarcarVisitaConError,
 } from '../store/slice/visita.slice';
 import { useToast } from '../../../shared/hooks/use-toast.hook';
 import { EntregaFormData } from '../interfaces/visita.interface';
-import { 
-  VisitaProcessingService, 
-  VisitaProcessingConfig, 
-  BatchProcessingResult 
+import {
+  VisitaProcessingService,
+  VisitaProcessingConfig,
+  BatchProcessingResult,
 } from '../services/visita-processing.service';
 
 /**
@@ -38,7 +39,10 @@ export const useVisitaProcessing = () => {
    * Procesa una visita individual y actualiza el estado de Redux
    */
   const procesarVisitaIndividual = useCallback(
-    async (visitaId: number, config: UseVisitaProcessingConfig = {}): Promise<boolean> => {
+    async (
+      visitaId: number,
+      config: UseVisitaProcessingConfig = {},
+    ): Promise<boolean> => {
       if (!subdominio) {
         toast.error('No se proporcionó un subdominio');
         return false;
@@ -48,7 +52,7 @@ export const useVisitaProcessing = () => {
         visitaId,
         visitas,
         subdominio,
-        config
+        config,
       );
 
       if (result.success) {
@@ -60,7 +64,7 @@ export const useVisitaProcessing = () => {
         if (config.markErrorOnFailure) {
           dispatch(marcarVisitaConError(visitaId));
         }
-        
+
         // Mostrar toast de error
         const errorMessage = `Error al procesar la visita ${visitaId}: ${result.error}`;
         toast.error(errorMessage);
@@ -68,14 +72,18 @@ export const useVisitaProcessing = () => {
 
       return result.success;
     },
-    [visitas, subdominio, dispatch, toast]
+    [visitas, subdominio, dispatch, toast],
   );
 
   /**
    * Procesa múltiples visitas y actualiza el estado de Redux
    */
   const procesarVisitasEnLote = useCallback(
-    async (visitaIds: number[], config: UseVisitaProcessingConfig = {}, datosFormulario?: EntregaFormData): Promise<BatchProcessingResult> => {
+    async (
+      visitaIds: number[],
+      config: UseVisitaProcessingConfig = {},
+      datosFormulario?: EntregaFormData,
+    ): Promise<BatchProcessingResult> => {
       if (visitaIds.length === 0) {
         const messagePrefix = config.messagePrefix || 'operación';
         toast.warning(`No hay visitas para ${messagePrefix}`);
@@ -88,34 +96,19 @@ export const useVisitaProcessing = () => {
       }
 
       try {
-        // Debug: Verificar estado de las visitas antes del procesamiento
-        console.log('🔍 Estado de visitas antes del procesamiento:');
-        visitaIds.forEach(visitaId => {
-          const visita = visitas.find(v => v.id === visitaId);
-          if (visita) {
-            console.log(`  Visita ${visitaId}:`, {
-              id: visita.id,
-              tiene_datos_guardados: !!visita.datos_formulario_guardados,
-              datos_guardados: visita.datos_formulario_guardados,
-              estado_error: visita.estado_error
-            });
-          } else {
-            console.log(`  ❌ Visita ${visitaId}: NO ENCONTRADA`);
-          }
-        });
-
         const batchResult = await VisitaProcessingService.procesarVisitasEnLote(
           visitaIds,
           visitas,
           subdominio,
           config,
-          datosFormulario
+          datosFormulario,
         );
 
         // Actualizar Redux para cada resultado
         batchResult.results.forEach(result => {
           if (result.success) {
             dispatch(marcarVisitaComoEntregada(result.visitaId));
+            dispatch(desmarcarVisitaConError(result.visitaId));
             dispatch(limpiarDatosFormularioDeVisita(result.visitaId));
           } else if (config.markErrorOnFailure) {
             dispatch(marcarVisitaConError(result.visitaId));
@@ -123,11 +116,12 @@ export const useVisitaProcessing = () => {
         });
 
         // Mostrar mensajes de resultado
-        const messageResult = VisitaProcessingService.generarMensajesDeResultado(
-          batchResult.successCount,
-          batchResult.errorCount,
-          config.messagePrefix || 'operación'
-        );
+        const messageResult =
+          VisitaProcessingService.generarMensajesDeResultado(
+            batchResult.successCount,
+            batchResult.errorCount,
+            config.messagePrefix || 'operación',
+          );
 
         if (messageResult) {
           switch (messageResult.type) {
@@ -155,7 +149,7 @@ export const useVisitaProcessing = () => {
         return { successCount: 0, errorCount: visitaIds.length, results: [] };
       }
     },
-    [subdominio, dispatch, toast, visitas]
+    [subdominio, dispatch, toast, visitas],
   );
 
   return {

@@ -74,10 +74,9 @@ export const selectDatosFormularioGuardados = (visitaId: number) =>
 
 // Selector para verificar si las visitas seleccionadas tienen datos guardados para reintento
 export const selectVisitasSeleccionadasConDatosGuardados = createSelector(
-  [selectVisitas, selectVisitasSeleccionadas],
+  [selectVisitasConError, selectVisitasSeleccionadas],
   (visitas, seleccionadas) =>
     visitas
       .filter(visita => seleccionadas.includes(visita.id))
-      // .filter(visita => visita.estado_error && visita.datos_formulario_guardados),
-      .filter(visita => visita.estado_error)
+      .filter(visita => visita.estado_error && visita.datos_formulario_guardados),
 );

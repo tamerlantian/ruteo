@@ -32,6 +32,7 @@ export const VisitasScreen = () => {
     deliverSelectedVisitas,
     retrySelectedVisitas,
     onFilterChange,
+    isRetryLoading,
     totalSeleccionadas,
     totalConErrorSeleccionadas,
   } = useVisitasViewModel();
@@ -82,6 +83,7 @@ export const VisitasScreen = () => {
         totalSeleccionadas={totalSeleccionadas}
         totalConError={totalConErrorSeleccionadas}
         activeFilter={activeFilter}
+        isRetryLoading={isRetryLoading}
         onClearSelection={clearSelection}
         onDeliverVisitas={deliverSelectedVisitas}
         onRetryVisitas={retrySelectedVisitas}

@@ -43,7 +43,7 @@ export const useVisitasViewModel = () => {
   const visitasConError = useAppSelector(selectVisitasConError);
   
   // Hook para reintento de visitas
-  const { reintentarVisitasConError } = useRetryVisitas();
+  const { reintentarVisitasConError, isRetryLoading } = useRetryVisitas();
   
   // Estados locales
   const [refreshing, setRefreshing] = useState(false);
@@ -153,6 +153,7 @@ export const useVisitasViewModel = () => {
     refreshing,
     hasVisitas,
     hasSelectedVisitas,
+    isRetryLoading,
     
     // Filter states
     activeFilter,
