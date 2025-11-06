@@ -44,7 +44,7 @@ export const VisitasScreen = () => {
 
   return (
     <SafeAreaView style={visitasStyles.container}>
-      <FormButton title="Limpiar" onPress={retirarOrden} />
+        <FormButton title="Limpiar" onPress={retirarOrden} />
       <FlatList
         data={visitas}
         renderItem={renderVisitaItem}

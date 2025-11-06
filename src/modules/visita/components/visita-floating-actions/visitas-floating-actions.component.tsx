@@ -34,6 +34,7 @@ export const VisitasFloatingActions: React.FC<VisitasFloatingActionsProps> = ({
       <TouchableOpacity 
         style={visitasStyles.clearSelectionButton}
         onPress={onClearSelection}
+        disabled={isRetryLoading}
       >
         <Text style={visitasStyles.clearSelectionText}>✕</Text>
       </TouchableOpacity>
@@ -42,21 +43,19 @@ export const VisitasFloatingActions: React.FC<VisitasFloatingActionsProps> = ({
         {/* Mostrar botón según el filtro activo y disponibilidad de datos */}
         {activeFilter === 'error' && totalConError > 0 && onRetryVisitas ? (
           <FormButton
-            title={isRetryLoading ? 'Reintentando...' : `Reintentar (${totalConError})`}
+            title={`Reintentar (${totalConError})`}
             onPress={onRetryVisitas}
-            style={visitasStyles.secondaryActionButton}
+            style={{ flex: 1 }}
             isLoading={isRetryLoading}
-            disabled={isRetryLoading}
+            variant='success'
           />
         ) : (
-          <TouchableOpacity 
-            style={visitasStyles.primaryActionButton}
+          <FormButton 
+            title={`Entregar (${totalSeleccionadas})`}
             onPress={onDeliverVisitas}
-          >
-            <Text style={visitasStyles.primaryActionText}>
-              Entregar ({totalSeleccionadas})
-            </Text>
-          </TouchableOpacity>
+            style={{ flex: 1 }}
+            variant='success'
+          />
         )}
       </View>
     </View>

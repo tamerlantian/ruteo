@@ -7,6 +7,7 @@ import { usePermissions } from '../../../shared/hooks/usePermissions';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/types';
+import { FormButton } from '../../../shared/components/ui/button/FormButton';
 
 type HomeNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -72,9 +73,7 @@ export const HomeScreen = () => {
           </View>
         )}
 
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
-        </TouchableOpacity>
+        <FormButton title="Cerrar sesión" onPress={handleLogout} />
       </View>
     </SafeAreaView>
   );
