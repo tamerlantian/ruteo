@@ -58,6 +58,12 @@ export const DashboardScreen = () => {
             <Text style={styles.subtitleText}>
               Bienvenido a tu panel principal
             </Text>
+            {ordenEntrega && (
+              <View style={styles.ordenContainer}>
+                <Text style={styles.ordenLabel}>OE:</Text>
+                <Text style={styles.ordenValue}>#{ordenEntrega}</Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -127,6 +133,28 @@ const styles = StyleSheet.create({
   subtitleText: {
     fontSize: 14,
     color: '#8e8e93',
+  },
+  ordenContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  ordenLabel: {
+    fontSize: 14,
+    color: '#8e8e93',
+    marginRight: 8,
+  },
+  ordenValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#007aff',
+    backgroundColor: '#f0f8ff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
   },
   statsContainer: {
     flexDirection: 'row',
