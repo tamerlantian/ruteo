@@ -8,6 +8,7 @@ import {
   RegisterResponse,
 } from '../models/Auth';
 import { IAuthService } from '../../../core/interfaces/auth-service.interface';
+import { environment } from '../../../config/environment';
 
 /**
  * Repositorio para manejar las operaciones de API relacionadas con autenticación
@@ -73,7 +74,7 @@ export class AuthRepository extends HttpBaseRepository implements IAuthService {
     try {
       // Crear una instancia de axios independiente para evitar ciclos
       const directAxios = axios.create({
-        baseURL: 'http://reddocapi.online',
+        baseURL: environment.apiBase, // Usar la URL dinámica del environment
         headers: {
           'Content-Type': 'application/json',
         }

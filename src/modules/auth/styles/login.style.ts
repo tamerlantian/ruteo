@@ -106,6 +106,7 @@ export const loginStyles = StyleSheet.create({
   // Estilos para el checkbox de términos y condiciones
   checkboxContainer: {
     flexDirection: 'row',
+    justifyContent: 'center',
     marginVertical: 15,
     alignItems: 'flex-start',
   },
@@ -115,6 +116,7 @@ export const loginStyles = StyleSheet.create({
   },
   termsContainer: {
     flex: 1,
+    justifyContent: 'center',
   },
   termsText: {
     fontSize: 14,

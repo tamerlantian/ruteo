@@ -64,8 +64,8 @@ export const visitaFormValidationRules = {
   },
   celular: {
     minLength: {
-      value: 10,
-      message: 'El número de celular debe tener al menos 10 dígitos',
+      value: 7,
+      message: 'El número de celular debe tener al menos 7 dígitos',
     },
     maxLength: {
       value: 15,
