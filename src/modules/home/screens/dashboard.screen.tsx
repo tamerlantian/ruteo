@@ -67,7 +67,7 @@ export const DashboardScreen = () => {
           
           <View style={styles.statCard}>
             <Text style={[styles.statNumber, styles.errorNumber]}>{visitasConError.length}</Text>
-            <Text style={styles.statLabel}>Con Error</Text>
+            <Text style={styles.statLabel}>Error</Text>
           </View>
         </View>
 
