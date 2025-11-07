@@ -8,14 +8,14 @@ import { cargarVisitasThunk } from '../../store/thunk/visita.thunk';
 import { selectIsLoading } from '../../store/selector/visita.selector';
 import { FormButton } from '../../../../shared/components/ui/button/FormButton';
 import { updateSettingsThunk } from '../../../settings';
-import { useToast } from '../../../../shared/hooks/use-toast.hook';
+import Toast from 'react-native-toast-message';
+import { toastTextOneStyle } from '../../../../shared/styles/global.style';
 
 interface CargarOrdenFormValues {
   codigo: string;
 }
 
 const CargarOrdenComponent = () => {
-  const toast = useToast()
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector(selectIsLoading);
   const {
@@ -48,11 +48,20 @@ const CargarOrdenComponent = () => {
             despachoId: despacho_id,
           }),
         );
-        toast.success("Orden cargada correctamente");
+        Toast.show({
+          type: 'success',
+          text1: 'Orden cargada correctamente',
+          text1Style: toastTextOneStyle,
+        });
         reset();
       }
     } catch (error) {
-      toast.error("La orden no existe");
+      console.log(error);
+      Toast.show({
+        type: 'error',
+        text1: 'La orden no existe',
+        text1Style: toastTextOneStyle,
+      });
     }
   };
 

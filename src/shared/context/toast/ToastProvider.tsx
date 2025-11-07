@@ -50,6 +50,10 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({
     setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id));
   }, []);
 
+  const clearAllToasts = useCallback(() => {
+    setToasts([]);
+  }, []);
+
   // Separar los toasts por placement
   const topToasts = toasts.filter(toast => toast.placement === 'top');
   const bottomToasts = toasts.filter(toast => toast.placement === 'bottom');
@@ -58,6 +62,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({
     <ToastContext.Provider value={{ 
       showToast, 
       hideToast, 
+      clearAllToasts,
       toasts, 
       defaultPlacement, 
       setDefaultPlacement 
@@ -71,7 +76,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({
           top: Platform.OS === 'ios' ? 50 : 40,
           left: 0,
           right: 0,
-          zIndex: 9999,
+          zIndex: 2,
           alignItems: "center",
           pointerEvents: "box-none",
         }}
@@ -96,7 +101,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({
           bottom: Platform.OS === 'ios' ? 50 : 40,
           left: 0,
           right: 0,
-          zIndex: 9999,
+          zIndex: 2,
           alignItems: "center",
           pointerEvents: "box-none",
         }}

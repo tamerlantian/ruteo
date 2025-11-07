@@ -3,7 +3,6 @@ import { Animated, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { ToastType, ToastPlacement } from '../../context/toast/ToastContext';
 import { createToastStyles } from './toast.styles';
-// eslint-disable-next-line import/no-unresolved
 
 interface ToastProps {
   type: ToastType;

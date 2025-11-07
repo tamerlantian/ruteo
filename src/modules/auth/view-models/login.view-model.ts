@@ -1,14 +1,14 @@
-import { useToast } from '../../../shared/hooks/use-toast.hook';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { LoginCredentials } from '../models/Auth';
 import { authController } from '../controllers/auth.controller';
 import { authKeys } from '../constants/auth-keys';
 import { ApiErrorResponse } from '../../../core/interfaces/api.interface';
+import Toast from 'react-native-toast-message';
+import { toastTextOneStyle } from '../../../shared/styles/global.style';
 
 // Hook para manejar el login
 export const useLogin = () => {
   const queryClient = useQueryClient();
-  const toast = useToast();
 
   const loginMutation = useMutation({
     mutationFn: (credentials: LoginCredentials) => authController.login(credentials),
@@ -21,11 +21,19 @@ export const useLogin = () => {
       queryClient.invalidateQueries({ queryKey: authKeys.session() });
       queryClient.invalidateQueries({ queryKey: authKeys.user() });
       
-      toast.success('Inicio de sesión exitoso');
+      Toast.show({
+        type: 'success',
+        text1: 'Inicio de sesión exitoso',
+        text1Style: toastTextOneStyle,
+      });
     },
     onError: (error: any) => {
       const errorData = error as ApiErrorResponse;
-      toast.error(errorData?.mensaje || 'Error al iniciar sesión');
+      Toast.show({
+        type: 'error',
+        text1: errorData?.mensaje || 'Error al iniciar sesión',
+        text1Style: toastTextOneStyle,
+      });
     },
   });
 

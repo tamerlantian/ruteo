@@ -5,7 +5,7 @@ import { useToastContext, ToastType, ToastPlacement } from '../context/toast/Toa
  * @returns Funciones para mostrar diferentes tipos de toast
  */
 export const useToast = () => {
-  const { showToast, defaultPlacement, setDefaultPlacement } = useToastContext();
+  const { showToast, clearAllToasts, defaultPlacement, setDefaultPlacement } = useToastContext();
 
   /**
    * Muestra un mensaje de éxito
@@ -63,12 +63,21 @@ export const useToast = () => {
     showToast(type, message, duration, placement);
   };
 
+  /**
+   * Oculta todos los toasts activos inmediatamente
+   * Útil para limpiar toasts antes de mostrar bottom sheets o modales
+   */
+  const clearAll = () => {
+    clearAllToasts();
+  };
+
   return {
     success,
     error,
     info,
     warning,
     show,
+    clearAll,
     defaultPlacement,
     setDefaultPlacement,
   };

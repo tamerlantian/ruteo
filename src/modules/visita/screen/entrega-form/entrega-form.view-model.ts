@@ -14,8 +14,9 @@ import {
   limpiarSeleccionVisitas, 
   guardarDatosFormularioEnVisita,
 } from '../../store/slice/visita.slice';
-import { useToast } from '../../../../shared/hooks/use-toast.hook';
 import { useVisitaProcessing } from '../../hooks/use-visita-processing.hook';
+import Toast from 'react-native-toast-message';
+import { toastTextOneStyle } from '../../../../shared/styles/global.style';
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -27,7 +28,6 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[], navigati
   const subdominio = useAppSelector(selectSubdominio);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const dispatch = useAppDispatch();
-  const toast = useToast();
   const { procesarVisitasEnLote } = useVisitaProcessing();
 
   // Configuración de React Hook Form
@@ -59,17 +59,25 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[], navigati
    */
   const validateInitialConditions = useCallback(() => {
     if (!visitasSeleccionadas || visitasSeleccionadas.length === 0) {
-      toast.error('No hay visitas seleccionadas');
+      Toast.show({
+        type: 'error',
+        text1: 'No hay visitas seleccionadas',
+        text1Style: toastTextOneStyle,
+      });
       return false;
     }
 
     if (!subdominio) {
-      toast.error('No se proporcionó un subdominio');
+      Toast.show({
+        type: 'error',
+        text1: 'No se proporcionó un subdominio',
+        text1Style: toastTextOneStyle,
+      });
       return false;
     }
 
     return true;
-  }, [visitasSeleccionadas, subdominio, toast]);
+  }, [visitasSeleccionadas, subdominio]);
 
   // === FUNCIONES AUXILIARES ===
 
@@ -128,7 +136,11 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[], navigati
         finalizarProceso();
       } catch (error) {
         console.error('Error general al procesar las entregas:', error);
-        toast.error('Error al procesar las entregas');
+        Toast.show({
+          type: 'error',
+          text1: 'Error al procesar las entregas',
+          text1Style: toastTextOneStyle,
+        });
       } finally {
         setIsSubmitting(false);
       }
@@ -139,7 +151,6 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[], navigati
       dispatch,
       procesarVisitasEnLote,
       finalizarProceso,
-      toast,
     ],
   );
 

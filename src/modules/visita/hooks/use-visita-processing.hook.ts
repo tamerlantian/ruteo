@@ -9,13 +9,14 @@ import {
   limpiarSeleccionVisitas,
   desmarcarVisitaConError,
 } from '../store/slice/visita.slice';
-import { useToast } from '../../../shared/hooks/use-toast.hook';
 import { EntregaFormData } from '../interfaces/visita.interface';
 import {
   VisitaProcessingService,
   VisitaProcessingConfig,
   BatchProcessingResult,
 } from '../services/visita-processing.service';
+import Toast from 'react-native-toast-message';
+import { toastTextOneStyle } from '../../../shared/styles/global.style';
 
 /**
  * Configuración para el hook de procesamiento de visitas
@@ -33,7 +34,6 @@ export const useVisitaProcessing = () => {
   const dispatch = useAppDispatch();
   const subdominio = useAppSelector(selectSubdominio);
   const visitas = useAppSelector(selectVisitas);
-  const toast = useToast();
 
   /**
    * Procesa una visita individual y actualiza el estado de Redux
@@ -44,7 +44,11 @@ export const useVisitaProcessing = () => {
       config: UseVisitaProcessingConfig = {},
     ): Promise<boolean> => {
       if (!subdominio) {
-        toast.error('No se proporcionó un subdominio');
+        Toast.show({
+          type: 'error',
+          text1: 'No se proporcionó un subdominio',
+          text1Style: toastTextOneStyle,
+        });
         return false;
       }
 
@@ -67,12 +71,16 @@ export const useVisitaProcessing = () => {
 
         // Mostrar toast de error
         const errorMessage = `Error al procesar la visita ${visitaId}: ${result.error}`;
-        toast.error(errorMessage);
+        Toast.show({
+          type: 'error',
+          text1: errorMessage,
+          text1Style: toastTextOneStyle,
+        });
       }
 
       return result.success;
     },
-    [visitas, subdominio, dispatch, toast],
+    [visitas, subdominio, dispatch],
   );
 
   /**
@@ -86,12 +94,20 @@ export const useVisitaProcessing = () => {
     ): Promise<BatchProcessingResult> => {
       if (visitaIds.length === 0) {
         const messagePrefix = config.messagePrefix || 'operación';
-        toast.warning(`No hay visitas para ${messagePrefix}`);
+        Toast.show({
+          type: 'warning',
+          text1: `No hay visitas para ${messagePrefix}`,
+          text1Style: toastTextOneStyle,
+        });
         return { successCount: 0, errorCount: 0, results: [] };
       }
 
       if (!subdominio) {
-        toast.error('No se proporcionó un subdominio');
+        Toast.show({
+          type: 'error',
+          text1: 'No se proporcionó un subdominio',
+          text1Style: toastTextOneStyle,
+        });
         return { successCount: 0, errorCount: 0, results: [] };
       }
 
@@ -126,13 +142,25 @@ export const useVisitaProcessing = () => {
         if (messageResult) {
           switch (messageResult.type) {
             case 'success':
-              toast.success(messageResult.message);
+              Toast.show({
+                type: 'success',
+                text1: messageResult.message,
+                text1Style: toastTextOneStyle,
+              });
               break;
             case 'warning':
-              toast.warning(messageResult.message);
+              Toast.show({
+                type: 'warning',
+                text1: messageResult.message,
+                text1Style: toastTextOneStyle,
+              });
               break;
             case 'error':
-              toast.error(messageResult.message);
+              Toast.show({
+                type: 'error',
+                text1: messageResult.message,
+                text1Style: toastTextOneStyle,
+              });
               break;
           }
         }
@@ -145,11 +173,15 @@ export const useVisitaProcessing = () => {
         return batchResult;
       } catch (error) {
         console.error('Error general al procesar las visitas:', error);
-        toast.error('Error al procesar las visitas');
+        Toast.show({
+          type: 'error',
+          text1: 'Error al procesar las visitas',
+          text1Style: toastTextOneStyle,
+        });
         return { successCount: 0, errorCount: visitaIds.length, results: [] };
       }
     },
-    [subdominio, dispatch, toast, visitas],
+    [subdominio, dispatch, visitas],
   );
 
   return {

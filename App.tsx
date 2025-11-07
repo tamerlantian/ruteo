@@ -16,6 +16,7 @@ import { AuthProvider } from './src/modules/auth/screens/auth-provider';
 import { Provider } from 'react-redux';
 import { store } from './src/store';
 import { initializeServices } from './src/core/services/init-services';
+import Toast from 'react-native-toast-message';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,8 +37,8 @@ function App() {
     <Provider store={store}>
       <GestureHandlerRootView style={styles.gestureHandler}>
         <QueryClientProvider client={queryClient}>
-          <ToastProvider>
-            <BottomSheetModalProvider>
+          <BottomSheetModalProvider>
+            <ToastProvider>
               <DevModeProvider>
                 <AuthProvider>
                   <SafeAreaProvider>
@@ -48,10 +49,11 @@ function App() {
                   </SafeAreaProvider>
                 </AuthProvider>
               </DevModeProvider>
-            </BottomSheetModalProvider>
-          </ToastProvider>
+            </ToastProvider>
+          </BottomSheetModalProvider>
         </QueryClientProvider>
       </GestureHandlerRootView>
+      <Toast />
     </Provider>
   );
 }

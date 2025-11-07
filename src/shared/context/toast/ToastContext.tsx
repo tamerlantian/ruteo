@@ -14,6 +14,7 @@ export interface ToastMessage {
 export interface ToastContextProps {
   showToast: (type: ToastType, message: string, duration?: number, placement?: ToastPlacement) => void;
   hideToast: (id: string) => void;
+  clearAllToasts: () => void;
   toasts: ToastMessage[];
   defaultPlacement: ToastPlacement;
   setDefaultPlacement: (placement: ToastPlacement) => void;
