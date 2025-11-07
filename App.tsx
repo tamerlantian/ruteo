@@ -53,7 +53,7 @@ function App() {
           </BottomSheetModalProvider>
         </QueryClientProvider>
       </GestureHandlerRootView>
-      <Toast />
+      <Toast visibilityTime={2000} />
     </Provider>
   );
 }
