@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { authController } from '../controllers/auth.controller';
 import { LoginCredentials, AuthUser } from '../models/Auth';
-// import { useAuthActions } from '../hooks/useAuthActions';
+import { useAuthActions } from '../hooks/useAuthActions';
 import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../shared/styles/global.style';
 import { authEvents } from '../../../core/services/auth-events.service';
@@ -15,6 +15,7 @@ interface AuthContextType {
   // Acciones
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
+  logoutTokenExpired: () => Promise<void>;
   checkAuthStatus: () => Promise<void>;
 }
 
@@ -33,12 +34,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   
   console.log('🔍 AuthProvider: Estado inicial - isAuthenticated:', isAuthenticated, 'isLoading:', isLoading);
   
-  // const { clearAppData } = useAuthActions();
-  const clearAppData = async () => {
-    console.log('🔍 AuthProvider: clearAppData mock ejecutado');
-    return true;
-  };
-  console.log('🔍 AuthProvider: clearAppData mock configurado');
+  const { clearAppData } = useAuthActions();
 
 
   // Verificar estado de autenticación al inicializar
@@ -49,7 +45,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (authenticated) {
         const userData = await authController.getCurrentUser();
-        setIsAuthenticated(true);
+        setIsAuthenticated(true); 
         setUser(userData);
       } else {
         setIsAuthenticated(false);
@@ -87,7 +83,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Logout
+  // Logout completo - Usuario manual (limpia toda la data)
   const logout = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -101,8 +97,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // 3. Actualizar estado local
       setIsAuthenticated(false);
       setUser(null);
+      
+      console.log('🔵 AuthContext: Logout completo ejecutado - Data limpiada');
     } catch (error) {
       console.error('Error during logout:', error);
+      // Forzar logout local incluso si falla el servidor
+      setIsAuthenticated(false);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [clearAppData]);
+
+  // Logout por token expirado - Solo limpia autenticación (preserva data)
+  const logoutTokenExpired = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      
+      // 1. Solo limpiar tokens del servidor (sin limpiar data local)
+      await authController.logout();
+      
+      // 2. Actualizar estado local (SIN limpiar datos de la app)
+      setIsAuthenticated(false);
+      setUser(null);
+      
+      console.log('🟡 AuthContext: Logout por token expirado - Data preservada');
+    } catch (error) {
+      console.error('Error during token expired logout:', error);
       // Forzar logout local incluso si falla el servidor
       setIsAuthenticated(false);
       setUser(null);
@@ -120,8 +141,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Escuchar eventos de expiración de token
   useEffect(() => {
     const handleTokenExpired = () => {
-      console.log('🔴 AuthContext: Token expirado - ejecutando logout');
-      logout();
+      console.log('🔴 AuthContext: Token expirado - ejecutando logoutTokenExpired');
+      logoutTokenExpired();
     };
 
     authEvents.on('TOKEN_EXPIRED', handleTokenExpired);
@@ -129,7 +150,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => {
       authEvents.off('TOKEN_EXPIRED', handleTokenExpired);
     };
-  }, [logout]);
+  }, [logoutTokenExpired]);
 
   const value: AuthContextType = {
     isAuthenticated,
@@ -137,6 +158,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading,
     login,
     logout,
+    logoutTokenExpired,
     checkAuthStatus,
   };
 
