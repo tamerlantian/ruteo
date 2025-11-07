@@ -23,7 +23,6 @@ export const useRegister = () => {
       Toast.show({
         type: 'success',
         text1: 'Registro exitoso',
-        text2: 'Ahora puedes iniciar sesión con tu cuenta',
         text1Style: toastTextOneStyle,
       });
       
