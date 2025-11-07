@@ -128,6 +128,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsAuthenticated(false);
       setUser(null);
     } finally {
+      Toast.show({
+        type: 'error',
+        text1: 'Sesión cerrada por expiración de token',
+        text1Style: toastTextOneStyle,
+      });
       setIsLoading(false);
     }
   }, []);

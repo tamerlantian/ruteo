@@ -3,9 +3,20 @@ import { View, Text, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../auth/context/auth.context';
 import { FormButton } from '../../../shared/components/ui/button/FormButton';
+import { useAppSelector } from '../../../store/hooks';
+import { 
+  selectVisitasPendientes, 
+  selectVisitasEntregadas, 
+  selectVisitasConError 
+} from '../../visita/store/selector/visita.selector';
 
 export const DashboardScreen = () => {
   const { user, logout } = useAuth();
+  
+  // Selectores para obtener estadísticas de visitas
+  const visitasPendientes = useAppSelector(selectVisitasPendientes);
+  const visitasEntregadas = useAppSelector(selectVisitasEntregadas);
+  const visitasConError = useAppSelector(selectVisitasConError);
 
   const handleLogout = () => {
     Alert.alert(
@@ -45,18 +56,18 @@ export const DashboardScreen = () => {
 
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>24</Text>
-            <Text style={styles.statLabel}>Tareas</Text>
-          </View>
-          
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>12</Text>
-            <Text style={styles.statLabel}>Completadas</Text>
-          </View>
-          
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>5</Text>
+            <Text style={[styles.statNumber, styles.pendingNumber]}>{visitasPendientes.length}</Text>
             <Text style={styles.statLabel}>Pendientes</Text>
+          </View>
+          
+          <View style={styles.statCard}>
+            <Text style={[styles.statNumber, styles.completedNumber]}>{visitasEntregadas.length}</Text>
+            <Text style={styles.statLabel}>Entregadas</Text>
+          </View>
+          
+          <View style={styles.statCard}>
+            <Text style={[styles.statNumber, styles.errorNumber]}>{visitasConError.length}</Text>
+            <Text style={styles.statLabel}>Con Error</Text>
           </View>
         </View>
 
@@ -130,6 +141,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#007aff',
     marginBottom: 4,
+  },
+  pendingNumber: {
+    color: '#ff9500', // Naranja para pendientes
+  },
+  completedNumber: {
+    color: '#34c759', // Verde para entregadas
+  },
+  errorNumber: {
+    color: '#ff3b30', // Rojo para errores
   },
   statLabel: {
     fontSize: 12,
