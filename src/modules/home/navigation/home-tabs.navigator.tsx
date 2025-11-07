@@ -15,7 +15,7 @@ const getTabBarIcon = (route: any, focused: boolean, color: string, size: number
       iconName = focused ? 'home' : 'home-outline';
       break;
     case 'Visitas':
-      iconName = focused ? 'map' : 'map-outline';
+      iconName = focused ? 'cube' : 'cube-outline';
       break;
     default:
       iconName = 'home-outline';
@@ -57,7 +57,7 @@ export const HomeTabsNavigator = () => {
         name="Visitas" 
         component={VisitasScreen}
         options={{
-          tabBarLabel: 'Visitas',
+          tabBarLabel: 'Entregas',
         }}
       />
     </Tab.Navigator>
