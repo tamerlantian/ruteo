@@ -20,6 +20,7 @@ import { MainStackParamList } from '../../../../navigation/types';
 import { LIST_OPTIMIZATION_CONFIG } from '../../constants/visita.constant';
 import { FilterType } from '../../components/filter-badges/filter-badges.component';
 import { useRetryVisitas } from '../../hooks/use-retry-visitas.hook';
+import { resetSettings } from '../../../settings';
 
 /**
  * ViewModel para la pantalla de Visitas
@@ -95,6 +96,7 @@ export const useVisitasViewModel = () => {
     // Limpiar todas las visitas y selecciones
     dispatch(removerVisitas());
     dispatch(limpiarSeleccionVisitas());
+    dispatch(resetSettings());
     
     // Resetear filtro a pending
     setActiveFilter('pending');

@@ -81,8 +81,8 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
               <Text style={entregaFormStyles.visitasInfoTitle}>
                 Visitas seleccionadas
               </Text>
-              <ScrollView 
-                horizontal 
+              <ScrollView
+                horizontal
                 showsHorizontalScrollIndicator={false}
                 style={entregaFormStyles.visitasScrollContainer}
                 contentContainerStyle={entregaFormStyles.visitasIds}
@@ -94,6 +94,18 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
                 ))}
               </ScrollView>
             </View>
+
+            {/* Campo: Fotos de Entrega */}
+            <PhotoField
+              control={viewModel.control}
+              name="fotos"
+              label="Fotos"
+              rules={viewModel.visitaFormValidationRules.fotos}
+              error={viewModel.errors.fotos}
+              required={false}
+              maxPhotos={5}
+            />
+
             {/* Campo: Recibe */}
             <FormInputController
               control={viewModel.control}
@@ -151,17 +163,6 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
               error={viewModel.errors.firma}
               required={false}
               onScrollEnable={setScrollEnabled}
-            />
-
-            {/* Campo: Fotos de Entrega */}
-            <PhotoField
-              control={viewModel.control}
-              name="fotos"
-              label="Fotos"
-              rules={viewModel.visitaFormValidationRules.fotos}
-              error={viewModel.errors.fotos}
-              required={false}
-              maxPhotos={5}
             />
           </View>
         </ScrollView>

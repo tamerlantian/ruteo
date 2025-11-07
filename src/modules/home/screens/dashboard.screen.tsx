@@ -9,11 +9,13 @@ import {
   selectVisitasEntregadas, 
   selectVisitasConError 
 } from '../../visita/store/selector/visita.selector';
+import { selectOrdenEntrega } from '../../settings';
 
 export const DashboardScreen = () => {
   const { user, logout } = useAuth();
   
   // Selectores para obtener estadísticas de visitas
+  const ordenEntrega = useAppSelector(selectOrdenEntrega);
   const visitasPendientes = useAppSelector(selectVisitasPendientes);
   const visitasEntregadas = useAppSelector(selectVisitasEntregadas);
   const visitasConError = useAppSelector(selectVisitasConError);
@@ -59,6 +61,7 @@ export const DashboardScreen = () => {
           </View>
         )}
 
+      {ordenEntrega && (
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
             <Text style={[styles.statNumber, styles.pendingNumber]}>{visitasPendientes.length}</Text>
@@ -75,6 +78,7 @@ export const DashboardScreen = () => {
             <Text style={styles.statLabel}>Error</Text>
           </View>
         </View>
+      )}
 
         <View style={styles.logoutContainer}>
           <FormButton
