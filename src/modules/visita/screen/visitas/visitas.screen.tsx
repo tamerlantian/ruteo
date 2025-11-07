@@ -115,7 +115,7 @@ export const VisitasScreen = () => {
 
       <CustomBottomSheet
         ref={confirmacionBottomSheetRef}
-        initialSnapPoints={['40%']}
+        initialSnapPoints={['42%']}
       >
         <ConfirmacionDesvincularComponent 
           onConfirmar={confirmarDesvinculacion}
