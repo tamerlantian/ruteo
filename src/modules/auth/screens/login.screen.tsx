@@ -18,7 +18,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LoginFormValues } from '../interfaces/auth.interface';
 import { loginStyles } from '../styles/login.style';
-import { useLogin } from '../view-models/login.view-model';
+import { useLogin } from '../hooks/useLogin';
 import { useAuthNavigation } from '../../../navigation/hooks';
 
 export const LoginScreen = () => {

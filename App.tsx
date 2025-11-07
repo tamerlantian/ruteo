@@ -12,7 +12,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DevModeProvider } from './src/shared/context/dev-mode-context';
 import { ToastProvider } from './src/shared/context';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import { AuthProvider } from './src/modules/auth/screens/auth-provider';
+import { AuthProvider } from './src/modules/auth/context/auth.context';
 import { Provider } from 'react-redux';
 import { store } from './src/store';
 import { initializeServices } from './src/core/services/init-services';

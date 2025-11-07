@@ -1,7 +1,7 @@
 import { IAuthService } from '../interfaces/auth-service.interface';
 import storageService from '../../shared/services/storage.service';
 import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY } from '../../shared/constants/localstorage-keys';
-import { navigate } from '../../navigation/navigators/RootNavigator';
+import { authEvents } from './auth-events.service';
 
 /**
  * Servicio para gestionar tokens de autenticación
@@ -12,6 +12,7 @@ class TokenService {
   private isRefreshing = false;
   private refreshSubscribers: ((_token: string) => void)[] = [];
   private authService: IAuthService | null = null;
+  private onAuthFailureCallback: (() => void) | null = null;
 
   private constructor() {}
 
@@ -28,6 +29,14 @@ class TokenService {
    */
   public setAuthService(authService: IAuthService): void {
     this.authService = authService;
+  }
+
+  /**
+   * Establece el callback para manejar fallos de autenticación
+   * @param callback Función a ejecutar cuando falle la autenticación
+   */
+  public setAuthFailureCallback(callback: () => void): void {
+    this.onAuthFailureCallback = callback;
   }
 
   /**
@@ -100,6 +109,9 @@ class TokenService {
         // Notificar a todos los suscriptores que el token ha sido renovado
         this.onRefreshed(response.access);
 
+        // Emitir evento de token renovado
+        authEvents.emitTokenRefreshed(response.access);
+
         return response.access;
       } else {
         throw new Error('Error al renovar el token');
@@ -113,19 +125,17 @@ class TokenService {
   }
 
   /**
-   * Maneja el fallo de autenticación: limpia tokens y redirige al login
+   * Maneja el fallo de autenticación: limpia tokens y emite evento
    */
   public async handleAuthFailure(): Promise<void> {
-    // Limpiar tokens
-    await this.clearTokens();
-
-    // Redirigir al login usando expo-router
     try {
-      // TODO: implementar redireccionamiento
-      // router.replace('/(auth)/login');
-      // navigate('Auth', { screen: 'Login' })
+      // Limpiar tokens del storage
+      await this.clearTokens();
+
+      // Emitir evento de token expirado
+      authEvents.emitTokenExpired();
     } catch (error) {
-      console.error('Error al redirigir al login:', error);
+      console.error('Error al manejar fallo de autenticación:', error);
     }
   }
 

@@ -1,9 +1,10 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useAuth } from '../../modules/auth/screens/auth-provider';
+import { useAuth } from '../../modules/auth/context/auth.context';
 import { AuthNavigator } from './AuthNavigator';
 import { MainNavigator } from './MainNavigator';
 import { RootStackParamList } from '../types';
+import { SplashScreen } from '../../components/SplashScreen';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 
@@ -22,13 +23,14 @@ export function navigate(name: string, params?: object) {
  * Maneja la navegación entre Auth y Main basado en el estado de autenticación
  */
 export const RootNavigator: React.FC = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
-  // Mostrar loading mientras se verifica el estado de autenticación
-  if (loading) {
-    // Aquí podrías mostrar un splash screen o loading
-    return null;
+  // Mostrar splash screen mientras se verifica el estado de autenticación
+  if (isLoading) {
+    return <SplashScreen />;
   }
+
+  console.log('🔍 RootNavigator: isAuthenticated:', isAuthenticated);
 
   return (
     <RootStack.Navigator 

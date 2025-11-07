@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '../../auth/screens/auth-provider';
+import { useAuth } from '../../auth/context/auth.context';
 import Ionicons from '@react-native-vector-icons/ionicons';
 
 export const ProfileScreen = () => {
