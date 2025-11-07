@@ -3,7 +3,6 @@ import {
   ForgotPasswordFormValues,
   LoginCredentials,
   LoginResponse,
-  RefreshTokenResponse,
   RegisterCredentials,
   RegisterResponse,
 } from '../models/Auth';
@@ -41,30 +40,6 @@ export const authController = {
       return response;
     } catch (error) {
       console.error('Error en registro:', error);
-      throw error;
-    }
-  },
-
-  // Refrescar token
-  refreshToken: async (): Promise<RefreshTokenResponse | null> => {
-    try {
-      const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
-
-      if (!refreshToken) {
-        return null;
-      }
-
-      const response = await AuthRepository.getInstance().refreshToken(refreshToken);
-
-      // Actualizar token en almacenamiento local
-      await AsyncStorage.setItem(AUTH_TOKEN_KEY, response.token);
-      if (response.refreshToken) {
-        await AsyncStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
-      }
-
-      return response;
-    } catch (error) {
-      console.error('Error al refrescar token:', error);
       throw error;
     }
   },
