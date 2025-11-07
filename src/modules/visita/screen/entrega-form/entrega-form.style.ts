@@ -168,7 +168,7 @@ export const entregaFormStyles = StyleSheet.create({
     backgroundColor: '#f0f8ff',
     borderRadius: 8,
     padding: 16,
-    marginTop: 20,
+    marginBottom: 20,
   },
   visitasInfoTitle: {
     fontSize: 14,
@@ -176,10 +176,13 @@ export const entregaFormStyles = StyleSheet.create({
     color: '#007aff',
     marginBottom: 12,
   },
+  visitasScrollContainer: {
+    maxHeight: 50,
+  },
   visitasIds: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 8,
+    paddingRight: 16, // Espacio al final del scroll
   },
   visitaId: {
     backgroundColor: '#007aff',

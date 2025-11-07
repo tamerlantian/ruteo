@@ -53,7 +53,7 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
         </TouchableOpacity>
 
         <View style={entregaFormStyles.headerContent}>
-          <Text style={entregaFormStyles.title}>Formulario de Entrega</Text>
+          <Text style={entregaFormStyles.title}>Formulario de entrega</Text>
           <Text style={entregaFormStyles.subtitle}>
             {visitasSeleccionadas.length} visita
             {visitasSeleccionadas.length !== 1 ? 's' : ''} seleccionada
@@ -76,6 +76,24 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
         >
           {/* Form Fields */}
           <View style={entregaFormStyles.formContainer}>
+            {/* Info de visitas seleccionadas */}
+            <View style={entregaFormStyles.visitasInfo}>
+              <Text style={entregaFormStyles.visitasInfoTitle}>
+                Visitas seleccionadas
+              </Text>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                style={entregaFormStyles.visitasScrollContainer}
+                contentContainerStyle={entregaFormStyles.visitasIds}
+              >
+                {visitasSeleccionadas.map(id => (
+                  <Text key={id} style={entregaFormStyles.visitaId}>
+                    #{id}
+                  </Text>
+                ))}
+              </ScrollView>
+            </View>
             {/* Campo: Recibe */}
             <FormInputController
               control={viewModel.control}
@@ -145,25 +163,6 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
               required={false}
               maxPhotos={5}
             />
-
-            {/* Info de visitas seleccionadas */}
-            {/* <View style={entregaFormStyles.visitasInfo}>
-              <Text style={entregaFormStyles.visitasInfoTitle}>
-                Visitas a entregar ({visitasSeleccionadas.length})
-              </Text>
-              <View style={entregaFormStyles.visitasIds}>
-                {visitasSeleccionadas.slice(0, 5).map((id) => (
-                  <Text key={id} style={entregaFormStyles.visitaId}>
-                    #{id}
-                  </Text>
-                ))}
-                {visitasSeleccionadas.length > 5 && (
-                  <Text style={entregaFormStyles.visitaIdMore}>
-                    +{visitasSeleccionadas.length - 5} más
-                  </Text>
-                )}
-              </View>
-            </View> */}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
