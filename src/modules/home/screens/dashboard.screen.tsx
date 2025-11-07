@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../auth/context/auth.context';
 import { FormButton } from '../../../shared/components/ui/button/FormButton';
@@ -39,7 +39,12 @@ export const DashboardScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <StatusBar 
+        barStyle="dark-content" 
+        backgroundColor="#f8f9fa" 
+        translucent={false}
+      />
       <View style={styles.content}>
         <Text style={styles.title}>Dashboard</Text>
         
