@@ -12,12 +12,6 @@ import { createNavigationContainerRef } from '@react-navigation/native';
 
 export const navigationRef = createNavigationContainerRef();
 
-export function navigate(name: string, params?: object) {
-  if (navigationRef.isReady()) {
-    navigationRef.navigate(name as never, params as never);
-  }
-}
-
 /**
  * Navegador raíz de la aplicación
  * Maneja la navegación entre Auth y Main basado en el estado de autenticación
