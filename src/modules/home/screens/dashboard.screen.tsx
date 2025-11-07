@@ -20,7 +20,7 @@ export const DashboardScreen = () => {
 
   const handleLogout = () => {
     Alert.alert(
-      'Cerrar Sesión',
+      'Cerrar sesión',
       '¿Estás seguro de que deseas cerrar sesión? Se eliminarán todos los datos locales.',
       [
         {
@@ -28,7 +28,7 @@ export const DashboardScreen = () => {
           style: 'cancel',
         },
         {
-          text: 'Cerrar Sesión',
+          text: 'Cerrar sesión',
           style: 'destructive',
           onPress: () => {
             logout();
@@ -73,7 +73,7 @@ export const DashboardScreen = () => {
 
         <View style={styles.logoutContainer}>
           <FormButton
-            title="Cerrar Sesión"
+            title="Cerrar sesión"
             onPress={handleLogout}
             style={styles.logoutButton}
           />
