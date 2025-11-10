@@ -42,12 +42,12 @@ export type MainStackParamList = {
 
 /**
  * Tabs del home principal
- * Contiene Dashboard, Visitas, Profile
+ * Contiene Dashboard, Visitas, Settings
  */
 export type MainTabParamList = {
   Dashboard: undefined;
   Visitas: undefined;
-  Profile: undefined;
+  Settings: undefined;
 };
 
 // ============================================

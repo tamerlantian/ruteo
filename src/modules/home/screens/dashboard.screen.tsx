@@ -1,8 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, Alert, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../auth/context/auth.context';
-import { FormButton } from '../../../shared/components/ui/button/FormButton';
 import { useAppSelector } from '../../../store/hooks';
 import { 
   selectVisitasPendientes, 
@@ -12,33 +11,13 @@ import {
 import { selectOrdenEntrega } from '../../settings';
 
 export const DashboardScreen = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   
   // Selectores para obtener estadísticas de visitas
   const ordenEntrega = useAppSelector(selectOrdenEntrega);
   const visitasPendientes = useAppSelector(selectVisitasPendientes);
   const visitasEntregadas = useAppSelector(selectVisitasEntregadas);
   const visitasConError = useAppSelector(selectVisitasConError);
-
-  const handleLogout = () => {
-    Alert.alert(
-      'Cerrar sesión',
-      '¿Estás seguro de que deseas cerrar sesión? Se eliminarán todos los datos locales.',
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-        {
-          text: 'Cerrar sesión',
-          style: 'destructive',
-          onPress: () => {
-            logout();
-          },
-        },
-      ]
-    );
-  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -85,14 +64,6 @@ export const DashboardScreen = () => {
           </View>
         </View>
       )}
-
-        <View style={styles.logoutContainer}>
-          <FormButton
-            title="Cerrar sesión"
-            onPress={handleLogout}
-            style={styles.logoutButton}
-          />
-        </View>
       </View>
     </SafeAreaView>
   );
@@ -192,20 +163,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#8e8e93',
     textAlign: 'center',
-  },
-  logoutContainer: {
-    marginTop: 40,
-    paddingHorizontal: 20,
-  },
-  logoutButton: {
-    backgroundColor: '#ff3b30',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
 });
