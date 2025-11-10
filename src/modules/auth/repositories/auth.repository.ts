@@ -58,8 +58,8 @@ export class AuthRepository extends HttpBaseRepository implements IAuthService {
    * @param email Correo electrónico del usuario
    * @returns Promise con la confirmación del cambio de contraseña
    */
-  async forgotPassword(username: string): Promise<boolean> {
-    return this.post<boolean>('seguridad/usuario/cambio-clave-solicitar/', { username });
+  async forgotPassword(username: string, aplicacion: string): Promise<boolean> {
+    return this.post<boolean>('seguridad/usuario/cambio-clave-solicitar/', { username, aplicacion });
   }
 
   /**

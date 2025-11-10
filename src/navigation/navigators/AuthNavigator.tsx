@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LoginScreen } from '../../modules/auth/screens/login.screen';
 import { RegisterScreen } from '../../modules/auth/screens/register.screen';
+import { ForgotPasswordScreen } from '../../modules/auth/screens/forgot-password.screen';
 import { AuthStackParamList } from '../types';
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -33,8 +34,13 @@ export const AuthNavigator: React.FC = () => {
           title: 'Crear Cuenta',
         }}
       />
-      {/* Pantalla de ForgotPassword cuando se implemente */}
-      {/* <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} /> */}
+      <AuthStack.Screen 
+        name="ForgotPassword" 
+        component={ForgotPasswordScreen}
+        options={{
+          title: 'Recuperar Contraseña',
+        }}
+      />
     </AuthStack.Navigator>
   );
 };

@@ -64,4 +64,5 @@ export interface RefreshTokenResponse {
 
 export type ForgotPasswordFormValues = {
   username: string;
+  aplicacion: string;
 };

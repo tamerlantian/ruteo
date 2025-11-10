@@ -90,7 +90,7 @@ export const authController = {
   // Solicitar recuperación de contraseña
   forgotPassword: async (data: ForgotPasswordFormValues): Promise<boolean> => {
     try {
-      return await AuthRepository.getInstance().forgotPassword(data.username);
+      return await AuthRepository.getInstance().forgotPassword(data.username, data.aplicacion);
     } catch (error) {
       console.error('Error al solicitar recuperación de contraseña:', error);
       throw error;

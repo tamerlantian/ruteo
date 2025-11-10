@@ -165,7 +165,7 @@ export const LoginScreen = () => {
           <TouchableOpacity
             style={loginStyles.forgotPassword}
             onPress={() => {
-              // navigation.navigate('ForgotPassword');
+              navigation.navigate('ForgotPassword');
             }}
           >
             <Text style={loginStyles.forgotPasswordText}>

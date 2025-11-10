@@ -1,5 +1,5 @@
 export const toastTextOneStyle = {
-    fontSize: 16,
+    fontSize: 14,
 }
 
 export const toastTextTwoStyle = {
