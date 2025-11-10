@@ -29,6 +29,9 @@ export const VisitasScreen = () => {
     errorCount,
     deliveredCount,
     totalCount,
+    searchValue,
+    onSearchChange,
+    onClearFilters,
     listConfig,
     bottomSheetRef,
     optionsBottomSheetRef,
@@ -68,6 +71,9 @@ export const VisitasScreen = () => {
             errorCount={errorCount}
             deliveredCount={deliveredCount}
             totalCount={totalCount}
+            searchValue={searchValue}
+            onSearchChange={onSearchChange}
+            onClearFilters={onClearFilters}
           />
         }
         ListFooterComponent={<VisitasLoadingFooter isLoading={isLoading} />}

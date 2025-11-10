@@ -23,7 +23,9 @@ export type AuthStackParamList = {
  */
 export type MainStackParamList = {
   HomeTabs: undefined;
-  EntregaForm: undefined;
+  EntregaForm: {
+    visitasSeleccionadas: string[];
+  };
   Profile: undefined;
   About: undefined;
 };

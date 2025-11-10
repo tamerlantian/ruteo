@@ -2,7 +2,9 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { visitasStyles } from '../../screen/visitas/visitas.style';
-import { FilterBadges, FilterType } from '../filter-badges/filter-badges.component';
+import { FilterType } from '../filter-badges/filter-badges.component';
+import { FilterBadges } from '../filter-badges/filter-badges.component';
+import { SimpleSearch } from '../../../../shared/components/simple-search/simple-search.component';
 
 interface VisitasHeaderProps {
   hasVisitas: boolean;
@@ -14,6 +16,10 @@ interface VisitasHeaderProps {
   errorCount: number;
   deliveredCount: number;
   totalCount: number;
+  // Search props
+  searchValue: string;
+  onSearchChange: (value: string) => void;
+  onClearFilters: () => void;
 }
 
 export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
@@ -26,7 +32,14 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
   errorCount,
   deliveredCount,
   totalCount,
+  searchValue,
+  onSearchChange,
+  onClearFilters,
 }) => {
+  // Función para manejar el clear
+  const handleClear = () => {
+    onClearFilters();
+  };
   return (
     <View style={visitasStyles.header}>
       <View style={visitasStyles.titleRow}>
@@ -60,14 +73,22 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
         </View>
       </View>
 
-      {/* Filter Badges - Only show when there are visitas */}
+      {/* Search and Filter - Only show when there are visitas */}
       {hasVisitas && (
-        <FilterBadges
-          activeFilter={activeFilter}
-          onFilterChange={onFilterChange}
-          pendingCount={pendingCount}
-          errorCount={errorCount}
-        />
+        <>
+          <SimpleSearch
+            searchValue={searchValue}
+            onSearchChange={onSearchChange}
+            placeholder="Buscar por número o documento..."
+            onClear={handleClear}
+          />
+          <FilterBadges
+            activeFilter={activeFilter}
+            onFilterChange={onFilterChange}
+            pendingCount={pendingCount}
+            errorCount={errorCount}
+          />
+        </>
       )}
             
       {!hasVisitas && (

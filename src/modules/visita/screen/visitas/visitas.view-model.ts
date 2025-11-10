@@ -3,18 +3,21 @@ import BottomSheet from '@gorhom/bottom-sheet';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppSelector, useAppDispatch } from '../../../../store/hooks';
-import { 
-  selectVisitas, 
-  selectIsLoading, 
-  selectIsSucceeded, 
-  selectTotalVisitasSeleccionadas, 
+import {
+  selectVisitas,
+  selectIsLoading,
+  selectIsSucceeded,
+  selectTotalVisitasSeleccionadas,
   selectVisitasSeleccionadas,
   selectVisitasSeleccionadasConDatosGuardados,
   selectVisitasPendientes,
   selectVisitasConError,
-  selectVisitasEntregadas
+  selectVisitasEntregadas,
 } from '../../store/selector/visita.selector';
-import { removerVisitas, limpiarSeleccionVisitas } from '../../store/slice/visita.slice';
+import {
+  removerVisitas,
+  limpiarSeleccionVisitas,
+} from '../../store/slice/visita.slice';
 import { VisitaResponse } from '../../interfaces/visita.interface';
 import { MainStackParamList } from '../../../../navigation/types';
 import { LIST_OPTIMIZATION_CONFIG } from '../../constants/visita.constant';
@@ -32,22 +35,25 @@ export const useVisitasViewModel = () => {
   const dispatch = useAppDispatch();
   const { reintentarVisitasConError, isRetryLoading } = useRetryVisitas();
   const navigation = useNavigation<NavigationProp>();
-  
+
   // Estados del store
   const visitas = useAppSelector(selectVisitas);
   const isLoading = useAppSelector(selectIsLoading);
   const isSuccess = useAppSelector(selectIsSucceeded);
   const totalSeleccionadas = useAppSelector(selectTotalVisitasSeleccionadas);
   const visitasSeleccionadas = useAppSelector(selectVisitasSeleccionadas);
-  const visitasSeleccionadasConDatosGuardados = useAppSelector(selectVisitasSeleccionadasConDatosGuardados);
+  const visitasSeleccionadasConDatosGuardados = useAppSelector(
+    selectVisitasSeleccionadasConDatosGuardados,
+  );
   const visitasPendientes = useAppSelector(selectVisitasPendientes);
   const visitasConError = useAppSelector(selectVisitasConError);
   const visitasEntregadas = useAppSelector(selectVisitasEntregadas);
-  
+
   // Estados locales
   const [refreshing, setRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterType>('pending');
-  
+  const [searchValue, setSearchValue] = useState('');
+
   // Referencias
   const bottomSheetRef = useRef<BottomSheet>(null);
   const optionsBottomSheetRef = useRef<BottomSheet>(null);
@@ -56,7 +62,7 @@ export const useVisitasViewModel = () => {
   const retirarOrden = () => {
     dispatch(removerVisitas());
     dispatch(limpiarSeleccionVisitas());
-  }
+  };
 
   // === ACCIONES DE BOTTOM SHEET ===
   const openDevModeSheet = useCallback(() => {
@@ -97,10 +103,10 @@ export const useVisitasViewModel = () => {
     dispatch(removerVisitas());
     dispatch(limpiarSeleccionVisitas());
     dispatch(resetSettings());
-    
+
     // Resetear filtro a pending
     setActiveFilter('pending');
-    
+
     // Cerrar el sheet de confirmación
     closeConfirmacionSheet();
   }, [dispatch, closeConfirmacionSheet]);
@@ -127,11 +133,15 @@ export const useVisitasViewModel = () => {
 
   const retrySelectedVisitas = useCallback(() => {
     if (visitasSeleccionadasConDatosGuardados.length === 0) {
-      console.warn('No hay visitas con error y datos guardados para reintentar');
+      console.warn(
+        'No hay visitas con error y datos guardados para reintentar',
+      );
       return;
     }
 
-    const visitasConErrorIds = visitasSeleccionadasConDatosGuardados.map(visita => visita.id);
+    const visitasConErrorIds = visitasSeleccionadasConDatosGuardados.map(
+      visita => visita.id,
+    );
     reintentarVisitasConError(visitasConErrorIds);
   }, [visitasSeleccionadasConDatosGuardados, reintentarVisitasConError]);
 
@@ -143,37 +153,79 @@ export const useVisitasViewModel = () => {
   }, []);
 
   // === OPTIMIZACIONES DE FLATLIST ===
-  const getItemLayout = useCallback((data: ArrayLike<VisitaResponse> | null | undefined, index: number) => ({
-    length: LIST_OPTIMIZATION_CONFIG.ITEM_HEIGHT,
-    offset: LIST_OPTIMIZATION_CONFIG.ITEM_HEIGHT * index,
-    index,
-  }), []);
+  const getItemLayout = useCallback(
+    (data: ArrayLike<VisitaResponse> | null | undefined, index: number) => ({
+      length: LIST_OPTIMIZATION_CONFIG.ITEM_HEIGHT,
+      offset: LIST_OPTIMIZATION_CONFIG.ITEM_HEIGHT * index,
+      index,
+    }),
+    [],
+  );
 
-  const keyExtractor = useCallback((item: VisitaResponse) => `visita-${item.id}`, []);
+  const keyExtractor = useCallback(
+    (item: VisitaResponse) => `visita-${item.id}`,
+    [],
+  );
 
   // === ACCIONES DE FILTRO ===
-  const handleFilterChange = useCallback((filter: FilterType) => {
+  const handleFilterChange = useCallback(
+    (filter: FilterType) => {
+      dispatch(limpiarSeleccionVisitas());
+      setActiveFilter(filter);
+    },
+    [dispatch],
+  );
+
+  // === ACCIONES DE BÚSQUEDA ===
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      setSearchValue(value);
+      dispatch(limpiarSeleccionVisitas());
+    },
+    [dispatch],
+  );
+
+  const clearFilters = useCallback(() => {
+    setSearchValue('');
+    setActiveFilter('pending');
     dispatch(limpiarSeleccionVisitas());
-    setActiveFilter(filter);
   }, [dispatch]);
 
   // === ESTADOS COMPUTADOS ===
   const visitasFiltradas = useMemo(() => {
+    // Primero filtrar por categoría
+    let filteredByCategory: VisitaResponse[];
     switch (activeFilter) {
       case 'pending':
-        return visitasPendientes;
+        filteredByCategory = visitasPendientes;
+        break;
       case 'error':
-        return visitasConError;
+        filteredByCategory = visitasConError;
+        break;
       default:
-        return visitasPendientes;
+        filteredByCategory = visitasPendientes;
     }
-  }, [activeFilter, visitasPendientes, visitasConError]);
+
+    // Luego aplicar búsqueda por número si hay texto de búsqueda
+    if (searchValue.trim()) {
+      const searchQuery = searchValue.toLowerCase().trim();
+      return filteredByCategory.filter(visita =>
+        visita.numero.toString().includes(searchQuery) || visita.documento.includes(searchQuery),
+      );
+    }
+
+    return filteredByCategory;
+  }, [activeFilter, visitasPendientes, visitasConError, searchValue]);
 
   const hasVisitas = useMemo(() => visitas.length > 0, [visitas.length]);
-  const hasSelectedVisitas = useMemo(() => totalSeleccionadas > 0, [totalSeleccionadas]);
+  const hasSelectedVisitas = useMemo(
+    () => totalSeleccionadas > 0,
+    [totalSeleccionadas],
+  );
 
   // Usar el selector para obtener el conteo de visitas con error seleccionadas
-  const totalConErrorSeleccionadas = visitasSeleccionadasConDatosGuardados.length;
+  const totalConErrorSeleccionadas =
+    visitasSeleccionadasConDatosGuardados.length;
 
   // === EFECTOS SECUNDARIOS ===
   // Cerrar bottom sheet cuando la operación sea exitosa
@@ -193,19 +245,24 @@ export const useVisitasViewModel = () => {
     hasVisitas,
     hasSelectedVisitas,
     isRetryLoading,
-    
+
     // Filter states
     activeFilter,
     pendingCount: visitasPendientes.length,
     errorCount: visitasConError.length,
     deliveredCount: visitasEntregadas.length,
     totalCount: visitas.length,
-    
+
+    // Search states
+    searchValue,
+    onSearchChange: handleSearchChange,
+    onClearFilters: clearFilters,
+
     // Referencias
     bottomSheetRef,
     optionsBottomSheetRef,
     confirmacionBottomSheetRef,
-    
+
     // Acciones de Bottom Sheet
     openDevModeSheet,
     closeDevModeSheet,
@@ -213,29 +270,29 @@ export const useVisitasViewModel = () => {
     closeOptionsSheet,
     openConfirmacionSheet,
     closeConfirmacionSheet,
-    
+
     // Acciones de Desvinculación
     handleDesvincular,
     confirmarDesvinculacion,
     cancelarDesvinculacion,
-    
+
     retirarOrden,
-    
+
     // Acciones de Selección
     clearSelection,
     deliverSelectedVisitas,
     retrySelectedVisitas,
-    
+
     // Acciones de Lista
     onRefresh,
-    
+
     // Acciones de Filtro
     onFilterChange: handleFilterChange,
-    
+
     // Optimizaciones de FlatList
     getItemLayout,
     keyExtractor,
-    
+
     // Configuración
     listConfig: LIST_OPTIMIZATION_CONFIG,
   };

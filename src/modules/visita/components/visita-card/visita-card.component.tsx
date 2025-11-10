@@ -29,7 +29,10 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
       activeOpacity={0.7}
     >
       <View style={visitaCardStyle.content}>
-        <Text style={visitaCardStyle.title}>#{visita.numero || visita.id}</Text>
+        <View style={visitaCardStyle.header}>
+          <Text style={visitaCardStyle.title}>#{visita.numero}</Text>
+          <Text style={visitaCardStyle.title}>DOC: {visita.documento}</Text>
+        </View>
         <Text style={visitaCardStyle.subtitle}>
           {visita.destinatario || 'Destinatario no especificado'}
         </Text>

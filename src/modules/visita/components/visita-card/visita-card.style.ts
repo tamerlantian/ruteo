@@ -13,6 +13,12 @@ export const visitaCardStyle = StyleSheet.create({
     elevation: 3,
     height: 120, // Altura fija para getItemLayout
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   content: {
     padding: 16,
     flex: 1,
