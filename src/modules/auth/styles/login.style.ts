@@ -108,11 +108,9 @@ export const loginStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     marginVertical: 15,
-    alignItems: 'flex-start',
   },
   checkbox: {
     marginRight: 10,
-    marginTop: 2,
   },
   termsContainer: {
     flex: 1,
