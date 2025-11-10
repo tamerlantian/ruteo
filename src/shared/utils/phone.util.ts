@@ -24,7 +24,7 @@ export const getFirstPhoneNumber = (phoneString: string): string => {
   const cleanString = phoneString.trim();
   
   // Patrones comunes de separadores
-  const separators = [' - ', ' -', '- ', '-', ' , ', ' ,', ', ', ',', ' | ', ' |', '| ', '|'];
+  const separators = [' - ', ' -', '- ', '-', ' , ', ' ,', ', ', ',', ' | ', ' |', '| ', '|', '/'];
   
   // Buscar el primer separador que aparezca
   let firstSeparatorIndex = -1;

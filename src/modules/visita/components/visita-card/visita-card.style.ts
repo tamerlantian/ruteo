@@ -5,13 +5,15 @@ export const visitaCardStyle = StyleSheet.create({
     backgroundColor: '#fff',
     marginHorizontal: 20,
     marginVertical: 6,
-    borderRadius: 12,
+    borderRadius: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    minHeight: 120, // Altura mínima, pero puede crecer
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 4,
+    minHeight: 120,
+    borderWidth: 0.5,
+    borderColor: '#f0f0f0',
   },
   header: {
     flexDirection: 'row',
@@ -19,32 +21,56 @@ export const visitaCardStyle = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+  numberBadge: {
+    backgroundColor: '#4698f0ff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  numberText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  destinatarioContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+    marginTop: 4,
+  },
+  addressContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    marginBottom: 8,
+  },
+  weightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   content: {
     padding: 16,
     flex: 1,
   },
-  title: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#1c1c1e',
-  },
   document: {
     fontSize: 11,
     fontWeight: '500',
-    color: '#8e8e93',
+    color: '#646467ff',
   },
   subtitle: {
-    fontSize: 12,
-    color: '#8e8e93',
-    marginBottom: 6,
-    marginTop: 4,
+    fontSize: 14,
+    color: '#676769ff',
+    flex: 1,
   },
   address: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#007aff',
-    marginBottom: 8,
     lineHeight: 14,
-    flexShrink: 1, // Permite que se ajuste al contenido
+    flexShrink: 1,
+    flex: 1,
   },
   infoRow: {
     flexDirection: 'row',
@@ -55,17 +81,28 @@ export const visitaCardStyle = StyleSheet.create({
   },
   leftInfo: {
     flex: 1,
+    justifyContent: 'center',
+  },
+  rightInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   infoText: {
     fontSize: 11,
-    color: '#8e8e93',
+    color: '#646467ff',
     fontWeight: '500',
-    marginBottom: 2,
+  },
+  cobroContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   cobro: {
-    fontSize: 12,
+    fontSize: 14,
+    marginLeft: 16,
     color: '#ff3b30',
-    fontWeight: '600',
+    fontWeight: '800',
   },
   phoneButton: {
     flexDirection: 'row',
@@ -77,7 +114,6 @@ export const visitaCardStyle = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e5e5ea',
     flexShrink: 0, // No se encoge
-    maxWidth: 120, // Ancho máximo
   },
   phoneText: {
     fontSize: 10,

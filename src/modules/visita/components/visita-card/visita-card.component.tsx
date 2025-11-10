@@ -47,46 +47,63 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
       <View style={visitaCardStyle.content}>
         {/* Header con número y documento */}
         <View style={visitaCardStyle.header}>
-          <Text style={visitaCardStyle.title}>#{visita.numero}</Text>
+          <View style={visitaCardStyle.numberBadge}>
+            <Text style={visitaCardStyle.numberText}>#{visita.numero}</Text>
+          </View>
           <Text style={visitaCardStyle.document}>DOC: {visita.documento}</Text>
         </View>
 
         {/* Destinatario */}
-        <Text style={visitaCardStyle.subtitle}>
-          {visita.destinatario || 'Destinatario no especificado'}
-        </Text>
+        <View style={visitaCardStyle.destinatarioContainer}>
+          <Ionicons name="person-outline" size={14} color="#8e8e93" />
+          <Text style={visitaCardStyle.subtitle}>
+            {visita.destinatario || 'Destinatario no especificado'}
+          </Text>
+        </View>
 
         {/* Dirección */}
         {visita.destinatario_direccion && (
-          <Text style={visitaCardStyle.address}>{visita.destinatario_direccion}</Text>
+          <View style={visitaCardStyle.addressContainer}>
+            <Ionicons name="location-outline" size={14} color="#007aff" />
+            <Text style={visitaCardStyle.address}>{visita.destinatario_direccion}</Text>
+          </View>
         )}
 
         {/* Información compacta */}
         <View style={visitaCardStyle.infoRow}>
           <View style={visitaCardStyle.leftInfo}>
-            <Text style={visitaCardStyle.infoText}>
-              {visita.unidades} und • {visita.peso}kg
-            </Text>
             {visita.cobro > 0 && (
-              <Text style={visitaCardStyle.cobro}>
-                ${visita.cobro.toLocaleString()}
-              </Text>
+              <View style={visitaCardStyle.cobroContainer}>
+                <Text style={visitaCardStyle.cobro}>
+                  ${visita.cobro.toLocaleString()}
+                </Text>
+              </View>
             )}
           </View>
 
-          {/* Botón de teléfono */}
-          {displayPhone && (
-            <TouchableOpacity 
-              style={visitaCardStyle.phoneButton}
-              onPress={handlePhonePress}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons name="call" size={16} color="#007aff" />
-              <Text style={visitaCardStyle.phoneText}>
-                {displayPhone}
+          {/* Información de carga y teléfono */}
+          <View style={visitaCardStyle.rightInfo}>
+            <View style={visitaCardStyle.weightContainer}>
+              <Ionicons name="cube-outline" size={12} color="#8e8e93" />
+              <Text style={visitaCardStyle.infoText}>
+                {visita.unidades} und • {visita.peso}kg
               </Text>
-            </TouchableOpacity>
-          )}
+            </View>
+            
+            {/* Botón de teléfono */}
+            {displayPhone && (
+              <TouchableOpacity 
+                style={visitaCardStyle.phoneButton}
+                onPress={handlePhonePress}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="call" size={16} color="#007aff" />
+                <Text style={visitaCardStyle.phoneText}>
+                  {displayPhone}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </View>
       
