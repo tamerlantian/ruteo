@@ -3,6 +3,7 @@ import { ScrollView, Text, TouchableOpacity, View, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { useAuth } from '../../auth/context/auth.context';
+import { settingsStyles } from '../styles/settings.style';
 
 export const SettingsScreen = () => {
   const { logout } = useAuth();
@@ -35,52 +36,24 @@ export const SettingsScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8f9fa' }}>
-      <ScrollView style={{ flex: 1 }}>
+    <SafeAreaView style={settingsStyles.container}>
+      <ScrollView style={settingsStyles.scrollContainer}>
         {/* Header */}
-        <View style={{ 
-          paddingHorizontal: 20, 
-          paddingVertical: 16,
-          backgroundColor: '#fff',
-          borderBottomWidth: 1,
-          borderBottomColor: '#e5e5ea'
-        }}>
-          <Text style={{ 
-            fontSize: 28, 
-            fontWeight: 'bold', 
-            color: '#1c1c1e' 
-          }}>
+        <View style={settingsStyles.header}>
+          <Text style={settingsStyles.headerTitle}>
             Ajustes
           </Text>
         </View>
 
         {/* Opciones de configuración */}
-        <View style={{ 
-          backgroundColor: '#fff', 
-          marginTop: 20,
-          marginHorizontal: 16,
-          borderRadius: 12,
-          overflow: 'hidden'
-        }}>
+        <View style={settingsStyles.optionsContainer}>
           {/* Perfil */}
           <TouchableOpacity
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              paddingHorizontal: 20,
-              paddingVertical: 18,
-              borderBottomWidth: 1,
-              borderBottomColor: '#f0f0f0'
-            }}
+            style={settingsStyles.optionButtonWithBorder}
             onPress={() => handleOptionPress('Perfil')}
           >
-            <Ionicons name="person-outline" size={22} color="#6b7280" style={{ marginRight: 16 }} />
-            <Text style={{ 
-              flex: 1, 
-              fontSize: 16, 
-              color: '#1f2937',
-              fontWeight: '400'
-            }}>
+            <Ionicons name="person-outline" size={22} color="#6b7280" style={settingsStyles.optionIcon} />
+            <Text style={settingsStyles.optionText}>
               Perfil
             </Text>
             <Ionicons name="chevron-forward" size={18} color="#d1d5db" />
@@ -88,23 +61,11 @@ export const SettingsScreen = () => {
 
           {/* Acerca de */}
           <TouchableOpacity
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              paddingHorizontal: 20,
-              paddingVertical: 18,
-              borderBottomWidth: 1,
-              borderBottomColor: '#f0f0f0'
-            }}
+            style={settingsStyles.optionButtonWithBorder}
             onPress={() => handleOptionPress('Acerca de')}
           >
-            <Ionicons name="information-circle-outline" size={22} color="#6b7280" style={{ marginRight: 16 }} />
-            <Text style={{ 
-              flex: 1, 
-              fontSize: 16, 
-              color: '#1f2937',
-              fontWeight: '400'
-            }}>
+            <Ionicons name="information-circle-outline" size={22} color="#6b7280" style={settingsStyles.optionIcon} />
+            <Text style={settingsStyles.optionText}>
               Acerca de
             </Text>
             <Ionicons name="chevron-forward" size={18} color="#d1d5db" />
@@ -112,21 +73,11 @@ export const SettingsScreen = () => {
 
           {/* Salir */}
           <TouchableOpacity
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              paddingHorizontal: 20,
-              paddingVertical: 18,
-            }}
+            style={settingsStyles.optionButton}
             onPress={handleLogout}
           >
-            <Ionicons name="log-out-outline" size={22} color="#ef4444" style={{ marginRight: 16 }} />
-            <Text style={{ 
-              flex: 1, 
-              fontSize: 16, 
-              color: '#ef4444',
-              fontWeight: '400'
-            }}>
+            <Ionicons name="log-out-outline" size={22} color="#ef4444" style={settingsStyles.optionIcon} />
+            <Text style={settingsStyles.optionTextDanger}>
               Salir
             </Text>
             <Ionicons name="chevron-forward" size={18} color="#d1d5db" />
