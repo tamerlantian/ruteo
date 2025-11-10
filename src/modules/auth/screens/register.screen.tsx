@@ -9,7 +9,7 @@ import BottomSheet from '@gorhom/bottom-sheet';
 import CheckBox from '@react-native-community/checkbox';
 import React, { useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import {  ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import {  ScrollView, Text, TouchableOpacity, View, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RegisterFormValues } from '../interfaces/auth.interface';
 import { loginStyles } from '../styles/login.style';
@@ -39,6 +39,36 @@ export const RegisterScreen = () => {
   // Función para cerrar el bottom sheet
   const handleCloseDevModeSheet = () => {
     bottomSheetRef.current?.close();
+  };
+
+  // Función para abrir términos y condiciones
+  const handleOpenTerms = async () => {
+    const url = 'http://app.ruteo.online/terminos_de_uso';
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        console.log('No se puede abrir la URL:', url);
+      }
+    } catch (error) {
+      console.error('Error al abrir términos y condiciones:', error);
+    }
+  };
+
+  // Función para abrir políticas de privacidad
+  const handleOpenPrivacy = async () => {
+    const url = 'http://app.ruteo.online/politicas_privacidad';
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        console.log('No se puede abrir la URL:', url);
+      }
+    } catch (error) {
+      console.error('Error al abrir políticas de privacidad:', error);
+    }
   };
 
   // Configurar React Hook Form
@@ -172,9 +202,16 @@ export const RegisterScreen = () => {
                     Acepto los{' '}
                     <Text
                       style={loginStyles.termsLink}
-                      onPress={() => console.log('Términos presionados')}
+                      onPress={handleOpenTerms}
                     >
-                      términos y condiciones
+                      términos
+                    </Text>
+                    <Text style={loginStyles.termsText}> y </Text>
+                    <Text
+                      style={loginStyles.termsLink}
+                      onPress={handleOpenPrivacy}
+                    >
+                      condiciones
                     </Text>
                   </Text>
                   {errors.aceptarTerminosCondiciones && (
