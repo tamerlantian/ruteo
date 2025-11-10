@@ -20,6 +20,7 @@ import { LoginFormValues } from '../interfaces/auth.interface';
 import { loginStyles } from '../styles/login.style';
 import { useLogin } from '../hooks/useLogin';
 import { useAuthNavigation } from '../../../navigation/hooks';
+import appInfoService from '../../../shared/services/app-info.service';
 
 export const LoginScreen = () => {
   // ViewModel para login
@@ -213,6 +214,24 @@ export const LoginScreen = () => {
               </Text>
             </View>
           )}
+
+          {/* Versión de la aplicación */}
+          <View
+            style={{
+              alignSelf: 'center',
+              marginTop: isDeveloperMode ? 8 : 16,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 12,
+                color: '#666',
+                textAlign: 'center',
+              }}
+            >
+              {appInfoService.getFormattedVersion()}
+            </Text>
+          </View>
         </ScrollView>
 
         {/* Bottom Sheet para el selector de modo desarrollador */}
