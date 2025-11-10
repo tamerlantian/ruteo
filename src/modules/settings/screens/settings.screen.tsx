@@ -67,32 +67,23 @@ export const SettingsScreen = () => {
             style={{
               flexDirection: 'row',
               alignItems: 'center',
-              paddingHorizontal: 16,
-              paddingVertical: 16,
+              paddingHorizontal: 20,
+              paddingVertical: 18,
               borderBottomWidth: 1,
-              borderBottomColor: '#e5e5ea'
+              borderBottomColor: '#f0f0f0'
             }}
             onPress={() => handleOptionPress('Perfil')}
           >
-            <View style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
-              backgroundColor: '#007aff',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginRight: 12
-            }}>
-              <Ionicons name="person" size={18} color="#fff" />
-            </View>
+            <Ionicons name="person-outline" size={22} color="#6b7280" style={{ marginRight: 16 }} />
             <Text style={{ 
               flex: 1, 
               fontSize: 16, 
-              color: '#1c1c1e' 
+              color: '#1f2937',
+              fontWeight: '400'
             }}>
               Perfil
             </Text>
-            <Ionicons name="chevron-forward" size={20} color="#c7c7cc" />
+            <Ionicons name="chevron-forward" size={18} color="#d1d5db" />
           </TouchableOpacity>
 
           {/* Acerca de */}
@@ -100,32 +91,23 @@ export const SettingsScreen = () => {
             style={{
               flexDirection: 'row',
               alignItems: 'center',
-              paddingHorizontal: 16,
-              paddingVertical: 16,
+              paddingHorizontal: 20,
+              paddingVertical: 18,
               borderBottomWidth: 1,
-              borderBottomColor: '#e5e5ea'
+              borderBottomColor: '#f0f0f0'
             }}
             onPress={() => handleOptionPress('Acerca de')}
           >
-            <View style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
-              backgroundColor: '#34c759',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginRight: 12
-            }}>
-              <Ionicons name="information" size={18} color="#fff" />
-            </View>
+            <Ionicons name="information-circle-outline" size={22} color="#6b7280" style={{ marginRight: 16 }} />
             <Text style={{ 
               flex: 1, 
               fontSize: 16, 
-              color: '#1c1c1e' 
+              color: '#1f2937',
+              fontWeight: '400'
             }}>
               Acerca de
             </Text>
-            <Ionicons name="chevron-forward" size={20} color="#c7c7cc" />
+            <Ionicons name="chevron-forward" size={18} color="#d1d5db" />
           </TouchableOpacity>
 
           {/* Salir */}
@@ -133,30 +115,21 @@ export const SettingsScreen = () => {
             style={{
               flexDirection: 'row',
               alignItems: 'center',
-              paddingHorizontal: 16,
-              paddingVertical: 16,
+              paddingHorizontal: 20,
+              paddingVertical: 18,
             }}
             onPress={handleLogout}
           >
-            <View style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
-              backgroundColor: '#ff3b30',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginRight: 12
-            }}>
-              <Ionicons name="log-out" size={18} color="#fff" />
-            </View>
+            <Ionicons name="log-out-outline" size={22} color="#ef4444" style={{ marginRight: 16 }} />
             <Text style={{ 
               flex: 1, 
               fontSize: 16, 
-              color: '#ff3b30' 
+              color: '#ef4444',
+              fontWeight: '400'
             }}>
               Salir
             </Text>
-            <Ionicons name="chevron-forward" size={20} color="#c7c7cc" />
+            <Ionicons name="chevron-forward" size={18} color="#d1d5db" />
           </TouchableOpacity>
         </View>
       </ScrollView>
