@@ -1,77 +1,38 @@
-// ============================================
-// TIPOS DE NAVEGACIÓN GLOBAL
-// ============================================
+/**
+ * Tipos de navegación para toda la aplicación
+ */
 
 /**
- * Stack principal de la aplicación
- * Maneja la navegación entre Auth y Main
+ * Parámetros para el stack raíz de la aplicación
  */
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
 };
 
-// ============================================
-// MÓDULO DE AUTENTICACIÓN
-// ============================================
-
 /**
- * Stack de autenticación
- * Contiene Login, Register, ForgotPassword
+ * Parámetros para el stack de autenticación
  */
 export type AuthStackParamList = {
   Login: undefined;
-  Register: undefined;
-  ForgotPassword: undefined;
+  Register?: undefined;
 };
 
-// ============================================
-// MÓDULO PRINCIPAL (MAIN)
-// ============================================
-
 /**
- * Stack principal de la aplicación autenticada
- * Contiene HomeTabs y pantallas modales
+ * Parámetros para el stack principal (aplicación autenticada)
  */
 export type MainStackParamList = {
   HomeTabs: undefined;
-  EntregaForm: {
-    visitasSeleccionadas: string[];
-  };
+  EntregaForm: undefined;
+  Profile: undefined;
+  About: undefined;
 };
 
 /**
- * Tabs del home principal
- * Contiene Dashboard, Visitas, Settings
+ * Parámetros para las tabs principales
  */
 export type MainTabParamList = {
   Dashboard: undefined;
   Visitas: undefined;
   Settings: undefined;
-};
-
-// ============================================
-// TIPOS COMPUESTOS PARA NAVEGACIÓN ANIDADA
-// ============================================
-
-/**
- * Tipo compuesto para navegación desde Auth a Main
- */
-export type AuthToMainNavigationProp = {
-  navigate(name: 'Main'): void;
-  navigate(name: 'HomeTabs'): void;
-};
-
-/**
- * Tipo para navegación dentro del Main Stack
- */
-export type MainStackNavigationProp = {
-  navigate<K extends keyof MainStackParamList>(
-    name: K,
-    params: MainStackParamList[K]
-  ): void;
-  navigate<K extends keyof MainStackParamList>(
-    name: K,
-    ...args: MainStackParamList[K] extends undefined ? [] : [MainStackParamList[K]]
-  ): void;
 };

@@ -3,10 +3,12 @@ import { ScrollView, Text, TouchableOpacity, View, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { useAuth } from '../../auth/context/auth.context';
+import { useTabNavigation } from '../../../navigation/hooks/useTypedNavigation';
 import { settingsStyles } from '../styles/settings.style';
 
 export const SettingsScreen = () => {
   const { logout } = useAuth();
+  const navigation = useTabNavigation();
 
   // Función para manejar el logout
   const handleLogout = () => {
@@ -29,10 +31,18 @@ export const SettingsScreen = () => {
     );
   };
 
-  // Función placeholder para manejar navegación a opciones
+  // Función para manejar navegación a opciones
   const handleOptionPress = (option: string) => {
-    console.log(`Navegando a: ${option}`);
-    // TODO: Implementar navegación a cada opción
+    switch (option) {
+      case 'Perfil':
+        navigation.navigate('Profile');
+        break;
+      case 'Acerca de':
+        navigation.navigate('About');
+        break;
+      default:
+        console.log(`Navegando a: ${option}`);
+    }
   };
 
   return (
