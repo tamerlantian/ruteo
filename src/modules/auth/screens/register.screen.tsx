@@ -221,14 +221,14 @@ export const RegisterScreen = () => {
               }}
             >
               <Text style={{ fontSize: 10, color: '#4CAF50', fontWeight: 'bold' }}>
-                MODO DESARROLLO
+                MODO PRUEBAS
               </Text>
             </View>
           )}
         </ScrollView>
 
         {/* Bottom Sheet para el selector de modo desarrollador */}
-        <CustomBottomSheet ref={bottomSheetRef} initialSnapPoints={['40%']}>
+        <CustomBottomSheet ref={bottomSheetRef} initialSnapPoints={['27%']}>
           <DevModeSelector onClose={handleCloseDevModeSheet} />
         </CustomBottomSheet>
       </View>

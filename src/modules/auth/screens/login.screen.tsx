@@ -209,7 +209,7 @@ export const LoginScreen = () => {
               <Text
                 style={{ fontSize: 10, color: '#4CAF50', fontWeight: 'bold' }}
               >
-                MODO DESARROLLO
+                MODO PRUEBAS
               </Text>
             </View>
           )}
@@ -218,7 +218,7 @@ export const LoginScreen = () => {
         {/* Bottom Sheet para el selector de modo desarrollador */}
         <CustomBottomSheet
           ref={bottomSheetRef}
-          initialSnapPoints={['30%', '50%']}
+          initialSnapPoints={['27%']}
         >
           <DevModeSelector onClose={handleCloseDevModeSheet} />
         </CustomBottomSheet>

@@ -8,7 +8,7 @@ interface DevModeSelectorProps {
 }
 
 export const DevModeSelector: React.FC<DevModeSelectorProps> = ({ onClose }) => {
-  const { isDeveloperMode, toggleDeveloperMode, currentEndpoint } = useDevMode();
+  const { isDeveloperMode, toggleDeveloperMode } = useDevMode();
 
   const handleToggle = async () => {
     await toggleDeveloperMode();
@@ -21,7 +21,7 @@ export const DevModeSelector: React.FC<DevModeSelectorProps> = ({ onClose }) => 
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Modo desarrollador</Text>
+      <Text style={styles.title}>Modo pruebas</Text>
 
       <View style={styles.infoContainer}>
         <Text style={styles.subtitle}>Estado actual:</Text>
@@ -30,24 +30,17 @@ export const DevModeSelector: React.FC<DevModeSelectorProps> = ({ onClose }) => 
         </Text>
       </View>
 
-      <View style={styles.endpointContainer}>
-        <Text style={styles.subtitle}>Endpoint:</Text>
-        <Text style={styles.endpoint}>{currentEndpoint}</Text>
-      </View>
-
       <TouchableOpacity
         style={[styles.button, isDeveloperMode ? styles.disableButton : styles.enableButton]}
         onPress={handleToggle}
       >
         <Text style={styles.buttonText}>
-          {isDeveloperMode ? 'Desactivar modo desarrollador' : 'Activar modo desarrollador'}
+          {isDeveloperMode ? 'Desactivar modo pruebas' : 'Activar modo pruebas'}
         </Text>
       </TouchableOpacity>
 
       <Text style={styles.description}>
-        El modo desarrollador te permite cambiar entre el endpoint de producción y desarrollo.
-        {'\n\n'}• Modo normal: https://reddocapi.co/
-        {'\n'}• Modo desarrollador: http://reddocapi.online/
+        Activar un entorno seguro con datos de ejemplo. Puedes explorar todas las funciones sin afectar la información real.
       </Text>
     </View>
   );
