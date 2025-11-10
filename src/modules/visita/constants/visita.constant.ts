@@ -30,7 +30,7 @@ export const parentescos = [
 ];
 
 export const LIST_OPTIMIZATION_CONFIG = {
-  ITEM_HEIGHT: 120,
+  // Removed ITEM_HEIGHT since cards now have dynamic height
   INITIAL_NUM_TO_RENDER: 10,
   MAX_TO_RENDER_PER_BATCH: 5,
   WINDOW_SIZE: 10,

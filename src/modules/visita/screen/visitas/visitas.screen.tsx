@@ -19,7 +19,6 @@ export const VisitasScreen = () => {
     openOptionsSheet,
     visitas,
     keyExtractor,
-    getItemLayout,
     onRefresh,
     refreshing,
     isLoading,
@@ -59,7 +58,6 @@ export const VisitasScreen = () => {
         data={visitas}
         renderItem={renderVisitaItem}
         keyExtractor={keyExtractor}
-        getItemLayout={getItemLayout}
         ListHeaderComponent={
           <VisitasHeader
             hasVisitas={hasVisitas}

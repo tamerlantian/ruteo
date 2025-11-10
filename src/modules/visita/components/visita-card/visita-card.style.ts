@@ -11,7 +11,7 @@ export const visitaCardStyle = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    height: 120, // Altura fija para getItemLayout
+    minHeight: 120, // Altura mínima, pero puede crecer
   },
   header: {
     flexDirection: 'row',
@@ -22,38 +22,69 @@ export const visitaCardStyle = StyleSheet.create({
   content: {
     padding: 16,
     flex: 1,
-    justifyContent: 'space-between',
   },
   title: {
     fontSize: 12,
     fontWeight: '600',
     color: '#1c1c1e',
-    marginBottom: 4,
+  },
+  document: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#8e8e93',
   },
   subtitle: {
     fontSize: 12,
     color: '#8e8e93',
-    marginBottom: 8,
+    marginBottom: 6,
+    marginTop: 4,
   },
   address: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#007aff',
-    marginBottom: 4,
-  },
-  date: {
-    fontSize: 12,
-    color: '#8e8e93',
+    marginBottom: 8,
+    lineHeight: 14,
+    flexShrink: 1, // Permite que se ajuste al contenido
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 8,
+    alignItems: 'flex-start', // Alinea al inicio para mejor distribución
+    marginTop: 6,
+    flexWrap: 'wrap', // Permite que se envuelva si es necesario
   },
-  weight: {
+  leftInfo: {
+    flex: 1,
+  },
+  infoText: {
+    fontSize: 11,
+    color: '#8e8e93',
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  cobro: {
     fontSize: 12,
+    color: '#ff3b30',
+    fontWeight: '600',
+  },
+  phoneButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
+    flexShrink: 0, // No se encoge
+    maxWidth: 120, // Ancho máximo
+  },
+  phoneText: {
+    fontSize: 10,
     color: '#007aff',
     fontWeight: '500',
+    marginLeft: 3,
+    flexShrink: 1, // Puede encogerse si es necesario
   },
   containerSelected: {
     backgroundColor: '#f0f8ff', // Azul muy suave

@@ -153,14 +153,15 @@ export const useVisitasViewModel = () => {
   }, []);
 
   // === OPTIMIZACIONES DE FLATLIST ===
-  const getItemLayout = useCallback(
-    (data: ArrayLike<VisitaResponse> | null | undefined, index: number) => ({
-      length: LIST_OPTIMIZATION_CONFIG.ITEM_HEIGHT,
-      offset: LIST_OPTIMIZATION_CONFIG.ITEM_HEIGHT * index,
-      index,
-    }),
-    [],
-  );
+  // getItemLayout removed since cards now have dynamic height
+  // const getItemLayout = useCallback(
+  //   (data: ArrayLike<VisitaResponse> | null | undefined, index: number) => ({
+  //     length: LIST_OPTIMIZATION_CONFIG.ITEM_HEIGHT,
+  //     offset: LIST_OPTIMIZATION_CONFIG.ITEM_HEIGHT * index,
+  //     index,
+  //   }),
+  //   [],
+  // );
 
   const keyExtractor = useCallback(
     (item: VisitaResponse) => `visita-${item.id}`,
@@ -290,7 +291,6 @@ export const useVisitasViewModel = () => {
     onFilterChange: handleFilterChange,
 
     // Optimizaciones de FlatList
-    getItemLayout,
     keyExtractor,
 
     // Configuración
