@@ -209,7 +209,8 @@ export const useVisitasViewModel = () => {
     if (searchValue.trim()) {
       const searchQuery = searchValue.toLowerCase().trim();
       return filteredByCategory.filter(visita =>
-        visita.numero.toString().includes(searchQuery) || visita.documento.includes(searchQuery),
+        visita.numero.toString().toLowerCase().includes(searchQuery) || 
+        visita.documento.toLowerCase().includes(searchQuery),
       );
     }
 
