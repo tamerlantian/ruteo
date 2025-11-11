@@ -1,5 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '../../../../store/root-reducer';
+import { selectVisitaIdsWithNovedades } from '../../../novedad/store/selector/novedad.selector';
 
 const selectVisitasRootState = (state: RootState) => state.visita;
 
@@ -75,4 +76,14 @@ export const selectVisitasSeleccionadasConDatosGuardados = createSelector(
       .filter(
         visita => visita.estado_error && visita.datos_formulario_guardados,
       ),
+);
+
+/**
+ * Selector cross-module que obtiene visitas que tienen novedades asociadas
+ * Combina datos del módulo visita con datos del módulo novedad
+ */
+export const selectVisitasConNovedades = createSelector(
+  [selectVisitas, selectVisitaIdsWithNovedades],
+  (visitas, visitaIdsWithNovedades) =>
+    visitas.filter(visita => visitaIdsWithNovedades.includes(visita.id)),
 );

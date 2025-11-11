@@ -26,6 +26,7 @@ export const VisitasScreen = () => {
     activeFilter,
     pendingCount,
     errorCount,
+    novedadesCount,
     deliveredCount,
     totalCount,
     searchValue,
@@ -68,6 +69,7 @@ export const VisitasScreen = () => {
             onFilterChange={onFilterChange}
             pendingCount={pendingCount}
             errorCount={errorCount}
+            novedadesCount={novedadesCount}
             deliveredCount={deliveredCount}
             totalCount={totalCount}
             searchValue={searchValue}

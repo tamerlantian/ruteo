@@ -13,6 +13,7 @@ import {
   selectVisitasPendientes,
   selectVisitasConError,
   selectVisitasEntregadas,
+  selectVisitasConNovedades,
 } from '../../store/selector/visita.selector';
 import {
   removerVisitas,
@@ -48,6 +49,7 @@ export const useVisitasViewModel = () => {
   const visitasPendientes = useAppSelector(selectVisitasPendientes);
   const visitasConError = useAppSelector(selectVisitasConError);
   const visitasEntregadas = useAppSelector(selectVisitasEntregadas);
+  const visitasConNovedades = useAppSelector(selectVisitasConNovedades);
 
   // Estados locales
   const [refreshing, setRefreshing] = useState(false);
@@ -212,6 +214,9 @@ export const useVisitasViewModel = () => {
       case 'error':
         filteredByCategory = visitasConError;
         break;
+      case 'novedades':
+        filteredByCategory = visitasConNovedades;
+        break;
       default:
         filteredByCategory = visitasPendientes;
     }
@@ -226,7 +231,7 @@ export const useVisitasViewModel = () => {
     }
 
     return filteredByCategory;
-  }, [activeFilter, visitasPendientes, visitasConError, searchValue]);
+  }, [activeFilter, visitasPendientes, visitasConError, visitasConNovedades, searchValue]);
 
   const hasVisitas = useMemo(() => visitas.length > 0, [visitas.length]);
   const hasSelectedVisitas = useMemo(
@@ -261,6 +266,7 @@ export const useVisitasViewModel = () => {
     activeFilter,
     pendingCount: visitasPendientes.length,
     errorCount: visitasConError.length,
+    novedadesCount: visitasConNovedades.length,
     deliveredCount: visitasEntregadas.length,
     totalCount: visitas.length,
 
