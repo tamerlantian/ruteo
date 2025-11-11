@@ -10,9 +10,13 @@ export const selectVisitas = createSelector(
 );
 
 export const selectVisitasPendientes = createSelector(
-  selectVisitasRootState,
-  ({ visitas }) =>
-    visitas.filter(visita => !visita.estado_entregado && !visita.estado_error),
+  [selectVisitas, selectVisitaIdsWithNovedades],
+  (visitas, visitaIdsWithNovedades) =>
+    visitas.filter(visita => 
+      !visita.estado_entregado && 
+      !visita.estado_error && 
+      !visitaIdsWithNovedades.includes(visita.id)
+    ),
 );
 
 export const selectVisitasEntregadas = createSelector(
