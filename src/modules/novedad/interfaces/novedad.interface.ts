@@ -7,8 +7,16 @@ export interface Novedad {
   novedad_tipo_id: number;
   fecha: string;
   descripcion: string;
+  solucion?: string;
   imagenes: { uri: string }[];
+
+  // campos para tracking local
+  estado_error: boolean;
   estado_sincronizado?: boolean;
+  estado_solucion_error?: boolean;
+  estado_solucion_sincronizado?: boolean;
+
+  // no se usan
   estado_entregado?: boolean;
   estado_sincronizado_codigo?: number;
   estado_sincronizada_error?: boolean;

@@ -37,6 +37,17 @@ export class NovedadRepository extends HttpBaseRepository {
     const url = await buildUrlWithSubdomain(schemaName, 'ruteo/novedad_tipo/');
     return this.get<ApiResponse<NovedadTipo>>(url);
   }
+
+  /**
+   * Envía una novedad al servidor
+   * @param schemaName Nombre del schema
+   * @param formData - FormData con los datos de la novedad
+   * @returns Promise con la respuesta del servidor
+   */
+  async enviarNovedad(schemaName: string, formData: FormData): Promise<any> {
+    const url = await buildUrlWithSubdomain(schemaName, 'ruteo/novedad/nuevo/');
+    return this.postMultipart(url, formData);
+  }
 }
 
 export const novedadRepository = NovedadRepository.getInstance();

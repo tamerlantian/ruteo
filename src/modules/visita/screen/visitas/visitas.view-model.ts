@@ -165,17 +165,6 @@ export const useVisitasViewModel = () => {
     setTimeout(() => setRefreshing(false), 1000);
   }, []);
 
-  // === OPTIMIZACIONES DE FLATLIST ===
-  // getItemLayout removed since cards now have dynamic height
-  // const getItemLayout = useCallback(
-  //   (data: ArrayLike<VisitaResponse> | null | undefined, index: number) => ({
-  //     length: LIST_OPTIMIZATION_CONFIG.ITEM_HEIGHT,
-  //     offset: LIST_OPTIMIZATION_CONFIG.ITEM_HEIGHT * index,
-  //     index,
-  //   }),
-  //   [],
-  // );
-
   const keyExtractor = useCallback(
     (item: VisitaResponse) => `visita-${item.id}`,
     [],

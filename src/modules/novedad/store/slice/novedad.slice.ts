@@ -30,10 +30,22 @@ const novedadSlice = createSlice({
       };
       state.novedades.push(novedadConId);
     },
+    marcarNovedadConError: (state, action: PayloadAction<string>) => {
+      const novedad = state.novedades.find(n => n.id === action.payload);
+      if (novedad) {
+        novedad.estado_error = true;
+      }
+    },
+    desmarcarNovedadConError: (state, action: PayloadAction<string>) => {
+      const novedad = state.novedades.find(n => n.id === action.payload);
+      if (novedad) {
+        novedad.estado_error = false;
+      }
+    },
   },
   extraReducers() {
   },
 });
 
-export const { guardarNovedad } = novedadSlice.actions;
+export const { guardarNovedad, marcarNovedadConError, desmarcarNovedadConError } = novedadSlice.actions;
 export default novedadSlice.reducer;
