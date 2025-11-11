@@ -94,6 +94,20 @@ export const NovedadFormScreen: React.FC<NovedadFormScreenProps> = ({
               </ScrollView>
             </View>
 
+              {/* Campo: Descripción */}
+            <FormInputController
+              control={viewModel.control}
+              name="descripcion"
+              label="Descripción *"
+              placeholder="Describe detalladamente la novedad encontrada..."
+              rules={viewModel.validationRules.descripcion}
+              error={viewModel.errors.descripcion}
+              multiline={true}
+              numberOfLines={4}
+              textAlignVertical="top"
+              style={novedadFormStyles.textArea}
+            />
+
             {/* Campo: Tipo de Novedad */}
             <FormSelectorController
               control={viewModel.control}
@@ -118,20 +132,6 @@ export const NovedadFormScreen: React.FC<NovedadFormScreenProps> = ({
               error={viewModel.errors.foto}
               required={true}
               maxPhotos={1}
-            />
-
-            {/* Campo: Descripción */}
-            <FormInputController
-              control={viewModel.control}
-              name="descripcion"
-              label="Descripción *"
-              placeholder="Describe detalladamente la novedad encontrada..."
-              rules={viewModel.validationRules.descripcion}
-              error={viewModel.errors.descripcion}
-              multiline={true}
-              numberOfLines={4}
-              textAlignVertical="top"
-              style={novedadFormStyles.textArea}
             />
           </View>
         </ScrollView>
