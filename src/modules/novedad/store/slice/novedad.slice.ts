@@ -5,7 +5,7 @@ import { generateTempId } from '../../../../shared/utils/id-generator.util';
 interface NovedadState {
   novedades: Novedad[];
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
-  seleccionadas: number[];
+  seleccionadas: string[];
 }
 
 const initialState: NovedadState = {
@@ -42,10 +42,44 @@ const novedadSlice = createSlice({
         novedad.estado_error = false;
       }
     },
+    // === ACCIONES DE SELECCIÓN ===
+    toggleNovedadSeleccion: (state, action: PayloadAction<string>) => {
+      const novedadId = action.payload;
+      const index = state.seleccionadas.indexOf(novedadId);
+      
+      if (index > -1) {
+        // Si está seleccionada, la removemos
+        state.seleccionadas.splice(index, 1);
+      } else {
+        // Si no está seleccionada, la agregamos
+        state.seleccionadas.push(novedadId);
+      }
+    },
+    seleccionarTodasNovedades: (state) => {
+      // Seleccionar todas las novedades actuales
+      state.seleccionadas = state.novedades.map(novedad => novedad.id);
+    },
+    limpiarSeleccionNovedades: (state) => {
+      // Limpiar todas las selecciones
+      state.seleccionadas = [];
+    },
+    seleccionarMultiplesNovedades: (state, action: PayloadAction<string[]>) => {
+      // Agregar múltiples IDs a la selección
+      const idsToAdd = action.payload.filter(id => !state.seleccionadas.includes(id));
+      state.seleccionadas.push(...idsToAdd);
+    },
   },
   extraReducers() {
   },
 });
 
-export const { guardarNovedad, marcarNovedadConError, desmarcarNovedadConError } = novedadSlice.actions;
+export const { 
+  guardarNovedad, 
+  marcarNovedadConError, 
+  desmarcarNovedadConError,
+  toggleNovedadSeleccion,
+  seleccionarTodasNovedades,
+  limpiarSeleccionNovedades,
+  seleccionarMultiplesNovedades
+} = novedadSlice.actions;
 export default novedadSlice.reducer;

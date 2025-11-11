@@ -1,13 +1,19 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Novedad } from '../../interfaces/novedad.interface';
 import { dateUtil } from '../../../../shared/utils/date.util';
+import { useAppSelector, useAppDispatch } from '../../../../store/hooks';
+import { selectIsNovedadSeleccionada } from '../../store/selector/novedad.selector';
+import { toggleNovedadSeleccion } from '../../store/slice/novedad.slice';
 
 interface NovedadCardProps {
   novedad: Novedad;
 }
 
 export const NovedadCardComponent: React.FC<NovedadCardProps> = ({ novedad }) => {
+  const dispatch = useAppDispatch();
+  const isSelected = useAppSelector(selectIsNovedadSeleccionada(novedad.id));
+
   const formatDate = (dateString: string) => {
     try {
       return dateUtil.formatDate(dateString);
@@ -16,8 +22,19 @@ export const NovedadCardComponent: React.FC<NovedadCardProps> = ({ novedad }) =>
     }
   };
 
+  const handlePress = () => {
+    dispatch(toggleNovedadSeleccion(novedad.id));
+  };
+
   return (
-    <View style={styles.container}>
+    <TouchableOpacity 
+      style={[
+        styles.container,
+        isSelected && styles.containerSelected
+      ]} 
+      onPress={handlePress}
+      activeOpacity={0.7}
+    >
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>
@@ -56,7 +73,14 @@ export const NovedadCardComponent: React.FC<NovedadCardProps> = ({ novedad }) =>
           </View>
         )}
       </View>
-    </View>
+      
+      {/* Indicador visual de selección */}
+      {isSelected && (
+        <View style={styles.selectedIndicator}>
+          <View style={styles.checkmark} />
+        </View>
+      )}
+    </TouchableOpacity>
   );
 };
 
@@ -130,5 +154,39 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#fff',
     fontWeight: '600',
+  },
+  containerSelected: {
+    backgroundColor: '#f0f8ff', // Azul muy suave
+    borderWidth: 2,
+    borderColor: '#007aff',
+    shadowColor: '#007aff',
+    shadowOpacity: 0.2,
+    elevation: 6,
+  },
+  selectedIndicator: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#007aff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  checkmark: {
+    width: 8,
+    height: 12,
+    borderBottomWidth: 2,
+    borderRightWidth: 2,
+    borderColor: '#fff',
+    transform: [{ rotate: '45deg' }],
+    marginTop: -2,
+    marginLeft: 2,
   },
 });
