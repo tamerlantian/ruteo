@@ -58,3 +58,35 @@ export const selectNovedadPorId = (novedadId: string) =>
   createSelector(selectNovedades, novedades =>
     novedades.find(novedad => novedad.id === novedadId),
   );
+
+// === SELECTORES CROSS-MODULE ===
+
+// Selector que combina novedad con datos de la visita asociada
+export const selectNovedadConVisita = (novedadId: string) =>
+  createSelector(
+    [selectNovedades, (state: RootState) => state.visita.visitas],
+    (novedades, visitas) => {
+      const novedad = novedades.find(n => n.id === novedadId);
+      if (!novedad) return null;
+      
+      const visita = visitas.find(v => v.id === novedad.visita_id);
+      return {
+        novedad,
+        visita: visita || null,
+      };
+    },
+  );
+
+// Selector que obtiene todas las novedades con sus visitas asociadas
+export const selectNovedadesConVisitas = createSelector(
+  [selectNovedades, (state: RootState) => state.visita.visitas],
+  (novedades, visitas) => {
+    return novedades.map(novedad => {
+      const visita = visitas.find(v => v.id === novedad.visita_id);
+      return {
+        novedad,
+        visita: visita || null,
+      };
+    });
+  },
+);

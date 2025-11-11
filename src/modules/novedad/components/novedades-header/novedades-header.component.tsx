@@ -105,7 +105,7 @@ export const NovedadesHeader: React.FC<NovedadesHeaderProps> = ({
           <SimpleSearch
             searchValue={searchValue}
             onSearchChange={onSearchChange}
-            placeholder="Buscar por descripción o ID de visita..."
+            placeholder="Buscar por número o documento..."
             onClear={handleClear}
           />
           <NovedadFilterBadges

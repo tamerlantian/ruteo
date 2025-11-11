@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useAppSelector } from '../../../../store/hooks';
-import { selectNovedades } from '../../store/selector/novedad.selector';
+import { selectNovedades, selectNovedadesConVisitas } from '../../store/selector/novedad.selector';
 import { Novedad } from '../../interfaces/novedad.interface';
 
 type NovedadFilterType = 'all' | 'error';
@@ -17,6 +17,7 @@ export const useNovedadesViewModel = () => {
 
   // === SELECTORES DE REDUX ===
   const novedades = useAppSelector(selectNovedades);
+  const novedadesConVisitas = useAppSelector(selectNovedadesConVisitas);
 
   // === ESTADO COMPUTADO ===
   const hasNovedades = novedades.length > 0;
@@ -31,28 +32,40 @@ export const useNovedadesViewModel = () => {
 
   // === FILTRADO Y BÚSQUEDA ===
   const novedadesFiltradas = useMemo(() => {
-    // Primero filtrar por categoría
-    let filteredByCategory: Novedad[];
-    switch (activeFilter) {
-      case 'error':
-        filteredByCategory = novedadesConError;
-        break;
-      case 'all':
-      default:
-        filteredByCategory = novedades;
-    }
+    // Primero filtrar por categoría usando datos combinados
+    let filteredByCategory = novedadesConVisitas.filter(item => {
+      switch (activeFilter) {
+        case 'error':
+          return item.novedad.estado_error;
+        case 'all':
+        default:
+          return true;
+      }
+    });
 
     // Luego filtrar por búsqueda
     if (!searchValue.trim()) {
-      return filteredByCategory;
+      return filteredByCategory.map(item => item.novedad);
     }
 
     const searchQuery = searchValue.toLowerCase();
-    return filteredByCategory.filter(novedad =>
-      novedad.descripcion.toLowerCase().includes(searchQuery) ||
-      novedad.visita_id.toString().includes(searchQuery)
-    );
-  }, [novedades, novedadesConError, activeFilter, searchValue]);
+    const filtered = filteredByCategory.filter(item => {
+      const { novedad, visita } = item;
+      
+      // Buscar en datos de la novedad
+      const matchesNovedad = novedad.visita_id.toString().includes(searchQuery);
+      
+      // Buscar en datos de la visita si existe
+      const matchesVisita = visita ? (
+        visita.numero.toString().toLowerCase().includes(searchQuery) ||
+        visita.documento.toLowerCase().includes(searchQuery)
+      ) : false;
+      
+      return matchesNovedad || matchesVisita;
+    });
+
+    return filtered.map(item => item.novedad);
+  }, [novedadesConVisitas, activeFilter, searchValue]);
 
 
   // === FUNCIONES DE CALLBACK ===

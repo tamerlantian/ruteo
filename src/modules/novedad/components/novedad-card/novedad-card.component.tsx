@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import Ionicons from '@react-native-vector-icons/ionicons';
 import { Novedad } from '../../interfaces/novedad.interface';
-import { dateUtil } from '../../../../shared/utils/date.util';
 import { useAppSelector, useAppDispatch } from '../../../../store/hooks';
-import { selectIsNovedadSeleccionada } from '../../store/selector/novedad.selector';
+import { selectIsNovedadSeleccionada, selectNovedadConVisita } from '../../store/selector/novedad.selector';
 import { toggleNovedadSeleccion } from '../../store/slice/novedad.slice';
+import { getFirstPhoneNumber } from '../../../../shared/utils/phone.util';
 
 interface NovedadCardProps {
   novedad: Novedad;
@@ -13,18 +14,25 @@ interface NovedadCardProps {
 export const NovedadCardComponent: React.FC<NovedadCardProps> = ({ novedad }) => {
   const dispatch = useAppDispatch();
   const isSelected = useAppSelector(selectIsNovedadSeleccionada(novedad.id));
+  const novedadConVisita = useAppSelector(selectNovedadConVisita(novedad.id));
 
-  const formatDate = (dateString: string) => {
-    try {
-      return dateUtil.formatDate(dateString);
-    } catch {
-      return dateString;
-    }
-  };
 
   const handlePress = () => {
     dispatch(toggleNovedadSeleccion(novedad.id));
   };
+
+  const handlePhonePress = (event: any) => {
+    event.stopPropagation();
+    if (novedadConVisita?.visita?.destinatario_telefono) {
+      const firstPhone = getFirstPhoneNumber(novedadConVisita.visita.destinatario_telefono);
+      Linking.openURL(`tel:${firstPhone}`);
+    }
+  };
+
+  const visita = novedadConVisita?.visita;
+  const displayPhone = visita?.destinatario_telefono 
+    ? getFirstPhoneNumber(visita.destinatario_telefono)
+    : '';
 
   return (
     <TouchableOpacity 
@@ -36,39 +44,73 @@ export const NovedadCardComponent: React.FC<NovedadCardProps> = ({ novedad }) =>
       activeOpacity={0.7}
     >
       <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>
-            Visita #{novedad.visita_id}
-          </Text>
-          <Text style={styles.date}>
-            {formatDate(novedad.fecha)}
-          </Text>
-        </View>
-
-        <Text style={styles.description}>
-          {novedad.descripcion}
-        </Text>
-        
-        {novedad.imagenes && novedad.imagenes.length > 0 && (
-          <View style={styles.imageContainer}>
-            <Text style={styles.imageLabel}>
-              {novedad.imagenes.length} {novedad.imagenes.length === 1 ? 'imagen' : 'imágenes'}
-            </Text>
-            <View style={styles.imageRow}>
-              {novedad.imagenes.slice(0, 3).map((imagen, index) => (
-                <Image
-                  key={index}
-                  source={{ uri: imagen.uri }}
-                  style={styles.thumbnailImage}
-                  resizeMode="cover"
-                />
-              ))}
+        {/* Header con número y documento */}
+        {visita && (
+          <View style={styles.header}>
+            <View style={styles.numberBadge}>
+              <Text style={styles.numberText}>{visita.id} - #{visita.numero}</Text>
             </View>
+            <Text style={styles.document}>DOC: {visita.documento}</Text>
           </View>
         )}
 
+        {/* Información de la visita */}
+        {visita && (
+          <>
+
+            {/* Destinatario */}
+            <View style={styles.destinatarioContainer}>
+              <Ionicons name="person-outline" size={14} color="#8e8e93" />
+              <Text style={styles.destinatario}>
+                {visita.destinatario || 'Destinatario no especificado'}
+              </Text>
+            </View>
+
+            {/* Dirección */}
+            {visita.destinatario_direccion && (
+              <View style={styles.addressContainer}>
+                <Ionicons name="location-outline" size={14} color="#007aff" />
+                <Text style={styles.address}>{visita.destinatario_direccion}</Text>
+              </View>
+            )}
+          </>
+        )}
+
+        {/* Descripción de la novedad */}
+        <View style={styles.novedadContainer}>
+          <Ionicons name="document-text-outline" size={14} color="#ff6b35" />
+          <Text style={styles.description}>
+            {novedad.descripcion}
+          </Text>
+        </View>
+        
+        {/* Información adicional y teléfono */}
+        <View style={styles.infoRow}>
+          <View style={styles.leftInfo}>
+            {/* Espacio para información futura */}
+          </View>
+
+          <View style={styles.rightInfo}>
+            {/* Botón de teléfono */}
+            {displayPhone && (
+              <TouchableOpacity 
+                style={styles.phoneButton}
+                onPress={handlePhonePress}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="call" size={16} color="#007aff" />
+                <Text style={styles.phoneText}>
+                  {displayPhone}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        {/* Badge de error */}
         {novedad.estado_error && (
           <View style={styles.errorBadge}>
+            <Ionicons name="warning" size={12} color="#ffffff" />
             <Text style={styles.errorText}>Error de sincronización</Text>
           </View>
         )}
@@ -95,68 +137,130 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 6,
     elevation: 4,
+    minHeight: 120,
     borderWidth: 0.5,
     borderColor: '#f0f0f0',
   },
   content: {
     padding: 16,
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1c1c1e',
-  },
-  date: {
-    fontSize: 12,
-    color: '#8e8e93',
-    fontWeight: '500',
-  },
-  description: {
-    fontSize: 14,
-    color: '#3c3c43',
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  imageContainer: {
-    marginTop: 8,
-  },
-  imageLabel: {
-    fontSize: 12,
-    color: '#8e8e93',
-    fontWeight: '500',
     marginBottom: 8,
   },
-  imageRow: {
+  numberBadge: {
+    backgroundColor: '#4698f0ff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  numberText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  document: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#646467ff',
+  },
+  destinatarioContainer: {
     flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+  },
+  destinatario: {
+    fontSize: 14,
+    color: '#676769ff',
+    flex: 1,
+  },
+  addressContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    marginBottom: 8,
+  },
+  address: {
+    fontSize: 12,
+    color: '#007aff',
+    lineHeight: 14,
+    flexShrink: 1,
+    flex: 1,
+  },
+  novedadContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    marginBottom: 8,
+    backgroundColor: '#fff5f0',
+    padding: 8,
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#ff6b35',
+  },
+  description: {
+    fontSize: 13,
+    color: '#3c3c43',
+    lineHeight: 18,
+    flex: 1,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginTop: 6,
+    flexWrap: 'wrap',
+  },
+  leftInfo: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  rightInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
-  thumbnailImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    backgroundColor: '#f2f2f7',
+  phoneButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
+    flexShrink: 0,
+  },
+  phoneText: {
+    fontSize: 10,
+    color: '#007aff',
+    fontWeight: '500',
+    marginLeft: 3,
+    flexShrink: 1,
   },
   errorBadge: {
     backgroundColor: '#ff3b30',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
     alignSelf: 'flex-start',
-    marginTop: 12,
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   errorText: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#fff',
     fontWeight: '600',
   },
   containerSelected: {
-    backgroundColor: '#f0f8ff', // Azul muy suave
+    backgroundColor: '#f0f8ff',
     borderWidth: 2,
     borderColor: '#007aff',
     shadowColor: '#007aff',
