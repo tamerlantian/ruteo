@@ -7,9 +7,10 @@ import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { cargarVisitasThunk } from '../../store/thunk/visita.thunk';
 import { selectIsLoading } from '../../store/selector/visita.selector';
 import { FormButton } from '../../../../shared/components/ui/button/FormButton';
-import { updateSettingsThunk } from '../../../settings';
+import { updateSettingsThunk, selectSubdominio } from '../../../settings';
 import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../../shared/styles/global.style';
+import { useNovedadTipos } from '../../../novedad/view-models/novedad.view-model';
 
 interface CargarOrdenFormValues {
   codigo: string;
@@ -18,6 +19,12 @@ interface CargarOrdenFormValues {
 const CargarOrdenComponent = () => {
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector(selectIsLoading);
+  const subdominio = useAppSelector(selectSubdominio);
+  
+  // Query para cargar tipos de novedad cuando hay subdominio
+  const { refetch: refetchNovedadTipos } = useNovedadTipos(subdominio || '', !!subdominio);
+
+
   const {
     control,
     handleSubmit,
@@ -48,6 +55,19 @@ const CargarOrdenComponent = () => {
             despachoId: despacho_id,
           }),
         );
+
+        try {
+          await refetchNovedadTipos();
+        } catch (novedadError) {
+          console.warn('Error cargando tipos de novedad:', novedadError);
+          Toast.show({
+            type: 'error',
+            text1: 'Error cargando tipos de novedad',
+            text1Style: toastTextOneStyle,
+          });
+          // No bloquear el flujo principal si falla la carga de tipos de novedad
+        }
+
         Toast.show({
           type: 'success',
           text1: 'Orden cargada correctamente',

@@ -14,6 +14,9 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import { useNovedadFormViewModel } from './novedad-form.view-model';
 import { novedadFormStyles } from './novedad-form.style';
 import { FormButton } from '../../../../shared/components/ui/button/FormButton';
+import { FormInputController } from '../../../../shared/components/ui/form/FormInputController';
+import { FormSelectorController } from '../../../../shared/components/ui/form/form-selector/FormSelectorController';
+import { PhotoField } from '../../../visita/screen/entrega-form/components/PhotoField';
 
 type NovedadFormScreenProps = NativeStackScreenProps<
   MainStackParamList,
@@ -91,15 +94,45 @@ export const NovedadFormScreen: React.FC<NovedadFormScreenProps> = ({
               </ScrollView>
             </View>
 
-            {/* TODO: Agregar campos del formulario de novedad aquí */}
-            <View style={novedadFormStyles.placeholderContainer}>
-              <Text style={novedadFormStyles.placeholderTitle}>
-                Formulario de novedad
-              </Text>
-              <Text style={novedadFormStyles.placeholderText}>
-                Los campos del formulario se agregarán aquí según los requerimientos específicos de novedad.
-              </Text>
-            </View>
+            {/* Campo: Tipo de Novedad */}
+            <FormSelectorController
+              control={viewModel.control}
+              name="tipo"
+              label="Tipo de novedad *"
+              placeholder="Selecciona el tipo de novedad"
+              options={viewModel.tiposOptions}
+              rules={viewModel.validationRules.tipo}
+              error={viewModel.errors.tipo}
+              isLoading={viewModel.isLoadingTipos}
+              apiError={viewModel.tiposError}
+              onRetry={viewModel.refetchTipos}
+              emptyOptionsMessage="No hay tipos de novedad disponibles"
+            />
+
+            {/* Campo: Foto de Novedad */}
+            <PhotoField
+              control={viewModel.control}
+              name="foto"
+              label="Foto *"
+              rules={viewModel.validationRules.foto}
+              error={viewModel.errors.foto}
+              required={true}
+              maxPhotos={1}
+            />
+
+            {/* Campo: Descripción */}
+            <FormInputController
+              control={viewModel.control}
+              name="descripcion"
+              label="Descripción *"
+              placeholder="Describe detalladamente la novedad encontrada..."
+              rules={viewModel.validationRules.descripcion}
+              error={viewModel.errors.descripcion}
+              multiline={true}
+              numberOfLines={4}
+              textAlignVertical="top"
+              style={novedadFormStyles.textArea}
+            />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -107,8 +140,8 @@ export const NovedadFormScreen: React.FC<NovedadFormScreenProps> = ({
       {/* Footer Actions */}
       <View style={novedadFormStyles.footer}>
         <FormButton
-          title="Enviar novedad"
-          disabled={viewModel.isSubmitting}
+          title={viewModel.isValid && !viewModel.isSubmitting ? "Enviar novedad" : "Complete los campos obligatorios"}
+          disabled={!viewModel.isValid || viewModel.isSubmitting}
           isLoading={viewModel.isSubmitting}
           onPress={viewModel.onSubmit}
         />

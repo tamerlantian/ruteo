@@ -33,3 +33,8 @@ export interface ApiResponse<T> {
 export interface ApiQueryParametros {
   [key: string]: string | number | boolean;
 }
+
+export interface SeleccionarResponse {
+  id: number;
+  nombre: string;
+}

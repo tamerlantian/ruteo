@@ -115,4 +115,9 @@ export const novedadFormStyles = StyleSheet.create({
     borderTopColor: '#e1e5e9',
     gap: 12,
   },
+  textArea: {
+    minHeight: 100,
+    maxHeight: 150,
+    paddingTop: 12,
+  },
 });

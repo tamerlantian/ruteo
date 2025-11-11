@@ -1,3 +1,5 @@
+import { SeleccionarResponse } from '../../../core/interfaces/api.interface';
+
 export interface Novedad {
   id: string;
   visita_id: number;
@@ -11,3 +13,5 @@ export interface Novedad {
   estado_sincronizada_error: boolean;
   estado_sincronizada_error_mensaje: string;
 }
+
+export interface NovedadTipo extends SeleccionarResponse {}
