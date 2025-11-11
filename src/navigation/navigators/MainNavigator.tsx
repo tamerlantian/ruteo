@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { HomeTabsNavigator } from '../../modules/home/navigation/home-tabs.navigator';
 import { EntregaFormScreen } from '../../modules/visita/screen/entrega-form/entrega-form.screen';
+import { NovedadFormScreen } from '../../modules/novedad/screen/novedad-form/novedad-form.screen';
 import { ProfileScreen } from '../../modules/settings/screens/profile.screen';
 import { AboutScreen } from '../../modules/settings/screens/about.screen';
 import { MainStackParamList } from '../types';
@@ -33,7 +34,17 @@ export const MainNavigator: React.FC = () => {
         options={{
           presentation: 'modal',
           gestureEnabled: true,
-          title: 'Entregar Visitas',
+          title: 'Entregar visitas',
+          animation: 'slide_from_bottom',
+        }}
+      />
+      <MainStack.Screen 
+        name="NovedadForm" 
+        component={NovedadFormScreen}
+        options={{
+          presentation: 'modal',
+          gestureEnabled: true,
+          title: 'Reportar novedad',
           animation: 'slide_from_bottom',
         }}
       />

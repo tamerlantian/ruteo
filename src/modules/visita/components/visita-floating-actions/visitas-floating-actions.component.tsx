@@ -12,7 +12,7 @@ interface VisitasFloatingActionsProps {
   onClearSelection: () => void;
   onDeliverVisitas: () => void;
   onRetryVisitas?: () => void;
-  // onNovedadVisitas?: () => void; // Para futuro uso
+  onNovedadVisitas?: () => void;
 }
 
 export const VisitasFloatingActions: React.FC<VisitasFloatingActionsProps> = ({
@@ -23,7 +23,7 @@ export const VisitasFloatingActions: React.FC<VisitasFloatingActionsProps> = ({
   onClearSelection,
   onDeliverVisitas,
   onRetryVisitas,
-  // onNovedadVisitas,
+  onNovedadVisitas,
 }) => {
   if (totalSeleccionadas === 0) {
     return null;
@@ -50,12 +50,22 @@ export const VisitasFloatingActions: React.FC<VisitasFloatingActionsProps> = ({
             variant='success'
           />
         ) : (
-          <FormButton 
-            title={`Entregar (${totalSeleccionadas})`}
-            onPress={onDeliverVisitas}
-            style={{ flex: 1 }}
-            variant='success'
-          />
+          <>
+            <FormButton 
+              title={`Entregar (${totalSeleccionadas})`}
+              onPress={onDeliverVisitas}
+              style={{ flex: 1, marginRight: 8 }}
+              variant='success'
+            />
+            {onNovedadVisitas && (
+              <FormButton 
+                title="Novedad"
+                onPress={onNovedadVisitas}
+                style={{ flex: 0.6 }}
+                variant='secondary'
+              />
+            )}
+          </>
         )}
       </View>
     </View>

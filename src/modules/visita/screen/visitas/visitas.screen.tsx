@@ -41,6 +41,7 @@ export const VisitasScreen = () => {
     clearSelection,
     deliverSelectedVisitas,
     retrySelectedVisitas,
+    reportNovedadSelectedVisitas,
     onFilterChange,
     isRetryLoading,
     totalSeleccionadas,
@@ -101,6 +102,7 @@ export const VisitasScreen = () => {
         onClearSelection={clearSelection}
         onDeliverVisitas={deliverSelectedVisitas}
         onRetryVisitas={retrySelectedVisitas}
+        onNovedadVisitas={reportNovedadSelectedVisitas}
       />
 
       <CustomBottomSheet

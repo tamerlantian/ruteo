@@ -26,6 +26,9 @@ export type MainStackParamList = {
   EntregaForm: {
     visitasSeleccionadas: string[];
   };
+  NovedadForm: {
+    visitasSeleccionadas: string[];
+  };
   Profile: undefined;
   About: undefined;
 };

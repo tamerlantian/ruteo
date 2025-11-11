@@ -131,6 +131,17 @@ export const useVisitasViewModel = () => {
     });
   }, [navigation, visitasSeleccionadas]);
 
+  const reportNovedadSelectedVisitas = useCallback(() => {
+    if (visitasSeleccionadas.length === 0) {
+      console.warn('No hay visitas seleccionadas para reportar novedad');
+      return;
+    }
+
+    navigation.navigate('NovedadForm', {
+      visitasSeleccionadas: visitasSeleccionadas.map(id => id.toString()),
+    });
+  }, [navigation, visitasSeleccionadas]);
+
   const retrySelectedVisitas = useCallback(() => {
     if (visitasSeleccionadasConDatosGuardados.length === 0) {
       console.warn(
@@ -282,6 +293,7 @@ export const useVisitasViewModel = () => {
     clearSelection,
     deliverSelectedVisitas,
     retrySelectedVisitas,
+    reportNovedadSelectedVisitas,
 
     // Acciones de Lista
     onRefresh,
