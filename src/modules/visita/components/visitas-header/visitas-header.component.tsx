@@ -45,7 +45,7 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
   return (
     <View style={visitasStyles.header}>
       <View style={visitasStyles.titleRow}>
-        <Text style={visitasStyles.title}>Visitas</Text>
+        <Text style={visitasStyles.title}>Entregas</Text>
         <View style={visitasStyles.headerActions}>
           {hasVisitas && totalCount > 0 && (
             <View style={visitasStyles.summaryContainer}>

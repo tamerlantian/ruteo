@@ -4,6 +4,7 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import { MainTabParamList } from '../../../navigation/types';
 import { DashboardScreen } from '../screens/dashboard.screen';
 import { VisitasScreen } from '../../visita/screen/visitas/visitas.screen';
+import { NovedadesScreen } from '../../novedad/screen/novedades/novedades.screen';
 import { SettingsScreen } from '../../settings/screens/settings.screen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -17,6 +18,9 @@ const getTabBarIcon = (route: any, focused: boolean, color: string, size: number
       break;
     case 'Visitas':
       iconName = focused ? 'cube' : 'cube-outline';
+      break;
+    case 'Novedades':
+      iconName = focused ? 'alert-circle' : 'alert-circle-outline';
       break;
     case 'Settings':
       iconName = focused ? 'settings' : 'settings-outline';
@@ -62,6 +66,13 @@ export const HomeTabsNavigator = () => {
         component={VisitasScreen}
         options={{
           tabBarLabel: 'Entregas',
+        }}
+      />
+      <Tab.Screen 
+        name="Novedades" 
+        component={NovedadesScreen}
+        options={{
+          tabBarLabel: 'Novedades',
         }}
       />
       <Tab.Screen 

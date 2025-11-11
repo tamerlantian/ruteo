@@ -47,8 +47,9 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
       <View style={visitaCardStyle.content}>
         {/* Header con número y documento */}
         <View style={visitaCardStyle.header}>
+
           <View style={visitaCardStyle.numberBadge}>
-            <Text style={visitaCardStyle.numberText}>#{visita.numero}</Text>
+            <Text style={visitaCardStyle.numberText}>{visita.id} - #{visita.numero}</Text>
           </View>
           <Text style={visitaCardStyle.document}>DOC: {visita.documento}</Text>
         </View>
