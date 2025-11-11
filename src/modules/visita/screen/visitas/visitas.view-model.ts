@@ -181,16 +181,14 @@ export const useVisitasViewModel = () => {
   const handleSearchChange = useCallback(
     (value: string) => {
       setSearchValue(value);
-      dispatch(limpiarSeleccionVisitas());
     },
-    [dispatch],
+    [],
   );
 
   const clearFilters = useCallback(() => {
     setSearchValue('');
     setActiveFilter('pending');
-    dispatch(limpiarSeleccionVisitas());
-  }, [dispatch]);
+  }, []);
 
   // === ESTADOS COMPUTADOS ===
   const visitasFiltradas = useMemo(() => {
