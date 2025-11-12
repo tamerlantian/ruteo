@@ -29,6 +29,9 @@ export type MainStackParamList = {
   NovedadForm: {
     visitasSeleccionadas: string[];
   };
+  SolucionForm: {
+    novedadesSeleccionadas: string[];
+  };
   Profile: undefined;
   About: undefined;
 };

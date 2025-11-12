@@ -1,7 +1,11 @@
 import { useCallback, useMemo, useState } from 'react';
-import { useAppSelector } from '../../../../store/hooks';
-import { selectNovedades, selectNovedadesConVisitas } from '../../store/selector/novedad.selector';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useAppSelector, useAppDispatch } from '../../../../store/hooks';
+import { selectNovedades, selectNovedadesConVisitas, selectNovedadesSeleccionadas, selectTotalNovedadesSeleccionadas } from '../../store/selector/novedad.selector';
+import { limpiarSeleccionNovedades } from '../../store/slice/novedad.slice';
 import { Novedad } from '../../interfaces/novedad.interface';
+import { MainStackParamList } from '../../../../navigation/types';
 
 type NovedadFilterType = 'all' | 'error';
 
@@ -9,7 +13,13 @@ type NovedadFilterType = 'all' | 'error';
  * ViewModel para la pantalla de Novedades
  * Maneja la lógica de estado y operaciones de la lista de novedades
  */
+type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
+
 export const useNovedadesViewModel = () => {
+  // === HOOKS ===
+  const navigation = useNavigation<NavigationProp>();
+  const dispatch = useAppDispatch();
+
   // === ESTADO LOCAL ===
   const [refreshing, setRefreshing] = useState(false);
   const [searchValue, setSearchValue] = useState('');
@@ -18,6 +28,8 @@ export const useNovedadesViewModel = () => {
   // === SELECTORES DE REDUX ===
   const novedades = useAppSelector(selectNovedades);
   const novedadesConVisitas = useAppSelector(selectNovedadesConVisitas);
+  const novedadesSeleccionadas = useAppSelector(selectNovedadesSeleccionadas);
+  const totalSeleccionadas = useAppSelector(selectTotalNovedadesSeleccionadas);
 
   // === ESTADO COMPUTADO ===
   const hasNovedades = novedades.length > 0;
@@ -92,6 +104,24 @@ export const useNovedadesViewModel = () => {
     setActiveFilter(filter);
   }, []);
 
+  // === FUNCIONES FLOATING ACTIONS ===
+  const onClearSelection = useCallback(() => {
+    dispatch(limpiarSeleccionNovedades());
+  }, [dispatch]);
+
+  const onSolucionarNovedades = useCallback(() => {
+    if (novedadesSeleccionadas.length > 0) {
+      navigation.navigate('SolucionForm', {
+        novedadesSeleccionadas: novedadesSeleccionadas,
+      });
+    }
+  }, [navigation, novedadesSeleccionadas]);
+
+  const onRetryNovedades = useCallback(() => {
+    // TODO: Implementar retry de novedades con error
+    console.log('Reintentar novedades con error');
+  }, []);
+
   // === RETORNO DEL VIEWMODEL ===
   return {
     // Datos
@@ -105,6 +135,7 @@ export const useNovedadesViewModel = () => {
     errorCount,
     totalCount,
     searchValue,
+    totalSeleccionadas,
     
     // Configuración
     listConfig: {
@@ -120,5 +151,10 @@ export const useNovedadesViewModel = () => {
     onSearchChange,
     onClearFilters,
     onFilterChange,
+    
+    // Floating Actions
+    onClearSelection,
+    onSolucionarNovedades,
+    onRetryNovedades,
   };
 };

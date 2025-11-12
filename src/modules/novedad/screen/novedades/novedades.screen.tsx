@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Novedad } from '../../interfaces/novedad.interface';
 import { NovedadesHeader } from '../../components/novedades-header/novedades-header.component';
 import { NovedadCardComponent } from '../../components/novedad-card/novedad-card.component';
+import { NovedadFloatingActions } from '../../components/novedad-floating-actions/novedad-floating-actions.component';
 import { useNovedadesViewModel } from './novedades.view-model';
 
 export const NovedadesScreen = () => {
@@ -22,6 +23,10 @@ export const NovedadesScreen = () => {
     onClearFilters,
     onFilterChange,
     listConfig,
+    totalSeleccionadas,
+    onClearSelection,
+    onSolucionarNovedades,
+    onRetryNovedades,
   } = useNovedadesViewModel();
 
   const renderNovedadItem: ListRenderItem<Novedad> = useCallback(
@@ -64,6 +69,16 @@ export const NovedadesScreen = () => {
         showsVerticalScrollIndicator={false}
         // Optimización adicional para listas grandes
         legacyImplementation={false}
+      />
+      
+      {/* Floating Actions */}
+      <NovedadFloatingActions
+        totalSeleccionadas={totalSeleccionadas}
+        totalConError={errorCount}
+        activeFilter={activeFilter}
+        onClearSelection={onClearSelection}
+        onSolucionarNovedades={onSolucionarNovedades}
+        onRetryNovedades={onRetryNovedades}
       />
     </SafeAreaView>
   );
