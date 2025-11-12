@@ -1,11 +1,7 @@
 import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { selectSubdominio } from '../../settings';
-import {
-  marcarNovedadConError,
-  desmarcarNovedadConError,
-  guardarNovedad,
-} from '../store/slice/novedad.slice';
+import { guardarNovedad } from '../store/slice/novedad.slice';
 import { limpiarSeleccionVisitas } from '../../visita/store/slice/visita.slice';
 import {
   NovedadProcessingService,
@@ -125,6 +121,11 @@ export const useNovedadProcessing = () => {
         // Actualizar Redux para cada resultado
         batchResult.results.forEach(result => {
           if (!result.success) {
+            // signfica que la novedad esta repetida y procedemos a no guardarla
+            if(result.apiError?.codigo === 400) {
+              return; 
+            }
+
             dispatch(
               guardarNovedad({
                 visita_id: result.visitaId,

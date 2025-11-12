@@ -301,21 +301,17 @@ export class HttpBaseRepository {
     formData: FormData,
     options: RequestOptions = {},
   ): Promise<T> {
-    try {
-      const url = this.buildUrl(endpoint);
-      const config: AxiosRequestConfig = {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          ...options.headers,
-        },
-        params: options.params,
-        timeout: options.timeout || 30000, // Increased timeout for file uploads
-      };
+    const url = this.buildUrl(endpoint);
+    const config: AxiosRequestConfig = {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        ...options.headers,
+      },
+      params: options.params,
+      timeout: options.timeout || 30000, // Increased timeout for file uploads
+    };
 
-      const response = await this.axiosInstance.post<T>(url, formData, config);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await this.axiosInstance.post<T>(url, formData, config);
+    return response.data;
   }
 }

@@ -1,6 +1,7 @@
 import { NovedadFormData } from '../interfaces/novedad.interface';
 import { NovedadFormDataBuilder } from '../utils/novedad-form-data-builder.util';
 import { novedadRepository } from '../repositories/novedad.repository';
+import { ApiErrorResponse } from '../../../core/interfaces/api.interface';
 
 /**
  * Configuration for novedad processing
@@ -19,6 +20,7 @@ export interface NovedadProcessingResult {
   novedadId?: string;
   datosFormulario: NovedadFormData;
   error?: string;
+  apiError?: ApiErrorResponse;
 }
 
 /**
@@ -73,8 +75,9 @@ export class NovedadProcessingService {
         // novedadId: datosFormulario.
       };
     } catch (error) {
-      console.error(`❌ Error al procesar novedad para visita ${visitaId}:`, error);
-      return { success: false, visitaId, datosFormulario, error: String(error) };
+      const errorParsed = error as ApiErrorResponse;
+      console.error(`❌ Error al procesar novedad para visita ${visitaId}:`, errorParsed);
+      return { success: false, visitaId, datosFormulario, apiError: errorParsed };
     }
   }
 
