@@ -1,5 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { VisitaResponse, EntregaFormData, VisitaEstado } from '../../interfaces/visita.interface';
+import {
+  VisitaResponse,
+  EntregaFormData,
+  VisitaEstado,
+} from '../../interfaces/visita.interface';
 import { cargarVisitasThunk } from '../thunk/visita.thunk';
 
 interface VisitaState {
@@ -18,13 +22,13 @@ const visitaSlice = createSlice({
   name: 'visita',
   initialState,
   reducers: {
-    removerVisitas: (state) => {
+    removerVisitas: state => {
       state.visitas = [];
     },
     toggleVisitaSeleccion: (state, action) => {
       const visitaId = action.payload;
       const index = state.seleccionadas.indexOf(visitaId);
-      
+
       if (index > -1) {
         // Si está seleccionada, la removemos
         state.seleccionadas.splice(index, 1);
@@ -33,27 +37,46 @@ const visitaSlice = createSlice({
         state.seleccionadas.push(visitaId);
       }
     },
-    seleccionarTodasVisitas: (state) => {
+    seleccionarTodasVisitas: state => {
       // Seleccionar todas las visitas actuales
       state.seleccionadas = state.visitas.map(visita => visita.id);
     },
-    limpiarSeleccionVisitas: (state) => {
+    limpiarSeleccionVisitas: state => {
       // Limpiar todas las selecciones
       state.seleccionadas = [];
     },
-    seleccionarMultiplesVisitas: (state, action) => {
+    seleccionarMultiplesVisitas: (state, action: PayloadAction<number[]>) => {
       // Agregar múltiples IDs a la selección
-      const idsToAdd = action.payload.filter((id: number) => !state.seleccionadas.includes(id));
+      const idsToAdd = action.payload.filter(
+        (id: number) => !state.seleccionadas.includes(id),
+      );
       state.seleccionadas.push(...idsToAdd);
     },
-    marcarVisitaComoEntregada: (state, action) => {
+    marcarVisitaComoEntregada: (state, action: PayloadAction<number>) => {
       const visitaId = action.payload;
       const index = state.visitas.findIndex(visita => visita.id === visitaId);
       if (index > -1) {
         state.visitas[index].estado_entregado = true;
       }
     },
-    cambiarEstadoVisita: (state, action: PayloadAction<{ visitaId: number; estado: VisitaEstado }>) => {
+    marcarVisitaConNovedad: (state, action: PayloadAction<number>) => {
+      const visitaId = action.payload;
+      const index = state.visitas.findIndex(visita => visita.id === visitaId);
+      if (index > -1) {
+        state.visitas[index].estado_novedad = true;
+      }
+    },
+    desmarcarVisitaConNovedad: (state, action: PayloadAction<number>) => {
+      const visitaId = action.payload;
+      const index = state.visitas.findIndex(visita => visita.id === visitaId);
+      if (index > -1) {
+        state.visitas[index].estado_novedad = false;
+      }
+    },
+    cambiarEstadoVisita: (
+      state,
+      action: PayloadAction<{ visitaId: number; estado: VisitaEstado }>,
+    ) => {
       const { visitaId, estado } = action.payload;
       const index = state.visitas.findIndex(visita => visita.id === visitaId);
       if (index > -1) {
@@ -61,16 +84,24 @@ const visitaSlice = createSlice({
       }
     },
     guardarDatosFormularioEnVisita: (
-      state, 
-      action: PayloadAction<{ visitaId: number; datosFormulario: EntregaFormData }>
+      state,
+      action: PayloadAction<{
+        visitaId: number;
+        datosFormulario: EntregaFormData;
+      }>,
     ) => {
       const { visitaId, datosFormulario } = action.payload;
       const index = state.visitas.findIndex(visita => visita.id === visitaId);
       if (index > -1) {
         state.visitas[index].datos_formulario_guardados = datosFormulario;
-        console.log(`💾 Datos de formulario guardados para visita ${visitaId}:`, datosFormulario);
+        console.log(
+          `💾 Datos de formulario guardados para visita ${visitaId}:`,
+          datosFormulario,
+        );
       } else {
-        console.error(`❌ No se pudo guardar datos para visita ${visitaId} - visita no encontrada`);
+        console.error(
+          `❌ No se pudo guardar datos para visita ${visitaId} - visita no encontrada`,
+        );
       }
     },
     limpiarDatosFormularioDeVisita: (state, action: PayloadAction<number>) => {
@@ -101,15 +132,17 @@ const visitaSlice = createSlice({
   },
 });
 
-export const { 
+export const {
   removerVisitas,
-  toggleVisitaSeleccion, 
-  seleccionarTodasVisitas, 
-  limpiarSeleccionVisitas, 
+  desmarcarVisitaConNovedad,
+  toggleVisitaSeleccion,
+  seleccionarTodasVisitas,
+  limpiarSeleccionVisitas,
   seleccionarMultiplesVisitas,
   marcarVisitaComoEntregada,
+  marcarVisitaConNovedad,
   cambiarEstadoVisita,
   guardarDatosFormularioEnVisita,
-  limpiarDatosFormularioDeVisita
+  limpiarDatosFormularioDeVisita,
 } = visitaSlice.actions;
 export default visitaSlice.reducer;

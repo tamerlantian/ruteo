@@ -2,7 +2,10 @@ import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { selectSubdominio } from '../../settings';
 import { guardarNovedad } from '../store/slice/novedad.slice';
-import { limpiarSeleccionVisitas } from '../../visita/store/slice/visita.slice';
+import {
+  limpiarSeleccionVisitas,
+  marcarVisitaConNovedad,
+} from '../../visita/store/slice/visita.slice';
 import {
   NovedadProcessingService,
   NovedadProcessingConfig,
@@ -161,6 +164,9 @@ export const useNovedadProcessing = () => {
               }),
             );
           }
+
+          // marcar visita con novedad
+          dispatch(marcarVisitaConNovedad(result.visitaId));
         });
 
         // Mostrar mensajes de resultado

@@ -8,6 +8,7 @@ import { novedadRepository } from '../../repositories/novedad.repository';
 import { MainStackParamList } from '../../../../navigation/types';
 import { isTempId } from '../../../../shared/utils/id-generator.util';
 import { guardarSolucionNovedad, limpiarNovedad, limpiarSeleccionNovedades } from '../../store/slice/novedad.slice';
+import { desmarcarVisitaConNovedad } from '../../../visita/store/slice/visita.slice';
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -83,6 +84,7 @@ export const useSolucionFormViewModel = ({
             };
 
             if (isTempId(novedadId)) {
+              // dispatch(desmarcarVisitaConNovedad(novedadId));
               dispatch(guardarSolucionNovedad(solucionData));
               return;
             }
@@ -93,6 +95,7 @@ export const useSolucionFormViewModel = ({
             );
 
             dispatch(limpiarNovedad(novedadId));
+            // dispatch(desmarcarVisitaConNovedad(novedadId));
             dispatch(limpiarSeleccionNovedades())
 
             // TODO: Actualizar estado de Redux para marcar esta novedad como solucionada

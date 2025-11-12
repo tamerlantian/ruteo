@@ -14,7 +14,8 @@ export const selectVisitasPendientes = createSelector(
   (visitas, visitaIdsWithNovedades) =>
     visitas.filter(visita => 
       !visita.estado_entregado && 
-      visita.estado !== 'error' && 
+      visita.estado === 'pending' && 
+      !visita.estado_novedad && 
       !visitaIdsWithNovedades.includes(visita.id)
     ),
 );
