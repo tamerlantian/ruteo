@@ -77,6 +77,16 @@ export const selectNovedadConVisita = (novedadId: string) =>
     },
   );
 
+// Selector para obtener el visita_id de una novedad específica
+export const selectVisitaIdByNovedadId = (novedadId: string) =>
+  createSelector(
+    [selectNovedades],
+    (novedades) => {
+      const novedad = novedades.find(n => n.id === novedadId);
+      return novedad?.visita_id || null;
+    },
+  );
+
 // Selector que obtiene todas las novedades con sus visitas asociadas
 export const selectNovedadesConVisitas = createSelector(
   [selectNovedades, (state: RootState) => state.visita.visitas],

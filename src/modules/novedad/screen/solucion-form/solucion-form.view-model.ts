@@ -30,6 +30,7 @@ export const useSolucionFormViewModel = ({
   const navigation = useNavigation<NavigationProp>();
   const schemaName = useAppSelector(selectSubdominio);
   const dispatch = useAppDispatch();
+  const novedades = useAppSelector(state => state.novedad.novedades);
 
   // === ESTADO LOCAL ===
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,22 +84,37 @@ export const useSolucionFormViewModel = ({
               solucion: data.solucion,
             };
 
+            // Obtener el visita_id asociado a esta novedad
+            const novedad = novedades.find(n => n.id === novedadId);
+            const visitaId = novedad?.visita_id || null;
+
             if (isTempId(novedadId)) {
-              // dispatch(desmarcarVisitaConNovedad(novedadId));
+              // Para novedades temporales, solo guardar la solución localmente
               dispatch(guardarSolucionNovedad(solucionData));
-              return;
+              
+              // Desmarcar la visita si tenemos el ID
+              if (visitaId) {
+                dispatch(desmarcarVisitaConNovedad(visitaId));
+              }
+              
+              successCount++;
+              continue;
             }
 
+            // Para novedades sincronizadas, enviar al servidor
             await novedadRepository.solucionarNovedades(
               schemaName!,
               solucionData,
             );
 
+            // Limpiar la novedad del store (ya está solucionada)
             dispatch(limpiarNovedad(novedadId));
-            // dispatch(desmarcarVisitaConNovedad(novedadId));
-            dispatch(limpiarSeleccionNovedades())
+            
+            // Desmarcar la visita asociada
+            if (visitaId) {
+              dispatch(desmarcarVisitaConNovedad(visitaId));
+            }
 
-            // TODO: Actualizar estado de Redux para marcar esta novedad como solucionada
             console.log(
               `Solución enviada exitosamente para novedad ${novedadId}`,
             );
@@ -112,6 +128,9 @@ export const useSolucionFormViewModel = ({
             errorCount++;
           }
         }
+
+        // Limpiar selección después de procesar todas
+        dispatch(limpiarSeleccionNovedades());
 
         // Mostrar resultado final
         console.log(
@@ -130,7 +149,7 @@ export const useSolucionFormViewModel = ({
         setIsSubmitting(false);
       }
     },
-    [schemaName, novedadesSeleccionadas, reset, navigation, dispatch],
+    [schemaName, novedadesSeleccionadas, reset, navigation, dispatch, novedades],
   );
 
   const onCancel = useCallback(() => {

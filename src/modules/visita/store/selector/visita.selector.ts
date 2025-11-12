@@ -10,13 +10,12 @@ export const selectVisitas = createSelector(
 );
 
 export const selectVisitasPendientes = createSelector(
-  [selectVisitas, selectVisitaIdsWithNovedades],
-  (visitas, visitaIdsWithNovedades) =>
+  [selectVisitas],
+  (visitas) =>
     visitas.filter(visita => 
       !visita.estado_entregado && 
       visita.estado === 'pending' && 
-      !visita.estado_novedad && 
-      !visitaIdsWithNovedades.includes(visita.id)
+      !visita.estado_novedad
     ),
 );
 
