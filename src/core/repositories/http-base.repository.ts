@@ -1,6 +1,11 @@
 import { AUTH_TOKEN_KEY } from '../../shared/constants/localstorage-keys';
 import storageService from '../../shared/services/storage.service';
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, {
+  AxiosError,
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+} from 'axios';
 import { environment } from '../../config/environment';
 import { handleErrorResponse } from '../interceptors/error.interceptor';
 import {
@@ -161,7 +166,9 @@ export class HttpBaseRepository {
       return endpoint; // If it's already a complete URL, return it as is
     }
     // Normalize the path to avoid double slashes
-    const normalizedEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+    const normalizedEndpoint = endpoint.startsWith('/')
+      ? endpoint.substring(1)
+      : endpoint;
     const baseUrl = this.getCurrentBaseUrl();
     return `${baseUrl}/${normalizedEndpoint}`;
   }
@@ -196,7 +203,11 @@ export class HttpBaseRepository {
    * @param options Additional request options
    * @returns Promise with the response data
    */
-  public async post<T>(endpoint: string, data: any, options: RequestOptions = {}): Promise<T> {
+  public async post<T>(
+    endpoint: string,
+    data: any,
+    options: RequestOptions = {},
+  ): Promise<T> {
     const url = this.buildUrl(endpoint);
     const config: AxiosRequestConfig = {
       headers: options.headers,
@@ -215,7 +226,11 @@ export class HttpBaseRepository {
    * @param options Additional request options
    * @returns Promise with the response data
    */
-  public async put<T>(endpoint: string, data: any, options: RequestOptions = {}): Promise<T> {
+  public async put<T>(
+    endpoint: string,
+    data: any,
+    options: RequestOptions = {},
+  ): Promise<T> {
     const url = this.buildUrl(endpoint);
     const config: AxiosRequestConfig = {
       headers: options.headers,
@@ -234,7 +249,11 @@ export class HttpBaseRepository {
    * @param options Additional request options
    * @returns Promise with the response data
    */
-  public async patch<T>(endpoint: string, data: any, options: RequestOptions = {}): Promise<T> {
+  public async patch<T>(
+    endpoint: string,
+    data: any,
+    options: RequestOptions = {},
+  ): Promise<T> {
     const url = this.buildUrl(endpoint);
     const config: AxiosRequestConfig = {
       headers: options.headers,
@@ -253,7 +272,11 @@ export class HttpBaseRepository {
    * @param options Additional request options
    * @returns Promise with the response data
    */
-  public async delete<T>(endpoint: string, data?: any, options: RequestOptions = {}): Promise<T> {
+  public async delete<T>(
+    endpoint: string,
+    data?: any,
+    options: RequestOptions = {},
+  ): Promise<T> {
     const url = this.buildUrl(endpoint);
     const config: AxiosRequestConfig = {
       headers: options.headers,
@@ -273,18 +296,26 @@ export class HttpBaseRepository {
    * @param options Additional request options
    * @returns Promise with the response data
    */
-  public async postMultipart<T>(endpoint: string, formData: FormData, options: RequestOptions = {}): Promise<T> {
-    const url = this.buildUrl(endpoint);
-    const config: AxiosRequestConfig = {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        ...options.headers,
-      },
-      params: options.params,
-      timeout: options.timeout || 30000, // Increased timeout for file uploads
-    };
+  public async postMultipart<T>(
+    endpoint: string,
+    formData: FormData,
+    options: RequestOptions = {},
+  ): Promise<T> {
+    try {
+      const url = this.buildUrl(endpoint);
+      const config: AxiosRequestConfig = {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          ...options.headers,
+        },
+        params: options.params,
+        timeout: options.timeout || 30000, // Increased timeout for file uploads
+      };
 
-    const response = await this.axiosInstance.post<T>(url, formData, config);
-    return response.data;
+      const response = await this.axiosInstance.post<T>(url, formData, config);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
 }

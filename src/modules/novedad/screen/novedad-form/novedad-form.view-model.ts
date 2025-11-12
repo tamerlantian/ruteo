@@ -7,7 +7,6 @@ import { selectSubdominio } from '../../../settings';
 import { useNovedadTipos } from '../../view-models/novedad.view-model';
 import { NovedadFormData } from '../../interfaces/novedad.interface';
 import { novedadValidationRules } from '../../constants/novedad.constant';
-import { guardarNovedad } from '../../store/slice/novedad.slice';
 import { limpiarSeleccionVisitas } from '../../../visita/store/slice/visita.slice';
 import { useNovedadProcessing } from '../../hooks/use-novedad-processing.hook';
 import Toast from 'react-native-toast-message';
@@ -70,26 +69,12 @@ export const useNovedadFormViewModel = (
         setIsSubmitting(true);
         const visitaIds = visitasSeleccionadas.map(id => parseInt(id, 10));
 
-        // Guardar novedades en Redux ANTES del procesamiento para posibles reintentos futuros
-        visitaIds.forEach(visitaId => {
-          dispatch(
-            guardarNovedad({
-              visita_id: visitaId,
-              novedad_tipo_id: parseInt(data.tipo, 10),
-              fecha: new Date().toISOString(),
-              descripcion: data.descripcion,
-              imagenes: data.foto.map(foto => ({ uri: foto.uri })),
-              estado_error: false,
-            }),
-          );
-        });
-
         // Procesar novedades usando el hook de procesamiento
         await procesarNovedadesEnLote(visitaIds, data, {
           logPrefix: 'Novedad',
           messagePrefix: 'novedad',
           showToasts: true,
-        });
+        })     
 
         finalizarProceso();
       } catch (error) {
@@ -103,7 +88,7 @@ export const useNovedadFormViewModel = (
         setIsSubmitting(false);
       }
     },
-    [visitasSeleccionadas, isSubmitting, dispatch, finalizarProceso, procesarNovedadesEnLote],
+    [visitasSeleccionadas, isSubmitting, finalizarProceso, procesarNovedadesEnLote],
   );
 
   const onSubmit = handleSubmit(onSubmitForm);

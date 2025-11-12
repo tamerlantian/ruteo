@@ -81,6 +81,8 @@ export const selectNovedadConVisita = (novedadId: string) =>
 export const selectNovedadesConVisitas = createSelector(
   [selectNovedades, (state: RootState) => state.visita.visitas],
   (novedades, visitas) => {
+    console.log("Novedades", novedades);
+    
     return novedades.map(novedad => {
       const visita = visitas.find(v => v.id === novedad.visita_id);
       return {

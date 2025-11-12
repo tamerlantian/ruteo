@@ -45,8 +45,12 @@ export class NovedadRepository extends HttpBaseRepository {
    * @returns Promise con la respuesta del servidor
    */
   async enviarNovedad(schemaName: string, formData: FormData): Promise<any> {
-    const url = await buildUrlWithSubdomain(schemaName, 'ruteo/novedad/nuevo/');
-    return this.postMultipart(url, formData);
+    try {
+      const url = await buildUrlWithSubdomain(schemaName, 'ruteo/novedad/nuevo/');
+      return this.postMultipart(url, formData);
+    } catch (error) {
+      throw error;
+    }
   }
 }
 

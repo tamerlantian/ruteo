@@ -25,6 +25,7 @@ import { LIST_OPTIMIZATION_CONFIG } from '../../constants/visita.constant';
 import { FilterType } from '../../components/filter-badges/filter-badges.component';
 import { useRetryVisitas } from '../../hooks/use-retry-visitas.hook';
 import { resetSettings } from '../../../settings';
+import { limpiarNovedades, limpiarSeleccionNovedades } from '../../../novedad/store/slice/novedad.slice';
 
 /**
  * ViewModel para la pantalla de Visitas
@@ -103,7 +104,9 @@ export const useVisitasViewModel = () => {
   const confirmarDesvinculacion = useCallback(() => {
     // Limpiar todas las visitas y selecciones
     dispatch(removerVisitas());
+    dispatch(limpiarNovedades());
     dispatch(limpiarSeleccionVisitas());
+    dispatch(limpiarSeleccionNovedades());
     dispatch(resetSettings());
 
     // Resetear filtro a pending

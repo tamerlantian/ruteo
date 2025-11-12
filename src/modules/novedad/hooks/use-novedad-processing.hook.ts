@@ -1,12 +1,16 @@
 import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { selectSubdominio } from '../../settings';
-import { marcarNovedadConError, desmarcarNovedadConError } from '../store/slice/novedad.slice';
+import {
+  marcarNovedadConError,
+  desmarcarNovedadConError,
+  guardarNovedad,
+} from '../store/slice/novedad.slice';
 import { limpiarSeleccionVisitas } from '../../visita/store/slice/visita.slice';
-import { 
-  NovedadProcessingService, 
+import {
+  NovedadProcessingService,
   NovedadProcessingConfig,
-  NovedadBatchProcessingResult 
+  NovedadBatchProcessingResult,
 } from '../services/novedad-processing.service';
 import { NovedadFormData } from '../interfaces/novedad.interface';
 import Toast from 'react-native-toast-message';
@@ -34,7 +38,7 @@ export const useNovedadProcessing = () => {
     async (
       visitaId: number,
       datosFormulario: NovedadFormData,
-      config: UseNovedadProcessingConfig = {}
+      config: UseNovedadProcessingConfig = {},
     ) => {
       if (!subdominio) {
         if (config.showToasts !== false) {
@@ -51,7 +55,7 @@ export const useNovedadProcessing = () => {
         visitaId,
         subdominio,
         datosFormulario,
-        config
+        config,
       );
 
       // Show toast for individual processing if enabled
@@ -74,7 +78,7 @@ export const useNovedadProcessing = () => {
 
       return result;
     },
-    [subdominio]
+    [subdominio],
   );
 
   /**
@@ -84,7 +88,7 @@ export const useNovedadProcessing = () => {
     async (
       visitaIds: number[],
       datosFormulario: NovedadFormData,
-      config: UseNovedadProcessingConfig = {}
+      config: UseNovedadProcessingConfig = {},
     ): Promise<NovedadBatchProcessingResult> => {
       if (visitaIds.length === 0) {
         const messagePrefix = config.messagePrefix || 'novedad';
@@ -110,34 +114,54 @@ export const useNovedadProcessing = () => {
       }
 
       try {
-        const batchResult = await NovedadProcessingService.procesarNovedadesEnLote(
-          visitaIds,
-          subdominio,
-          datosFormulario,
-          config
-        );
+        const batchResult =
+          await NovedadProcessingService.procesarNovedadesEnLote(
+            visitaIds,
+            subdominio,
+            datosFormulario,
+            config,
+          );
 
         // Actualizar Redux para cada resultado
         batchResult.results.forEach(result => {
+          if (!result.success) {
+            dispatch(
+              guardarNovedad({
+                visita_id: result.visitaId,
+                novedad_tipo_id: parseInt(result.datosFormulario.tipo, 10),
+                fecha: new Date().toISOString(),
+                descripcion: result.datosFormulario.descripcion,
+                imagenes: result.datosFormulario.foto.map(foto => ({
+                  uri: foto.uri,
+                })),
+                estado_error: true,
+              }),
+            );
+          }
+
           if (result.success) {
-            // Si la novedad fue exitosa, desmarcar error si existía
-            if (result.novedadId) {
-              dispatch(desmarcarNovedadConError(result.novedadId));
-            }
-          } else {
-            // Si falló, marcar la novedad con error si existe el ID
-            if (result.novedadId) {
-              dispatch(marcarNovedadConError(result.novedadId));
-            }
+            dispatch(
+              guardarNovedad({
+                visita_id: result.visitaId,
+                novedad_tipo_id: parseInt(result.datosFormulario.tipo, 10),
+                fecha: new Date().toISOString(),
+                descripcion: result.datosFormulario.descripcion,
+                imagenes: result.datosFormulario.foto.map(foto => ({
+                  uri: foto.uri,
+                })),
+                estado_error: false,
+              }),
+            );
           }
         });
 
         // Mostrar mensajes de resultado
-        const messageResult = NovedadProcessingService.generarMensajesDeResultado(
-          batchResult.successCount,
-          batchResult.errorCount,
-          config.messagePrefix || 'novedad'
-        );
+        const messageResult =
+          NovedadProcessingService.generarMensajesDeResultado(
+            batchResult.successCount,
+            batchResult.errorCount,
+            config.messagePrefix || 'novedad',
+          );
 
         if (messageResult) {
           switch (messageResult.type) {
@@ -173,7 +197,7 @@ export const useNovedadProcessing = () => {
         return batchResult;
       } catch (error) {
         console.error('Error general al procesar novedades en lote:', error);
-        
+
         if (config.showToasts !== false) {
           Toast.show({
             type: 'error',
@@ -182,14 +206,19 @@ export const useNovedadProcessing = () => {
           });
         }
 
-        return { 
-          successCount: 0, 
-          errorCount: visitaIds.length, 
-          results: visitaIds.map(id => ({ success: false, visitaId: id, error: String(error) }))
+        return {
+          successCount: 0,
+          errorCount: visitaIds.length,
+          results: visitaIds.map(id => ({
+            success: false,
+            visitaId: id,
+            datosFormulario,
+            error: String(error),
+          })),
         };
       }
     },
-    [subdominio, dispatch]
+    [subdominio, dispatch],
   );
 
   return {

@@ -17,6 +17,7 @@ export interface NovedadProcessingResult {
   success: boolean;
   visitaId: number;
   novedadId?: string;
+  datosFormulario: NovedadFormData;
   error?: string;
 }
 
@@ -51,7 +52,7 @@ export class NovedadProcessingService {
       if (!validation.isValid) {
         const error = `Validation error for visita ${visitaId}: ${validation.error}`;
         console.error(error);
-        return { success: false, visitaId, error: validation.error };
+        return { success: false, visitaId, datosFormulario, error: validation.error };
       }
 
       // Build FormData for multipart submission
@@ -68,11 +69,12 @@ export class NovedadProcessingService {
       return { 
         success: true, 
         visitaId,
-        novedadId: response?.id || response?.data?.id
+        datosFormulario,
+        // novedadId: datosFormulario.
       };
     } catch (error) {
       console.error(`❌ Error al procesar novedad para visita ${visitaId}:`, error);
-      return { success: false, visitaId, error: String(error) };
+      return { success: false, visitaId, datosFormulario, error: String(error) };
     }
   }
 

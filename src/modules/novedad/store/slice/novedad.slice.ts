@@ -23,6 +23,9 @@ const novedadSlice = createSlice({
   name: 'novedad',
   initialState,
   reducers: {
+    limpiarNovedades: (state) => {
+      state.novedades = [];
+    },
     guardarNovedad: (state, action: PayloadAction<NovedadInput>) => {
       const novedadConId: Novedad = {
         ...action.payload,
@@ -80,6 +83,7 @@ export const {
   toggleNovedadSeleccion,
   seleccionarTodasNovedades,
   limpiarSeleccionNovedades,
-  seleccionarMultiplesNovedades
+  seleccionarMultiplesNovedades,
+  limpiarNovedades
 } = novedadSlice.actions;
 export default novedadSlice.reducer;
