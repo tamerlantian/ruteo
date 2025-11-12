@@ -2,10 +2,12 @@ import { useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useAppSelector } from '../../../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { selectSubdominio } from '../../../settings/store/selector/settings.selector';
 import { novedadRepository } from '../../repositories/novedad.repository';
 import { MainStackParamList } from '../../../../navigation/types';
+import { isTempId } from '../../../../shared/utils/id-generator.util';
+import { guardarSolucionNovedad, limpiarNovedad, limpiarSeleccionNovedades } from '../../store/slice/novedad.slice';
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -20,10 +22,13 @@ interface SolucionFormViewModelProps {
 /**
  * ViewModel para el formulario de solución de novedades
  */
-export const useSolucionFormViewModel = ({ novedadesSeleccionadas }: SolucionFormViewModelProps) => {
+export const useSolucionFormViewModel = ({
+  novedadesSeleccionadas,
+}: SolucionFormViewModelProps) => {
   // === HOOKS ===
   const navigation = useNavigation<NavigationProp>();
   const schemaName = useAppSelector(selectSubdominio);
+  const dispatch = useAppDispatch();
 
   // === ESTADO LOCAL ===
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,39 +61,74 @@ export const useSolucionFormViewModel = ({ novedadesSeleccionadas }: SolucionFor
   };
 
   // === FUNCIONES ===
-  const onSubmit = useCallback(async (data: SolucionFormData) => {
-    if (!schemaName) {
-      console.error('Schema name no disponible');
-      return;
-    }
+  const onSubmit = useCallback(
+    async (data: SolucionFormData) => {
+      if (!schemaName) {
+        console.error('Schema name no disponible');
+        return;
+      }
 
-    setIsSubmitting(true);
+      setIsSubmitting(true);
 
-    try {
-      // Preparar datos para el endpoint
-      const solucionData = novedadesSeleccionadas.map(id => ({
-        id,
-        solucion: data.solucion,
-      }));
+      try {
+        let successCount = 0;
+        let errorCount = 0;
 
-      // Enviar solución al servidor
-      await novedadRepository.solucionarNovedades(schemaName!, solucionData);
+        // Enviar una petición por cada novedad
+        for (const novedadId of novedadesSeleccionadas) {
+          try {
+            const solucionData = {
+              id: novedadId,
+              solucion: data.solucion,
+            };
 
-      // TODO: Actualizar estado de Redux para marcar novedades como solucionadas
-      console.log('Solución enviada exitosamente:', solucionData);
+            if (isTempId(novedadId)) {
+              dispatch(guardarSolucionNovedad(solucionData));
+              return;
+            }
 
-      // Limpiar formulario y navegar de vuelta
-      reset();
-      navigation.goBack();
+            await novedadRepository.solucionarNovedades(
+              schemaName!,
+              solucionData,
+            );
 
-      // TODO: Mostrar toast de éxito
-    } catch (error) {
-      console.error('Error al enviar solución:', error);
-      // TODO: Mostrar toast de error
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [schemaName, novedadesSeleccionadas, reset, navigation]);
+            dispatch(limpiarNovedad(novedadId));
+            dispatch(limpiarSeleccionNovedades())
+
+            // TODO: Actualizar estado de Redux para marcar esta novedad como solucionada
+            console.log(
+              `Solución enviada exitosamente para novedad ${novedadId}`,
+            );
+            successCount++;
+          } catch (error) {
+            console.error(
+              `Error al enviar solución para novedad ${novedadId}:`,
+              error,
+            );
+            // TODO: Marcar esta novedad con error en Redux
+            errorCount++;
+          }
+        }
+
+        // Mostrar resultado final
+        console.log(
+          `Proceso completado: ${successCount} exitosas, ${errorCount} con error`,
+        );
+
+        // TODO: Mostrar toast con resumen (ej: "3 novedades solucionadas, 1 con error")
+
+        // Limpiar formulario y navegar de vuelta
+        reset();
+        navigation.goBack();
+      } catch (error) {
+        console.error('Error general al procesar soluciones:', error);
+        // TODO: Mostrar toast de error general
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [schemaName, novedadesSeleccionadas, reset, navigation, dispatch],
+  );
 
   const onCancel = useCallback(() => {
     navigation.goBack();

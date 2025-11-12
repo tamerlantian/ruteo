@@ -23,12 +23,19 @@ const novedadSlice = createSlice({
     limpiarNovedades: (state) => {
       state.novedades = [];
     },
-    guardarNovedad: (state, action: PayloadAction<NovedadInput>) => {
+    guardarNovedad: (state, action: PayloadAction<{ novedad: NovedadInput, novedadId?: string }>) => {
       const novedadConId: Novedad = {
-        ...action.payload,
-        id: generateTempId('novedad'),
+        ...action.payload.novedad,
+        id: action.payload.novedadId || generateTempId(),
       };
       state.novedades.push(novedadConId);
+    },
+    limpiarNovedad: (state, action: PayloadAction<string>) => {
+      const novedadId = action.payload;
+      const index = state.novedades.findIndex(entidad => entidad.id === novedadId);
+      if (index > -1) {
+        state.novedades.splice(index, 1);
+      }
     },
     guardarSolucionNovedad: (state, action: PayloadAction<{ id: string; solucion: string }>) => {
       const { id, solucion } = action.payload;
@@ -86,7 +93,9 @@ export const {
   limpiarSeleccionNovedades,
   seleccionarMultiplesNovedades,
   limpiarNovedades,
+  limpiarNovedad,
   cambiarEstadoNovedad,
   cambiarEstadoSolucionNovedad,
+  guardarSolucionNovedad,
 } = novedadSlice.actions;
 export default novedadSlice.reducer;

@@ -66,13 +66,11 @@ export class NovedadProcessingService {
       // Send using multipart method
       const response = await novedadRepository.enviarNovedad(subdominio, formData);
       
-      console.log(`✅ ${logPrefix} exitoso para visita ${visitaId}:`, response);
-      
       return { 
         success: true, 
         visitaId,
         datosFormulario,
-        // novedadId: datosFormulario.
+        novedadId: response?.id?.toString(),
       };
     } catch (error) {
       const errorParsed = error as ApiErrorResponse;

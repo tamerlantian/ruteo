@@ -9,10 +9,13 @@ export interface Novedad {
   descripcion: string;
   solucion?: string;
   imagenes: { uri: string }[];
-
   // campos para tracking local
   estado: NovedadEstado;
   estado_solucion: NovedadEstadoSolucion;
+}
+
+export interface NovedadCreada {
+  id: number;
 }
 
 export type NovedadEstado = 'sync' | 'pending' | 'error';

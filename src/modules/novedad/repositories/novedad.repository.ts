@@ -1,7 +1,7 @@
 import { ApiResponse } from '../../../core/interfaces/api.interface';
 import { HttpBaseRepository } from '../../../core/repositories/http-base.repository';
 import { buildUrlWithSubdomain } from '../../../shared/utils/url-builder.util';
-import { NovedadTipo } from '../interfaces/novedad.interface';
+import { NovedadCreada, NovedadTipo } from '../interfaces/novedad.interface';
 
 /**
  * Repositorio para manejar las operaciones de API relacionadas con visitas
@@ -44,7 +44,7 @@ export class NovedadRepository extends HttpBaseRepository {
    * @param formData - FormData con los datos de la novedad
    * @returns Promise con la respuesta del servidor
    */
-  async enviarNovedad(schemaName: string, formData: FormData): Promise<any> {
+  async enviarNovedad(schemaName: string, formData: FormData): Promise<NovedadCreada> {
     try {
       const url = await buildUrlWithSubdomain(schemaName, 'ruteo/novedad/nuevo/');
       return this.postMultipart(url, formData);
@@ -59,7 +59,7 @@ export class NovedadRepository extends HttpBaseRepository {
    * @param solucionData - Datos de la solución
    * @returns Promise con la respuesta del servidor
    */
-  async solucionarNovedades(schemaName: string, solucionData: { id: string; solucion: string }[]): Promise<any> {
+  async solucionarNovedades(schemaName: string, solucionData: { id: string; solucion: string }): Promise<any> {
     try {
       const url = await buildUrlWithSubdomain(schemaName, 'ruteo/novedad/solucionar/');
       return this.post(url, solucionData);

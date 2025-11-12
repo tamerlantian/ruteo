@@ -128,15 +128,17 @@ export const useNovedadProcessing = () => {
 
             dispatch(
               guardarNovedad({
-                visita_id: result.visitaId,
-                novedad_tipo_id: parseInt(result.datosFormulario.tipo, 10),
-                fecha: new Date().toISOString(),
-                descripcion: result.datosFormulario.descripcion,
-                imagenes: result.datosFormulario.foto.map(foto => ({
-                  uri: foto.uri,
-                })),
-                estado: 'error',
-                estado_solucion: 'pending',
+                novedad: {
+                  visita_id: result.visitaId,
+                  novedad_tipo_id: parseInt(result.datosFormulario.tipo, 10),
+                  fecha: new Date().toISOString(),
+                  descripcion: result.datosFormulario.descripcion,
+                  imagenes: result.datosFormulario.foto.map(foto => ({
+                    uri: foto.uri,
+                  })),
+                  estado: 'error',
+                  estado_solucion: 'pending',
+                },
               }),
             );
           }
@@ -144,15 +146,18 @@ export const useNovedadProcessing = () => {
           if (result.success) {
             dispatch(
               guardarNovedad({
-                visita_id: result.visitaId,
-                novedad_tipo_id: parseInt(result.datosFormulario.tipo, 10),
-                fecha: new Date().toISOString(),
-                descripcion: result.datosFormulario.descripcion,
-                imagenes: result.datosFormulario.foto.map(foto => ({
-                  uri: foto.uri,
-                })),
-                estado: 'sync',
-                estado_solucion: 'pending',
+                novedadId: result.novedadId,
+                novedad: {
+                  visita_id: result.visitaId,
+                  novedad_tipo_id: parseInt(result.datosFormulario.tipo, 10),
+                  fecha: new Date().toISOString(),
+                  descripcion: result.datosFormulario.descripcion,
+                  imagenes: result.datosFormulario.foto.map(foto => ({
+                    uri: foto.uri,
+                  })),
+                  estado: 'sync',
+                  estado_solucion: 'pending',
+                },
               }),
             );
           }
