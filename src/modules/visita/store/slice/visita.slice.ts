@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { VisitaResponse, EntregaFormData } from '../../interfaces/visita.interface';
+import { VisitaResponse, EntregaFormData, VisitaEstado } from '../../interfaces/visita.interface';
 import { cargarVisitasThunk } from '../thunk/visita.thunk';
 
 interface VisitaState {
@@ -53,18 +53,11 @@ const visitaSlice = createSlice({
         state.visitas[index].estado_entregado = true;
       }
     },
-    marcarVisitaConError: (state, action) => {
-      const visitaId = action.payload;
+    cambiarEstadoVisita: (state, action: PayloadAction<{ visitaId: number; estado: VisitaEstado }>) => {
+      const { visitaId, estado } = action.payload;
       const index = state.visitas.findIndex(visita => visita.id === visitaId);
       if (index > -1) {
-        state.visitas[index].estado_error = true;
-      }
-    },
-    desmarcarVisitaConError: (state, action) => {
-      const visitaId = action.payload;
-      const index = state.visitas.findIndex(visita => visita.id === visitaId);
-      if (index > -1) {
-        state.visitas[index].estado_error = false;
+        state.visitas[index].estado = estado;
       }
     },
     guardarDatosFormularioEnVisita: (
@@ -85,7 +78,7 @@ const visitaSlice = createSlice({
       const index = state.visitas.findIndex(visita => visita.id === visitaId);
       if (index > -1) {
         state.visitas[index].datos_formulario_guardados = undefined;
-        state.visitas[index].estado_error = false;
+        state.visitas[index].estado = 'sync';
       }
     },
   },
@@ -99,7 +92,7 @@ const visitaSlice = createSlice({
       state.visitas = payload.map(visita => ({
         ...visita,
         datos_formulario_guardados: undefined,
-        estado_error: false,
+        estado: 'pending',
       }));
     });
     builder.addCase(cargarVisitasThunk.rejected, state => {
@@ -115,9 +108,8 @@ export const {
   limpiarSeleccionVisitas, 
   seleccionarMultiplesVisitas,
   marcarVisitaComoEntregada,
-  marcarVisitaConError,
+  cambiarEstadoVisita,
   guardarDatosFormularioEnVisita,
-  desmarcarVisitaConError,
   limpiarDatosFormularioDeVisita
 } = visitaSlice.actions;
 export default visitaSlice.reducer;

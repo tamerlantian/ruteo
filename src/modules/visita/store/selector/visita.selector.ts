@@ -14,7 +14,7 @@ export const selectVisitasPendientes = createSelector(
   (visitas, visitaIdsWithNovedades) =>
     visitas.filter(visita => 
       !visita.estado_entregado && 
-      !visita.estado_error && 
+      visita.estado !== 'error' && 
       !visitaIdsWithNovedades.includes(visita.id)
     ),
 );
@@ -62,7 +62,7 @@ export const selectTodasVisitasSeleccionadas = createSelector(
 // Selector para obtener visitas con error
 export const selectVisitasConError = createSelector(
   selectVisitasRootState,
-  ({ visitas }) => visitas.filter(visita => visita.estado_error),
+  ({ visitas }) => visitas.filter(visita => visita.estado === 'error'),
 );
 
 // Selector para obtener una visita específica por ID
@@ -78,7 +78,7 @@ export const selectVisitasSeleccionadasConDatosGuardados = createSelector(
     visitas
       .filter(visita => seleccionadas.includes(visita.id))
       .filter(
-        visita => visita.estado_error && visita.datos_formulario_guardados,
+        visita => visita.estado === 'error' && visita.datos_formulario_guardados,
       ),
 );
 

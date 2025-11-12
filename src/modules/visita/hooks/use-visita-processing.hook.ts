@@ -4,10 +4,9 @@ import { selectSubdominio } from '../../settings';
 import { selectVisitas } from '../store/selector/visita.selector';
 import {
   marcarVisitaComoEntregada,
-  marcarVisitaConError,
   limpiarDatosFormularioDeVisita,
   limpiarSeleccionVisitas,
-  desmarcarVisitaConError,
+  cambiarEstadoVisita,
 } from '../store/slice/visita.slice';
 import { EntregaFormData } from '../interfaces/visita.interface';
 import {
@@ -66,7 +65,7 @@ export const useVisitaProcessing = () => {
       } else {
         // Marcar con error si está configurado
         if (config.markErrorOnFailure) {
-          dispatch(marcarVisitaConError(visitaId));
+          dispatch(cambiarEstadoVisita({ visitaId, estado: 'error' }));
         }
 
         // Mostrar toast de error
@@ -121,13 +120,12 @@ export const useVisitaProcessing = () => {
         );
 
         // Actualizar Redux para cada resultado
-        batchResult.results.forEach(result => {
-          if (result.success) {
-            dispatch(marcarVisitaComoEntregada(result.visitaId));
-            dispatch(desmarcarVisitaConError(result.visitaId));
-            dispatch(limpiarDatosFormularioDeVisita(result.visitaId));
+        batchResult.results.forEach(({ visitaId, success }) => {
+          if (success) {
+            dispatch(marcarVisitaComoEntregada(visitaId));
+            dispatch(limpiarDatosFormularioDeVisita(visitaId));
           } else if (config.markErrorOnFailure) {
-            dispatch(marcarVisitaConError(result.visitaId));
+            dispatch(cambiarEstadoVisita({ visitaId, estado: 'error' }));
           }
         });
 

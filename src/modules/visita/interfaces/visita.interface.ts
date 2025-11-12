@@ -29,10 +29,15 @@ export interface VisitaResponse {
   estado_devolucion: boolean;
   estado_entregado: boolean;
   estado_despacho: boolean;
-  estado_error?: boolean;
+
+  // estados locales
+  estado?: VisitaEstado;
+
   // Datos del formulario guardados para reintento
   datos_formulario_guardados?: EntregaFormData;
 }
+
+export type VisitaEstado = 'sync' | 'pending' | 'error';
 
 export interface Visita {
   id: number;
