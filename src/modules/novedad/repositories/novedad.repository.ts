@@ -52,6 +52,21 @@ export class NovedadRepository extends HttpBaseRepository {
       throw error;
     }
   }
+
+  /**
+   * Envía solución de novedades al servidor
+   * @param schemaName Nombre del schema
+   * @param solucionData - Datos de la solución
+   * @returns Promise con la respuesta del servidor
+   */
+  async solucionarNovedades(schemaName: string, solucionData: { id: string; solucion: string }[]): Promise<any> {
+    try {
+      const url = await buildUrlWithSubdomain(schemaName, 'ruteo/novedad/solucionar/');
+      return this.post(url, solucionData);
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export const novedadRepository = NovedadRepository.getInstance();

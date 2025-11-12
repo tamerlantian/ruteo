@@ -12,7 +12,9 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MainStackParamList } from '../../../../navigation/types';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { FormButton } from '../../../../shared/components/ui/button/FormButton';
+import { FormInputController } from '../../../../shared/components/ui/form/FormInputController';
 import { solucionFormStyles } from './solucion-form.style';
+import { useSolucionFormViewModel } from './solucion-form.view-model';
 
 type SolucionFormScreenProps = NativeStackScreenProps<
   MainStackParamList,
@@ -25,17 +27,14 @@ export const SolucionFormScreen: React.FC<SolucionFormScreenProps> = ({
 }) => {
   const { novedadesSeleccionadas } = route.params;
 
+  // ViewModel
+  const viewModel = useSolucionFormViewModel({ novedadesSeleccionadas });
+
   // Estado para controlar el scroll durante la interacción
   const [scrollEnabled, _setScrollEnabled] = useState(true);
   const scrollViewRef = useRef<ScrollView>(null);
 
   const handleGoBack = () => {
-    navigation.goBack();
-  };
-
-  const handleSubmit = () => {
-    // TODO: Implementar lógica de envío
-    console.log('Enviando solución para novedades:', novedadesSeleccionadas);
     navigation.goBack();
   };
 
@@ -93,16 +92,19 @@ export const SolucionFormScreen: React.FC<SolucionFormScreenProps> = ({
               </ScrollView>
             </View>
 
-            {/* Placeholder para campos futuros */}
-            <View style={solucionFormStyles.placeholderContainer}>
-              <Ionicons name="construct-outline" size={48} color="#8e8e93" />
-              <Text style={solucionFormStyles.placeholderTitle}>
-                Formulario en construcción
-              </Text>
-              <Text style={solucionFormStyles.placeholderText}>
-                Los campos del formulario de solución se agregarán próximamente.
-              </Text>
-            </View>
+            {/* Campo: Descripción de la Solución */}
+            <FormInputController
+              control={viewModel.control}
+              name="solucion"
+              label="Descripción de la solución *"
+              placeholder="Describe detalladamente la solución aplicada a las novedades..."
+              rules={viewModel.validationRules.solucion}
+              error={viewModel.errors.solucion}
+              multiline={true}
+              numberOfLines={6}
+              textAlignVertical="top"
+              style={solucionFormStyles.textArea}
+            />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -110,9 +112,10 @@ export const SolucionFormScreen: React.FC<SolucionFormScreenProps> = ({
       {/* Footer Actions */}
       <View style={solucionFormStyles.footer}>
         <FormButton
-          title="Enviar solución"
-          onPress={handleSubmit}
+          title={viewModel.isSubmitting ? "Enviando..." : "Enviar solución"}
+          onPress={viewModel.onSubmit}
           variant="primary"
+          disabled={viewModel.isSubmitting}
         />
       </View>
     </SafeAreaView>

@@ -118,4 +118,9 @@ export const solucionFormStyles = StyleSheet.create({
     borderTopColor: '#e1e5e9',
     gap: 12,
   },
+  textArea: {
+    minHeight: 120,
+    maxHeight: 200,
+    paddingTop: 12,
+  },
 });
