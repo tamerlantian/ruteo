@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppSelector, useAppDispatch } from '../../../../store/hooks';
-import { selectNovedades, selectNovedadesConVisitas, selectNovedadesSeleccionadas, selectTotalNovedadesSeleccionadas } from '../../store/selector/novedad.selector';
+import { selectNovedades, selectNovedadesConVisitas, selectNovedadesSeleccionadas, selectTotalNovedadesSeleccionadas, selectNovedadesConError } from '../../store/selector/novedad.selector';
 import { limpiarSeleccionNovedades } from '../../store/slice/novedad.slice';
 import { Novedad } from '../../interfaces/novedad.interface';
 import { MainStackParamList } from '../../../../navigation/types';
@@ -30,16 +30,11 @@ export const useNovedadesViewModel = () => {
   const novedadesConVisitas = useAppSelector(selectNovedadesConVisitas);
   const novedadesSeleccionadas = useAppSelector(selectNovedadesSeleccionadas);
   const totalSeleccionadas = useAppSelector(selectTotalNovedadesSeleccionadas);
+  const novedadesConError = useAppSelector(selectNovedadesConError);
 
   // === ESTADO COMPUTADO ===
   const hasNovedades = novedades.length > 0;
   const totalCount = novedades.length;
-  
-  // Novedades con error
-  const novedadesConError = useMemo(() => 
-    novedades.filter(novedad => novedad.estado_error), 
-    [novedades]
-  );
   const errorCount = novedadesConError.length;
 
   // === FILTRADO Y BÚSQUEDA ===
@@ -48,7 +43,7 @@ export const useNovedadesViewModel = () => {
     let filteredByCategory = novedadesConVisitas.filter(item => {
       switch (activeFilter) {
         case 'error':
-          return item.novedad.estado_error;
+          return item.novedad.estado === 'error';
         case 'all':
         default:
           return true;

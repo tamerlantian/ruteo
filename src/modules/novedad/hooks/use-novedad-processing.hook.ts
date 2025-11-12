@@ -122,8 +122,8 @@ export const useNovedadProcessing = () => {
         batchResult.results.forEach(result => {
           if (!result.success) {
             // signfica que la novedad esta repetida y procedemos a no guardarla
-            if(result.apiError?.codigo === 400) {
-              return; 
+            if (result.apiError?.codigo === 400) {
+              return;
             }
 
             dispatch(
@@ -135,7 +135,8 @@ export const useNovedadProcessing = () => {
                 imagenes: result.datosFormulario.foto.map(foto => ({
                   uri: foto.uri,
                 })),
-                estado_error: true,
+                estado: 'error',
+                estado_solucion: 'pending',
               }),
             );
           }
@@ -150,7 +151,8 @@ export const useNovedadProcessing = () => {
                 imagenes: result.datosFormulario.foto.map(foto => ({
                   uri: foto.uri,
                 })),
-                estado_error: false,
+                estado: 'sync',
+                estado_solucion: 'pending',
               }),
             );
           }

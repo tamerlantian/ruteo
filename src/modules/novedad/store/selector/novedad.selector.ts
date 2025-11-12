@@ -25,7 +25,7 @@ export const selectVisitaIdsWithNovedades = createSelector(
 // Selector para obtener novedades con error
 export const selectNovedadesConError = createSelector(
   selectNovedadRootState,
-  ({ novedades }) => novedades.filter(novedad => novedad.estado_error),
+  ({ novedades }) => novedades.filter(novedad => novedad.estado === 'error'),
 );
 
 // Selectores para el estado de selección

@@ -11,21 +11,14 @@ export interface Novedad {
   imagenes: { uri: string }[];
 
   // campos para tracking local
-  estado_error: boolean;
-  estado_sincronizado?: boolean;
-  estado_solucion_error?: boolean;
-  estado_solucion_sincronizado?: boolean;
-
-  // no se usan
-  estado_entregado?: boolean;
-  estado_sincronizado_codigo?: number;
-  estado_sincronizada_error?: boolean;
-  estado_sincronizada_error_mensaje?: string;
+  estado: NovedadEstado;
+  estado_solucion: NovedadEstadoSolucion;
 }
 
+export type NovedadEstado = 'sync' | 'pending' | 'error';
+export type NovedadEstadoSolucion = 'sync' | 'pending' | 'error';
+
 export interface NovedadTipo extends SeleccionarResponse {}
-
-
 export interface NovedadFormData {
   tipo: string;
   descripcion: string;
