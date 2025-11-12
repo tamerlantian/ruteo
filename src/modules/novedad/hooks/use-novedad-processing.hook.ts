@@ -11,7 +11,7 @@ import {
   NovedadProcessingConfig,
   NovedadBatchProcessingResult,
 } from '../services/novedad-processing.service';
-import { NovedadFormData } from '../interfaces/novedad.interface';
+import { Novedad, NovedadFormData } from '../interfaces/novedad.interface';
 import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../shared/styles/global.style';
 
@@ -123,6 +123,18 @@ export const useNovedadProcessing = () => {
 
         // Actualizar Redux para cada resultado
         batchResult.results.forEach(result => {
+          const novedadData: Omit<Novedad, 'id'> = {
+            visita_id: result.visitaId,
+            novedad_tipo_id: parseInt(result.datosFormulario.tipo, 10),
+            fecha: new Date().toISOString(),
+            descripcion: result.datosFormulario.descripcion,
+            imagenes: result.datosFormulario.foto.map(foto => ({
+              uri: foto.uri,
+            })),
+            estado: 'error',
+            estado_solucion: 'pending',
+          };
+
           if (!result.success) {
             // signfica que la novedad esta repetida y procedemos a no guardarla
             if (result.apiError?.codigo === 400) {
@@ -131,17 +143,7 @@ export const useNovedadProcessing = () => {
 
             dispatch(
               guardarNovedad({
-                novedad: {
-                  visita_id: result.visitaId,
-                  novedad_tipo_id: parseInt(result.datosFormulario.tipo, 10),
-                  fecha: new Date().toISOString(),
-                  descripcion: result.datosFormulario.descripcion,
-                  imagenes: result.datosFormulario.foto.map(foto => ({
-                    uri: foto.uri,
-                  })),
-                  estado: 'error',
-                  estado_solucion: 'pending',
-                },
+                novedad: novedadData,
               }),
             );
           }
@@ -151,13 +153,7 @@ export const useNovedadProcessing = () => {
               guardarNovedad({
                 novedadId: result.novedadId,
                 novedad: {
-                  visita_id: result.visitaId,
-                  novedad_tipo_id: parseInt(result.datosFormulario.tipo, 10),
-                  fecha: new Date().toISOString(),
-                  descripcion: result.datosFormulario.descripcion,
-                  imagenes: result.datosFormulario.foto.map(foto => ({
-                    uri: foto.uri,
-                  })),
+                  ...novedadData,
                   estado: 'sync',
                   estado_solucion: 'pending',
                 },
