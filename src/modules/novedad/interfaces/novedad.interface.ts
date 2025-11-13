@@ -23,6 +23,8 @@ export type NovedadEstadoSolucion = 'sync' | 'pending' | 'error';
 
 export interface NovedadTipo extends SeleccionarResponse {}
 export interface NovedadFormData {
+  id: string;
+  visitaId: number;
   tipo: string;
   descripcion: string;
   foto: PhotoData[];

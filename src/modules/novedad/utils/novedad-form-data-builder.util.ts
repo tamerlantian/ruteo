@@ -9,14 +9,13 @@ export class NovedadFormDataBuilder {
   /**
    * Builds a FormData object from NovedadFormData for multipart submission
    * @param data Form data from the novedad form
-   * @param visitaId ID of the visita associated with the novedad
    * @returns FormData object ready for multipart submission
    */
-  static buildNovedadFormData(data: NovedadFormData, visitaId: number): FormData {
+  static buildNovedadFormData(data: NovedadFormData): FormData {
     const formData = new FormData();
 
     // Add basic novedad data
-    formData.append('visita_id', visitaId.toString());
+    formData.append('visita_id', data.visitaId.toString());
     formData.append('novedad_tipo_id', data.tipo);
     formData.append('fecha', dateUtil.getCurrentForAPI());
     formData.append('descripcion', data.descripcion);
@@ -41,12 +40,10 @@ export class NovedadFormDataBuilder {
   /**
    * Validates novedad form data before submission
    * @param data Form data to validate
-   * @param visitaId ID of the visita
    * @returns Validation result with isValid flag and error message
    */
   static validateNovedadFormData(
     data: NovedadFormData, 
-    visitaId: number
   ): { isValid: boolean; error?: string } {
     // Validate required fields
     if (!data.tipo || data.tipo.trim() === '') {
@@ -61,7 +58,7 @@ export class NovedadFormDataBuilder {
       return { isValid: false, error: 'Al menos una foto es requerida' };
     }
 
-    if (!visitaId || visitaId <= 0) {
+    if (!data.visitaId || data.visitaId <= 0) {
       return { isValid: false, error: 'ID de visita inválido' };
     }
 

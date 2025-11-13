@@ -6,6 +6,7 @@ import { selectNovedades, selectNovedadesConVisitas, selectNovedadesSeleccionada
 import { limpiarSeleccionNovedades } from '../../store/slice/novedad.slice';
 import { Novedad } from '../../interfaces/novedad.interface';
 import { MainStackParamList } from '../../../../navigation/types';
+import { useRetryNovedades } from '../../hooks/use-retry-novedades.hook';
 
 type NovedadFilterType = 'all' | 'error';
 
@@ -19,6 +20,7 @@ export const useNovedadesViewModel = () => {
   // === HOOKS ===
   const navigation = useNavigation<NavigationProp>();
   const dispatch = useAppDispatch();
+  const { reintentarNovedadesConError, isRetryLoading } = useRetryNovedades();
 
   // === ESTADO LOCAL ===
   const [refreshing, setRefreshing] = useState(false);
@@ -96,8 +98,9 @@ export const useNovedadesViewModel = () => {
   }, []);
 
   const onFilterChange = useCallback((filter: NovedadFilterType) => {
+    dispatch(limpiarSeleccionNovedades());
     setActiveFilter(filter);
-  }, []);
+  }, [dispatch]);
 
   // === FUNCIONES FLOATING ACTIONS ===
   const onClearSelection = useCallback(() => {
@@ -112,10 +115,11 @@ export const useNovedadesViewModel = () => {
     }
   }, [navigation, novedadesSeleccionadas]);
 
-  const onRetryNovedades = useCallback(() => {
-    // TODO: Implementar retry de novedades con error
-    console.log('Reintentar novedades con error');
-  }, []);
+  const onRetryNovedades = useCallback(async () => {
+    if(novedadesSeleccionadas.length > 0) {
+      await reintentarNovedadesConError(novedadesSeleccionadas);
+    }
+  }, [novedadesSeleccionadas, reintentarNovedadesConError]);
 
   // === RETORNO DEL VIEWMODEL ===
   return {
@@ -125,6 +129,7 @@ export const useNovedadesViewModel = () => {
     // Estado
     refreshing,
     isLoading: false, // Por ahora no hay loading async
+    isRetryLoading,
     hasNovedades,
     activeFilter,
     errorCount,

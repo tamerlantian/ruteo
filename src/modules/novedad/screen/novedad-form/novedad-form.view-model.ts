@@ -8,9 +8,10 @@ import { useNovedadTipos } from '../../view-models/novedad.view-model';
 import { NovedadFormData } from '../../interfaces/novedad.interface';
 import { novedadValidationRules } from '../../constants/novedad.constant';
 import { limpiarSeleccionVisitas } from '../../../visita/store/slice/visita.slice';
-import { useNovedadProcessing } from '../../hooks/use-novedad-processing.hook';
+import { useNovedadCreation } from '../../hooks/use-novedad-creation.hook';
 import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../../shared/styles/global.style';
+import { generateTempId } from '../../../../shared/utils/id-generator.util';
 
 type NavigationProp = NativeStackNavigationProp<
   MainStackParamList,
@@ -24,7 +25,7 @@ export const useNovedadFormViewModel = (
   const [isSubmitting, setIsSubmitting] = useState(false);
   const subdominio = useAppSelector(selectSubdominio);
   const dispatch = useAppDispatch();
-  const { procesarNovedadesEnLote } = useNovedadProcessing();
+  const { crearNuevasNovedades } = useNovedadCreation();
 
   const {
     data: novedadTiposResponse,
@@ -67,14 +68,23 @@ export const useNovedadFormViewModel = (
 
       try {
         setIsSubmitting(true);
-        const visitaIds = visitasSeleccionadas.map(id => parseInt(id, 10));
+        const formularios: NovedadFormData[] = visitasSeleccionadas.map(id => {
+          return {
+            id: generateTempId(),
+            visitaId: parseInt(id, 10),
+            tipo: data.tipo,
+            descripcion: data.descripcion,
+            foto: data.foto,
+          };
+        });
 
-        // Procesar novedades usando el hook de procesamiento
-        await procesarNovedadesEnLote(visitaIds, data, {
+        // Crear nuevas novedades usando el hook específico de creación
+        await crearNuevasNovedades(formularios, {
           logPrefix: 'Novedad',
           messagePrefix: 'novedad',
           showToasts: true,
-        })     
+          clearSelectionsOnSuccess: true,
+        });
 
         finalizarProceso();
       } catch (error) {
@@ -88,7 +98,7 @@ export const useNovedadFormViewModel = (
         setIsSubmitting(false);
       }
     },
-    [visitasSeleccionadas, isSubmitting, finalizarProceso, procesarNovedadesEnLote],
+    [visitasSeleccionadas, isSubmitting, finalizarProceso, crearNuevasNovedades],
   );
 
   const onSubmit = handleSubmit(onSubmitForm);

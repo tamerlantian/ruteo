@@ -7,8 +7,14 @@ import { ApiErrorResponse } from '../../../core/interfaces/api.interface';
  * Configuration for novedad processing
  */
 export interface NovedadProcessingConfig {
+  /** Marcar novedad con error en caso de fallo */
+  markErrorOnFailure?: boolean;
+  /** Prefijo para logs (ej: "Novedad", "Reintento") */
   logPrefix?: string;
+  /** Prefijo para mensajes de toast (ej: "novedad", "reintento") */
   messagePrefix?: string;
+  /** Limpiar selecciones al finalizar exitosamente */
+  clearSelectionsOnSuccess?: boolean;
 }
 
 /**
@@ -41,41 +47,40 @@ export class NovedadProcessingService {
    * Processes a single novedad submission
    */
   static async procesarNovedadIndividual(
-    visitaId: number,
     subdominio: string,
-    datosFormulario: NovedadFormData,
+    formulario: NovedadFormData,
     config: NovedadProcessingConfig = {}
   ): Promise<NovedadProcessingResult> {
     const { logPrefix = 'Procesamiento Novedad' } = config;
 
     try {
       // Validate form data
-      const validation = NovedadFormDataBuilder.validateNovedadFormData(datosFormulario, visitaId);
+      const validation = NovedadFormDataBuilder.validateNovedadFormData(formulario);
+      
       if (!validation.isValid) {
-        const error = `Validation error for visita ${visitaId}: ${validation.error}`;
+        const error = `Validation error for visita ${formulario.visitaId}: ${validation.error}`;
         console.error(error);
-        return { success: false, visitaId, datosFormulario, error: validation.error };
+        return { success: false, visitaId: formulario.visitaId, datosFormulario: formulario, error: validation.error };
       }
 
       // Build FormData for multipart submission
-      const formData = NovedadFormDataBuilder.buildNovedadFormData(datosFormulario, visitaId);
+      const formData = NovedadFormDataBuilder.buildNovedadFormData(formulario);
 
-      // Log for debugging
-      NovedadFormDataBuilder.logFormData(formData, `${logPrefix} Visita ${visitaId}`);
+      NovedadFormDataBuilder.logFormData(formData, `${logPrefix} Visita ${formulario.visitaId}`);
 
       // Send using multipart method
       const response = await novedadRepository.enviarNovedad(subdominio, formData);
       
       return { 
         success: true, 
-        visitaId,
-        datosFormulario,
+        visitaId: formulario.visitaId,
+        datosFormulario: formulario,
         novedadId: response?.id?.toString(),
       };
     } catch (error) {
       const errorParsed = error as ApiErrorResponse;
-      console.error(`❌ Error al procesar novedad para visita ${visitaId}:`, errorParsed);
-      return { success: false, visitaId, datosFormulario, apiError: errorParsed };
+      console.error(`❌ Error al procesar novedad para visita ${formulario.visitaId}:`, errorParsed);
+      return { success: false, visitaId: formulario.visitaId, datosFormulario: formulario, apiError: errorParsed };
     }
   }
 
@@ -83,20 +88,18 @@ export class NovedadProcessingService {
    * Processes multiple novedades in batch
    */
   static async procesarNovedadesEnLote(
-    visitaIds: number[],
     subdominio: string,
-    datosFormulario: NovedadFormData,
-    config: NovedadProcessingConfig = {}
+    formularios: NovedadFormData[],
+    config: NovedadProcessingConfig = {},
   ): Promise<NovedadBatchProcessingResult> {
     const results: NovedadProcessingResult[] = [];
     let successCount = 0;
     let errorCount = 0;
 
-    for (const visitaId of visitaIds) {
+    for (const formulario of formularios) {
       const result = await this.procesarNovedadIndividual(
-        visitaId, 
         subdominio, 
-        datosFormulario, 
+        formulario, 
         config
       );
       

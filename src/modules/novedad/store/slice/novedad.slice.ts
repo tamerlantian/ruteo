@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Novedad, NovedadEstado, NovedadEstadoSolucion } from '../../interfaces/novedad.interface';
-import { generateTempId } from '../../../../shared/utils/id-generator.util';
 
 interface NovedadState {
   novedades: Novedad[];
@@ -14,8 +13,6 @@ const initialState: NovedadState = {
   seleccionadas: [],
 };
 
-type NovedadInput = Omit<Novedad, 'id'>;
-
 const novedadSlice = createSlice({
   name: 'novedad',
   initialState,
@@ -23,12 +20,8 @@ const novedadSlice = createSlice({
     limpiarNovedades: (state) => {
       state.novedades = [];
     },
-    guardarNovedad: (state, action: PayloadAction<{ novedad: NovedadInput, novedadId?: string }>) => {
-      const novedadConId: Novedad = {
-        ...action.payload.novedad,
-        id: action.payload.novedadId || generateTempId(),
-      };
-      state.novedades.push(novedadConId);
+    guardarNovedad: (state, action: PayloadAction<{ novedad: Novedad }>) => {
+      state.novedades.push(action.payload.novedad);
     },
     limpiarNovedad: (state, action: PayloadAction<string>) => {
       const novedadId = action.payload;
@@ -51,6 +44,14 @@ const novedadSlice = createSlice({
 
       if (novedad) {
         novedad.estado = estado;
+      }
+    },
+    actualizarIdNovedad: (state, action: PayloadAction<{ id: string; nuevoId: string }>) => {
+      const { id, nuevoId } = action.payload;
+      const novedad = state.novedades.find(entidad => entidad.id === id);
+
+      if (novedad) {
+        novedad.id = nuevoId;
       }
     },
     cambiarEstadoSolucionNovedad: (state, action: PayloadAction<{ id: string; estado: NovedadEstadoSolucion }>) => {
@@ -95,6 +96,7 @@ export const {
   limpiarNovedades,
   limpiarNovedad,
   cambiarEstadoNovedad,
+  actualizarIdNovedad,
   cambiarEstadoSolucionNovedad,
   guardarSolucionNovedad,
 } = novedadSlice.actions;
