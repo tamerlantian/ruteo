@@ -47,8 +47,16 @@ export const NovedadCardComponent: React.FC<NovedadCardProps> = ({ novedad }) =>
         {/* Header con número y documento */}
         {visita && (
           <View style={styles.header}>
-            <View style={styles.numberBadge}>
-              <Text style={styles.numberText}>{visita.id} - #{visita.numero}</Text>
+            <View style={styles.badgeContainer}>
+              <View style={styles.numberBadge}>
+                <Text style={styles.numberText}>{visita.id} - #{visita.numero}</Text>
+              </View>
+              {novedad.estado_solucion !== 'pending' && (
+                <View style={styles.solvedBadge}>
+                  <Ionicons name="checkmark-circle" size={14} color="#ffffff" />
+                  <Text style={styles.solvedText}>Solucionado</Text>
+                </View>
+              )}
             </View>
             <Text style={styles.document}>DOC: {visita.documento}</Text>
           </View>
@@ -292,5 +300,25 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '45deg' }],
     marginTop: -2,
     marginLeft: 2,
+  },
+  badgeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  solvedBadge: {
+    backgroundColor: '#34c759',
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  solvedText: {
+    fontSize: 12,
+    color: '#ffffff',
+    fontWeight: '600',
   },
 });
