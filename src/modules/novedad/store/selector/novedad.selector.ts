@@ -14,8 +14,10 @@ export const selectNovedades = createSelector(
  */
 export const selectVisitaIdsWithNovedades = createSelector(
   selectNovedades,
-  (novedades) => {
-    const uniqueVisitaIds = [...new Set(novedades.map(novedad => novedad.visita_id))];
+  novedades => {
+    const uniqueVisitaIds = [
+      ...new Set(novedades.map(novedad => novedad.visita_id)),
+    ];
     return uniqueVisitaIds;
   },
 );
@@ -23,9 +25,31 @@ export const selectVisitaIdsWithNovedades = createSelector(
 // === SELECTORES DE SELECCIÓN ===
 
 // Selector para obtener novedades con error
+export const selectNovedadesConEstadosError = createSelector(
+  selectNovedadRootState,
+  ({ novedades }) =>
+    novedades.filter(
+      novedad =>
+        novedad.estado === 'error' || novedad.estado_solucion === 'error',
+    ),
+);
+
 export const selectNovedadesConError = createSelector(
   selectNovedadRootState,
-  ({ novedades }) => novedades.filter(novedad => novedad.estado === 'error'),
+  ({ novedades }) =>
+    novedades.filter(
+      novedad =>
+        novedad.estado === 'error',
+    ),
+);
+
+export const selectNovedadesConSolucionError = createSelector(
+  selectNovedadRootState,
+  ({ novedades }) =>
+    novedades.filter(
+      novedad =>
+        novedad.estado_solucion === 'error',
+    ),
 );
 
 // Selectores para el estado de selección
@@ -68,7 +92,7 @@ export const selectNovedadConVisita = (novedadId: string) =>
     (novedades, visitas) => {
       const novedad = novedades.find(n => n.id === novedadId);
       if (!novedad) return null;
-      
+
       const visita = visitas.find(v => v.id === novedad.visita_id);
       return {
         novedad,
@@ -79,20 +103,17 @@ export const selectNovedadConVisita = (novedadId: string) =>
 
 // Selector para obtener el visita_id de una novedad específica
 export const selectVisitaIdByNovedadId = (novedadId: string) =>
-  createSelector(
-    [selectNovedades],
-    (novedades) => {
-      const novedad = novedades.find(n => n.id === novedadId);
-      return novedad?.visita_id || null;
-    },
-  );
+  createSelector([selectNovedades], novedades => {
+    const novedad = novedades.find(n => n.id === novedadId);
+    return novedad?.visita_id || null;
+  });
 
 // Selector que obtiene todas las novedades con sus visitas asociadas
 export const selectNovedadesConVisitas = createSelector(
   [selectNovedades, (state: RootState) => state.visita.visitas],
   (novedades, visitas) => {
-    console.log("Novedades", novedades);
-    
+    console.log('Novedades', novedades);
+
     return novedades.map(novedad => {
       const visita = visitas.find(v => v.id === novedad.visita_id);
       return {

@@ -116,7 +116,7 @@ export const NovedadCardComponent: React.FC<NovedadCardProps> = ({ novedad }) =>
         </View>
 
         {/* Badge de error */}
-        {novedad.estado === 'error' && (
+        {(novedad.estado_solucion === 'error' || novedad.estado === 'error') && (
           <View style={styles.errorBadge}>
             <Ionicons name="warning" size={12} color="#ffffff" />
             <Text style={styles.errorText}>Error de sincronización</Text>

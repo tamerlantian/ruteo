@@ -2,11 +2,18 @@ import { useCallback, useMemo, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppSelector, useAppDispatch } from '../../../../store/hooks';
-import { selectNovedades, selectNovedadesConVisitas, selectNovedadesSeleccionadas, selectTotalNovedadesSeleccionadas, selectNovedadesConError } from '../../store/selector/novedad.selector';
+import {
+  selectNovedades,
+  selectNovedadesConVisitas,
+  selectNovedadesSeleccionadas,
+  selectTotalNovedadesSeleccionadas,
+  selectNovedadesConEstadosError,
+} from '../../store/selector/novedad.selector';
 import { limpiarSeleccionNovedades } from '../../store/slice/novedad.slice';
 import { Novedad } from '../../interfaces/novedad.interface';
 import { MainStackParamList } from '../../../../navigation/types';
 import { useRetryNovedades } from '../../hooks/use-retry-novedades.hook';
+import { useRetrySoluciones } from '../../hooks/use-retry-soluciones.hook';
 
 type NovedadFilterType = 'all' | 'error';
 
@@ -21,6 +28,10 @@ export const useNovedadesViewModel = () => {
   const navigation = useNavigation<NavigationProp>();
   const dispatch = useAppDispatch();
   const { reintentarNovedadesConError, isRetryLoading } = useRetryNovedades();
+  const {
+    reintentarSolucionesConError,
+    isRetryLoading: isRetrySolucionesLoading,
+  } = useRetrySoluciones();
 
   // === ESTADO LOCAL ===
   const [refreshing, setRefreshing] = useState(false);
@@ -32,7 +43,7 @@ export const useNovedadesViewModel = () => {
   const novedadesConVisitas = useAppSelector(selectNovedadesConVisitas);
   const novedadesSeleccionadas = useAppSelector(selectNovedadesSeleccionadas);
   const totalSeleccionadas = useAppSelector(selectTotalNovedadesSeleccionadas);
-  const novedadesConError = useAppSelector(selectNovedadesConError);
+  const novedadesConError = useAppSelector(selectNovedadesConEstadosError);
 
   // === ESTADO COMPUTADO ===
   const hasNovedades = novedades.length > 0;
@@ -45,12 +56,17 @@ export const useNovedadesViewModel = () => {
     let filteredByCategory = novedadesConVisitas.filter(item => {
       switch (activeFilter) {
         case 'error':
-          return item.novedad.estado === 'error';
+          return (
+            item.novedad.estado === 'error' ||
+            item.novedad.estado_solucion === 'error'
+          );
         case 'all':
         default:
           return true;
       }
     });
+
+    console.log('Novedades filtradas', filteredByCategory);
 
     // Luego filtrar por búsqueda
     if (!searchValue.trim()) {
@@ -60,28 +76,24 @@ export const useNovedadesViewModel = () => {
     const searchQuery = searchValue.toLowerCase();
     const filtered = filteredByCategory.filter(item => {
       const { novedad, visita } = item;
-      
+
       // Buscar en datos de la novedad
       const matchesNovedad = novedad.visita_id.toString().includes(searchQuery);
-      
+
       // Buscar en datos de la visita si existe
-      const matchesVisita = visita ? (
-        visita.numero.toString().toLowerCase().includes(searchQuery) ||
-        visita.documento.toLowerCase().includes(searchQuery)
-      ) : false;
-      
+      const matchesVisita = visita
+        ? visita.numero.toString().toLowerCase().includes(searchQuery) ||
+          visita.documento.toLowerCase().includes(searchQuery)
+        : false;
+
       return matchesNovedad || matchesVisita;
     });
 
     return filtered.map(item => item.novedad);
   }, [novedadesConVisitas, activeFilter, searchValue]);
 
-
   // === FUNCIONES DE CALLBACK ===
-  const keyExtractor = useCallback(
-    (item: Novedad) => `novedad-${item.id}`,
-    [],
-  );
+  const keyExtractor = useCallback((item: Novedad) => `novedad-${item.id}`, []);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -97,10 +109,13 @@ export const useNovedadesViewModel = () => {
     setSearchValue('');
   }, []);
 
-  const onFilterChange = useCallback((filter: NovedadFilterType) => {
-    dispatch(limpiarSeleccionNovedades());
-    setActiveFilter(filter);
-  }, [dispatch]);
+  const onFilterChange = useCallback(
+    (filter: NovedadFilterType) => {
+      dispatch(limpiarSeleccionNovedades());
+      setActiveFilter(filter);
+    },
+    [dispatch],
+  );
 
   // === FUNCIONES FLOATING ACTIONS ===
   const onClearSelection = useCallback(() => {
@@ -116,27 +131,32 @@ export const useNovedadesViewModel = () => {
   }, [navigation, novedadesSeleccionadas]);
 
   const onRetryNovedades = useCallback(async () => {
-    if(novedadesSeleccionadas.length > 0) {
+    if (novedadesSeleccionadas.length > 0) {
       await reintentarNovedadesConError(novedadesSeleccionadas);
+      await reintentarSolucionesConError(novedadesSeleccionadas);
     }
-  }, [novedadesSeleccionadas, reintentarNovedadesConError]);
+  }, [
+    novedadesSeleccionadas,
+    reintentarNovedadesConError,
+    reintentarSolucionesConError,
+  ]);
 
   // === RETORNO DEL VIEWMODEL ===
   return {
     // Datos
     novedades: novedadesFiltradas,
-    
+
     // Estado
     refreshing,
     isLoading: false, // Por ahora no hay loading async
-    isRetryLoading,
+    isRetryLoading: isRetryLoading || isRetrySolucionesLoading,
     hasNovedades,
     activeFilter,
     errorCount,
     totalCount,
     searchValue,
     totalSeleccionadas,
-    
+
     // Configuración
     listConfig: {
       MAX_TO_RENDER_PER_BATCH: 10,
@@ -144,14 +164,14 @@ export const useNovedadesViewModel = () => {
       WINDOW_SIZE: 10,
       UPDATE_CELLS_BATCHING_PERIOD: 50,
     },
-    
+
     // Funciones
     keyExtractor,
     onRefresh,
     onSearchChange,
     onClearFilters,
     onFilterChange,
-    
+
     // Floating Actions
     onClearSelection,
     onSolucionarNovedades,

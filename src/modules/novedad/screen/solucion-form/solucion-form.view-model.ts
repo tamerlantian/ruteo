@@ -2,17 +2,12 @@ import { useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
-import { selectSubdominio } from '../../../settings/store/selector/settings.selector';
-import { novedadRepository } from '../../repositories/novedad.repository';
 import { MainStackParamList } from '../../../../navigation/types';
-import { isTempId } from '../../../../shared/utils/id-generator.util';
-import { guardarSolucionNovedad, limpiarNovedad, limpiarSeleccionNovedades } from '../../store/slice/novedad.slice';
-import { desmarcarVisitaConNovedad } from '../../../visita/store/slice/visita.slice';
+import { useSolucionCreation } from '../../hooks/solucion-hooks.index';
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
-interface SolucionFormData {
+interface SolucionFormViewData {
   solucion: string;
 }
 
@@ -28,9 +23,7 @@ export const useSolucionFormViewModel = ({
 }: SolucionFormViewModelProps) => {
   // === HOOKS ===
   const navigation = useNavigation<NavigationProp>();
-  const schemaName = useAppSelector(selectSubdominio);
-  const dispatch = useAppDispatch();
-  const novedades = useAppSelector(state => state.novedad.novedades);
+  const { crearNuevasSoluciones } = useSolucionCreation();
 
   // === ESTADO LOCAL ===
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,7 +34,7 @@ export const useSolucionFormViewModel = ({
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<SolucionFormData>({
+  } = useForm<SolucionFormViewData>({
     defaultValues: {
       solucion: '',
     },
@@ -64,92 +57,34 @@ export const useSolucionFormViewModel = ({
 
   // === FUNCIONES ===
   const onSubmit = useCallback(
-    async (data: SolucionFormData) => {
-      if (!schemaName) {
-        console.error('Schema name no disponible');
-        return;
-      }
-
+    async (data: SolucionFormViewData) => {
       setIsSubmitting(true);
 
       try {
-        let successCount = 0;
-        let errorCount = 0;
+        // Preparar datos de soluciones
+        const solucionesData = novedadesSeleccionadas.map(novedadId => ({
+          id: novedadId,
+          solucion: data.solucion,
+        }));
 
-        // Enviar una petición por cada novedad
-        for (const novedadId of novedadesSeleccionadas) {
-          try {
-            const solucionData = {
-              id: novedadId,
-              solucion: data.solucion,
-            };
-
-            // Obtener el visita_id asociado a esta novedad
-            const novedad = novedades.find(n => n.id === novedadId);
-            const visitaId = novedad?.visita_id || null;
-
-            if (isTempId(novedadId)) {
-              // Para novedades temporales, solo guardar la solución localmente
-              dispatch(guardarSolucionNovedad(solucionData));
-              
-              // Desmarcar la visita si tenemos el ID
-              if (visitaId) {
-                dispatch(desmarcarVisitaConNovedad(visitaId));
-              }
-              
-              successCount++;
-              continue;
-            }
-
-            // Para novedades sincronizadas, enviar al servidor
-            await novedadRepository.solucionarNovedades(
-              schemaName!,
-              solucionData,
-            );
-
-            // Limpiar la novedad del store (ya está solucionada)
-            dispatch(limpiarNovedad(novedadId));
-            
-            // Desmarcar la visita asociada
-            if (visitaId) {
-              dispatch(desmarcarVisitaConNovedad(visitaId));
-            }
-
-            console.log(
-              `Solución enviada exitosamente para novedad ${novedadId}`,
-            );
-            successCount++;
-          } catch (error) {
-            console.error(
-              `Error al enviar solución para novedad ${novedadId}:`,
-              error,
-            );
-            // TODO: Marcar esta novedad con error en Redux
-            errorCount++;
-          }
-        }
-
-        // Limpiar selección después de procesar todas
-        dispatch(limpiarSeleccionNovedades());
-
-        // Mostrar resultado final
-        console.log(
-          `Proceso completado: ${successCount} exitosas, ${errorCount} con error`,
-        );
-
-        // TODO: Mostrar toast con resumen (ej: "3 novedades solucionadas, 1 con error")
+        // Crear soluciones usando el hook específico
+        await crearNuevasSoluciones(solucionesData, {
+          showToasts: true,
+          clearSelectionsOnSuccess: true,
+          logPrefix: 'Solución',
+          messagePrefix: 'solución',
+        });
 
         // Limpiar formulario y navegar de vuelta
         reset();
         navigation.goBack();
       } catch (error) {
         console.error('Error general al procesar soluciones:', error);
-        // TODO: Mostrar toast de error general
       } finally {
         setIsSubmitting(false);
       }
     },
-    [schemaName, novedadesSeleccionadas, reset, navigation, dispatch, novedades],
+    [novedadesSeleccionadas, reset, navigation, crearNuevasSoluciones],
   );
 
   const onCancel = useCallback(() => {
