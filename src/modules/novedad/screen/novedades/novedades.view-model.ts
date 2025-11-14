@@ -27,11 +27,9 @@ export const useNovedadesViewModel = () => {
   // === HOOKS ===
   const navigation = useNavigation<NavigationProp>();
   const dispatch = useAppDispatch();
-  const { reintentarNovedadesConError, isRetryLoading } = useRetryNovedades();
-  const {
-    reintentarSolucionesConError,
-    isRetryLoading: isRetrySolucionesLoading,
-  } = useRetrySoluciones(); 
+  const [isRetryLoading, setIsRetryLoading] = useState(false);
+  const { reintentarNovedadesConError } = useRetryNovedades();
+  const { reintentarSolucionesConError } = useRetrySoluciones();
 
   // === ESTADO LOCAL ===
   const [refreshing, setRefreshing] = useState(false);
@@ -129,9 +127,16 @@ export const useNovedadesViewModel = () => {
   }, [navigation, novedadesSeleccionadas]);
 
   const onRetryNovedades = useCallback(async () => {
-    if (novedadesSeleccionadas.length > 0) {
-      await reintentarNovedadesConError(novedadesSeleccionadas);
-      await reintentarSolucionesConError(novedadesSeleccionadas);
+    setIsRetryLoading(true);
+    try {
+      if (novedadesSeleccionadas.length > 0) {
+        await reintentarNovedadesConError(novedadesSeleccionadas);
+        await reintentarSolucionesConError(novedadesSeleccionadas);
+      }
+    } catch (error) {
+      console.error('Error al reintentar novedades:', error);
+    } finally {
+      setIsRetryLoading(false);
     }
   }, [
     novedadesSeleccionadas,
@@ -147,7 +152,7 @@ export const useNovedadesViewModel = () => {
     // Estado
     refreshing,
     isLoading: false, // Por ahora no hay loading async
-    isRetryLoading: isRetryLoading || isRetrySolucionesLoading,
+    isRetryLoading,
     hasNovedades,
     activeFilter,
     errorCount,

@@ -52,6 +52,7 @@ export const NovedadFloatingActions: React.FC<NovedadFloatingActionsProps> = ({
           <FormButton 
             title={`Solucionar (${totalSeleccionadas})`}
             onPress={onSolucionarNovedades}
+            isLoading={isRetryLoading}
             style={{ flex: 1 }}
             variant='primary'
           />

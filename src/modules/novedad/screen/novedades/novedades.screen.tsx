@@ -27,6 +27,7 @@ export const NovedadesScreen = () => {
     onClearSelection,
     onSolucionarNovedades,
     onRetryNovedades,
+    isRetryLoading,
   } = useNovedadesViewModel();
 
   const renderNovedadItem: ListRenderItem<Novedad> = useCallback(
@@ -79,6 +80,7 @@ export const NovedadesScreen = () => {
         onClearSelection={onClearSelection}
         onSolucionarNovedades={onSolucionarNovedades}
         onRetryNovedades={onRetryNovedades}
+        isRetryLoading={isRetryLoading}
       />
     </SafeAreaView>
   );
