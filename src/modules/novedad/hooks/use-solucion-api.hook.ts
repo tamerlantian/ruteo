@@ -19,6 +19,7 @@ export interface UseSolucionApiConfig {
  */
 export interface SolucionFormData {
   id: string;
+  tempId: string;
   solucion: string;
 }
 
@@ -28,6 +29,7 @@ export interface SolucionFormData {
 export interface SolucionProcessingResult {
   success: boolean;
   novedadId: string;
+  novedadTempId?: string;
   solucionData: SolucionFormData;
   error?: string;
   apiError?: any;
@@ -70,6 +72,7 @@ export const useSolucionApi = () => {
         return { 
           success: false, 
           novedadId: solucionData.id,
+          novedadTempId: solucionData.tempId,
           solucionData,
           error: 'No subdominio provided' 
         };

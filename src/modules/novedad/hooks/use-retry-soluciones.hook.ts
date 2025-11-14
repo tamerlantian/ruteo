@@ -1,12 +1,12 @@
 import { useCallback, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { 
+import { useAppDispatch } from '../../../store/hooks';
+import {
   limpiarNovedad,
-  limpiarSeleccionNovedades
+  limpiarSeleccionNovedades,
 } from '../store/slice/novedad.slice';
 import { desmarcarVisitaConNovedad } from '../../visita/store/slice/visita.slice';
 import { useSolucionApi, SolucionFormData } from './use-solucion-api.hook';
-import { selectNovedadesConSolucionError } from '../store/selector/novedad.selector';
+import { store } from '../../../store';
 
 /**
  * Hook specifically for retrying solutions with error state
@@ -15,8 +15,8 @@ import { selectNovedadesConSolucionError } from '../store/selector/novedad.selec
  */
 export const useRetrySoluciones = () => {
   const dispatch = useAppDispatch();
-  const novedades = useAppSelector(selectNovedadesConSolucionError);
-  const { procesarSolucionesApiEnLote, mostrarMensajesDeResultado } = useSolucionApi();
+  const { procesarSolucionesApiEnLote, mostrarMensajesDeResultado } =
+    useSolucionApi();
   const [isRetryLoading, setIsRetryLoading] = useState(false);
 
   /**
@@ -27,13 +27,31 @@ export const useRetrySoluciones = () => {
     async (novedadIds: string[]) => {
       try {
         setIsRetryLoading(true);
+        const novedadesActualizadas = store.getState().novedad.novedades;
+        const novedadesConError = novedadesActualizadas.filter(
+          n => n.estado_solucion === 'error',
+        );
         const solucionesAReintentar: SolucionFormData[] = [];
 
         // Get existing solutions data from Redux
-        novedades.forEach(novedad => {
-          if (novedadIds.includes(novedad.id) && novedad.solucion) {
+        console.log("novedades directas", novedadesActualizadas);
+        
+        novedadesConError.forEach(novedad => {
+          if (
+            novedadIds.includes(novedad.id) &&
+            novedad.solucion &&
+            novedad.id_real
+          ) {
+            solucionesAReintentar.push({
+              id: novedad.id_real,
+              tempId: novedad.id,
+              solucion: novedad.solucion,
+            });
+          } 
+          else if (novedadIds.includes(novedad.id) && novedad.solucion) {
             solucionesAReintentar.push({
               id: novedad.id,
+              tempId: novedad.id,
               solucion: novedad.solucion,
             });
           }
@@ -58,10 +76,12 @@ export const useRetrySoluciones = () => {
         batchResult.results.forEach(result => {
           if (result.success) {
             // Remove solved novedad from store (it's now solved)
-            dispatch(limpiarNovedad(result.novedadId));
-            
+            dispatch(limpiarNovedad(result.solucionData.tempId || result.novedadId));
+
             // Get associated visita_id and unmark visita
-            const novedad = novedades.find(n => n.id === result.novedadId);
+            const novedad = novedadesConError.find(
+              n => n.id === result.novedadId,
+            );
             if (novedad?.visita_id) {
               dispatch(desmarcarVisitaConNovedad(novedad.visita_id));
             }
@@ -71,21 +91,20 @@ export const useRetrySoluciones = () => {
 
         // Show consolidated result messages
         mostrarMensajesDeResultado(
-          batchResult.successCount, 
-          batchResult.errorCount, 
-          'reintento de solución'
+          batchResult.successCount,
+          batchResult.errorCount,
+          'reintento de solución',
         );
 
         // Clear selections after processing
         dispatch(limpiarSeleccionNovedades());
-
       } catch (error) {
         console.error('Error general al reintentar soluciones:', error);
       } finally {
         setIsRetryLoading(false);
       }
     },
-    [dispatch, novedades, procesarSolucionesApiEnLote, mostrarMensajesDeResultado],
+    [dispatch, procesarSolucionesApiEnLote, mostrarMensajesDeResultado],
   );
 
   return {

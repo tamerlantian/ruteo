@@ -31,7 +31,7 @@ export const useNovedadesViewModel = () => {
   const {
     reintentarSolucionesConError,
     isRetryLoading: isRetrySolucionesLoading,
-  } = useRetrySoluciones();
+  } = useRetrySoluciones(); 
 
   // === ESTADO LOCAL ===
   const [refreshing, setRefreshing] = useState(false);
@@ -65,8 +65,6 @@ export const useNovedadesViewModel = () => {
           return true;
       }
     });
-
-    console.log('Novedades filtradas', filteredByCategory);
 
     // Luego filtrar por búsqueda
     if (!searchValue.trim()) {

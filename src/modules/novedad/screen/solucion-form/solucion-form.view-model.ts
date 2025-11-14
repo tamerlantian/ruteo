@@ -64,6 +64,7 @@ export const useSolucionFormViewModel = ({
         // Preparar datos de soluciones
         const solucionesData = novedadesSeleccionadas.map(novedadId => ({
           id: novedadId,
+          tempId: novedadId,
           solucion: data.solucion,
         }));
 

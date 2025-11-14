@@ -17,6 +17,7 @@ import {
 import { useVisitaProcessing } from '../../hooks/use-visita-processing.hook';
 import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../../shared/styles/global.style';
+import { useCoordinatedRetry } from '../../hooks/use-coordinated-retry.hook';
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -29,6 +30,7 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[], navigati
   const [isSubmitting, setIsSubmitting] = useState(false);
   const dispatch = useAppDispatch();
   const { procesarVisitasEnLote } = useVisitaProcessing();
+  const { prepareVisitasForProcessing} = useCoordinatedRetry()
 
   // Configuración de React Hook Form
   const {
@@ -125,6 +127,8 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[], navigati
           dispatch(guardarDatosFormularioEnVisita({ visitaId, datosFormulario: data }));
         });
 
+        await prepareVisitasForProcessing(visitaIds);
+
         await procesarVisitasEnLote(visitaIds, {
           markErrorOnFailure: true,
           logPrefix: 'Entrega',
@@ -150,6 +154,7 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[], navigati
       visitasSeleccionadas,
       dispatch,
       procesarVisitasEnLote,
+      prepareVisitasForProcessing,
       finalizarProceso,
     ],
   );

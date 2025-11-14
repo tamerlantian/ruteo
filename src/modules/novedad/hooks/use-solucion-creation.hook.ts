@@ -120,6 +120,7 @@ export const useSolucionCreation = () => {
               }
             } else {
               // Mark solution with error state for retry
+              dispatch(guardarSolucionNovedad(result.solucionData));
               dispatch(
                 cambiarEstadoSolucionNovedad({
                   id: result.novedadId,

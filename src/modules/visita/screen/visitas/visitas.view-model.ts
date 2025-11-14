@@ -25,7 +25,13 @@ import { LIST_OPTIMIZATION_CONFIG } from '../../constants/visita.constant';
 import { FilterType } from '../../components/filter-badges/filter-badges.component';
 import { useRetryVisitas } from '../../hooks/use-retry-visitas.hook';
 import { resetSettings } from '../../../settings';
-import { limpiarNovedades, limpiarSeleccionNovedades } from '../../../novedad/store/slice/novedad.slice';
+import {
+  limpiarNovedades,
+  limpiarSeleccionNovedades,
+} from '../../../novedad/store/slice/novedad.slice';
+import { useRetrySoluciones } from '../../../novedad/hooks/use-retry-soluciones.hook';
+import { useRetryNovedades } from '../../../novedad/hooks';
+import { useCoordinatedRetry } from '../../hooks/use-coordinated-retry.hook';
 
 /**
  * ViewModel para la pantalla de Visitas
@@ -35,7 +41,10 @@ type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
 export const useVisitasViewModel = () => {
   const dispatch = useAppDispatch();
-  const { reintentarVisitasConError, isRetryLoading } = useRetryVisitas();
+  const { isRetryLoading } = useRetryVisitas();
+  const { isRetryLoading: isRetrySolucionesLoading } = useRetrySoluciones();
+  const { isRetryLoading: isRetryNovedadesLoading } = useRetryNovedades();
+  const { executeCoordinatedRetry } = useCoordinatedRetry();
   const navigation = useNavigation<NavigationProp>();
 
   // Estados del store
@@ -44,13 +53,13 @@ export const useVisitasViewModel = () => {
   const isSuccess = useAppSelector(selectIsSucceeded);
   const totalSeleccionadas = useAppSelector(selectTotalVisitasSeleccionadas);
   const visitasSeleccionadas = useAppSelector(selectVisitasSeleccionadas);
+  const visitasConError = useAppSelector(selectVisitasConError);
+  const visitasConNovedades = useAppSelector(selectVisitasConNovedades);
   const visitasSeleccionadasConDatosGuardados = useAppSelector(
     selectVisitasSeleccionadasConDatosGuardados,
   );
   const visitasPendientes = useAppSelector(selectVisitasPendientes);
-  const visitasConError = useAppSelector(selectVisitasConError);
   const visitasEntregadas = useAppSelector(selectVisitasEntregadas);
-  const visitasConNovedades = useAppSelector(selectVisitasConNovedades);
 
   // Estados locales
   const [refreshing, setRefreshing] = useState(false);
@@ -147,7 +156,7 @@ export const useVisitasViewModel = () => {
     });
   }, [navigation, visitasSeleccionadas]);
 
-  const retrySelectedVisitas = useCallback(() => {
+  const retrySelectedVisitas = useCallback(async () => {
     if (visitasSeleccionadasConDatosGuardados.length === 0) {
       console.warn(
         'No hay visitas con error y datos guardados para reintentar',
@@ -158,8 +167,15 @@ export const useVisitasViewModel = () => {
     const visitasConErrorIds = visitasSeleccionadasConDatosGuardados.map(
       visita => visita.id,
     );
-    reintentarVisitasConError(visitasConErrorIds);
-  }, [visitasSeleccionadasConDatosGuardados, reintentarVisitasConError]);
+
+    try {
+      await executeCoordinatedRetry(visitasConErrorIds, {
+        logPrefix: 'Retry Visitas',
+      });
+    } catch (error) {
+      console.error('Error al reintentar visitas:', error);
+    }
+  }, [visitasSeleccionadasConDatosGuardados, executeCoordinatedRetry]);
 
   // === ACCIONES DE LISTA ===
   const onRefresh = useCallback(() => {
@@ -183,12 +199,9 @@ export const useVisitasViewModel = () => {
   );
 
   // === ACCIONES DE BÚSQUEDA ===
-  const handleSearchChange = useCallback(
-    (value: string) => {
-      setSearchValue(value);
-    },
-    [],
-  );
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchValue(value);
+  }, []);
 
   const clearFilters = useCallback(() => {
     setSearchValue('');
@@ -216,14 +229,21 @@ export const useVisitasViewModel = () => {
     // Luego aplicar búsqueda por número si hay texto de búsqueda
     if (searchValue.trim()) {
       const searchQuery = searchValue.toLowerCase().trim();
-      return filteredByCategory.filter(visita =>
-        visita.numero.toString().toLowerCase().includes(searchQuery) || 
-        visita.documento.toLowerCase().includes(searchQuery),
+      return filteredByCategory.filter(
+        visita =>
+          visita.numero.toString().toLowerCase().includes(searchQuery) ||
+          visita.documento.toLowerCase().includes(searchQuery),
       );
     }
 
     return filteredByCategory;
-  }, [activeFilter, visitasPendientes, visitasConError, visitasConNovedades, searchValue]);
+  }, [
+    activeFilter,
+    visitasPendientes,
+    visitasConError,
+    visitasConNovedades,
+    searchValue,
+  ]);
 
   const hasVisitas = useMemo(() => visitas.length > 0, [visitas.length]);
   const hasSelectedVisitas = useMemo(
@@ -252,7 +272,8 @@ export const useVisitasViewModel = () => {
     refreshing,
     hasVisitas,
     hasSelectedVisitas,
-    isRetryLoading,
+    isRetryLoading:
+      isRetryLoading || isRetrySolucionesLoading || isRetryNovedadesLoading,
 
     // Filter states
     activeFilter,

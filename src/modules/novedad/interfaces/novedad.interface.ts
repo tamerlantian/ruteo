@@ -10,6 +10,7 @@ export interface Novedad {
   solucion?: string;
   imagenes: { uri: string }[];
   // campos para tracking local
+  id_real?: string;
   estado: NovedadEstado;
   estado_solucion: NovedadEstadoSolucion;
 }

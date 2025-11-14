@@ -51,7 +51,7 @@ const novedadSlice = createSlice({
       const novedad = state.novedades.find(entidad => entidad.id === id);
 
       if (novedad) {
-        novedad.id = nuevoId;
+        novedad.id_real = nuevoId;
       }
     },
     cambiarEstadoSolucionNovedad: (state, action: PayloadAction<{ id: string; estado: NovedadEstadoSolucion }>) => {
