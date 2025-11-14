@@ -1,9 +1,18 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Linking,
+} from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { Novedad } from '../../interfaces/novedad.interface';
 import { useAppSelector, useAppDispatch } from '../../../../store/hooks';
-import { selectIsNovedadSeleccionada, selectNovedadConVisita } from '../../store/selector/novedad.selector';
+import {
+  selectIsNovedadSeleccionada,
+  selectNovedadConVisita,
+} from '../../store/selector/novedad.selector';
 import { toggleNovedadSeleccion } from '../../store/slice/novedad.slice';
 import { getFirstPhoneNumber } from '../../../../shared/utils/phone.util';
 
@@ -11,11 +20,12 @@ interface NovedadCardProps {
   novedad: Novedad;
 }
 
-export const NovedadCardComponent: React.FC<NovedadCardProps> = ({ novedad }) => {
+export const NovedadCardComponent: React.FC<NovedadCardProps> = ({
+  novedad,
+}) => {
   const dispatch = useAppDispatch();
   const isSelected = useAppSelector(selectIsNovedadSeleccionada(novedad.id));
   const novedadConVisita = useAppSelector(selectNovedadConVisita(novedad.id));
-
 
   const handlePress = () => {
     dispatch(toggleNovedadSeleccion(novedad.id));
@@ -24,22 +34,21 @@ export const NovedadCardComponent: React.FC<NovedadCardProps> = ({ novedad }) =>
   const handlePhonePress = (event: any) => {
     event.stopPropagation();
     if (novedadConVisita?.visita?.destinatario_telefono) {
-      const firstPhone = getFirstPhoneNumber(novedadConVisita.visita.destinatario_telefono);
+      const firstPhone = getFirstPhoneNumber(
+        novedadConVisita.visita.destinatario_telefono,
+      );
       Linking.openURL(`tel:${firstPhone}`);
     }
   };
 
   const visita = novedadConVisita?.visita;
-  const displayPhone = visita?.destinatario_telefono 
+  const displayPhone = visita?.destinatario_telefono
     ? getFirstPhoneNumber(visita.destinatario_telefono)
     : '';
 
   return (
-    <TouchableOpacity 
-      style={[
-        styles.container,
-        isSelected && styles.containerSelected
-      ]} 
+    <TouchableOpacity
+      style={[styles.container, isSelected && styles.containerSelected]}
       onPress={handlePress}
       activeOpacity={0.7}
     >
@@ -49,7 +58,9 @@ export const NovedadCardComponent: React.FC<NovedadCardProps> = ({ novedad }) =>
           <View style={styles.header}>
             <View style={styles.badgeContainer}>
               <View style={styles.numberBadge}>
-                <Text style={styles.numberText}>{visita.id} - #{visita.numero}</Text>
+                <Text style={styles.numberText}>
+                  {visita.id} - #{visita.numero}
+                </Text>
               </View>
               {novedad.estado_solucion !== 'pending' && (
                 <View style={styles.solvedBadge}>
@@ -65,7 +76,6 @@ export const NovedadCardComponent: React.FC<NovedadCardProps> = ({ novedad }) =>
         {/* Información de la visita */}
         {visita && (
           <>
-
             {/* Destinatario */}
             <View style={styles.destinatarioContainer}>
               <Ionicons name="person-outline" size={14} color="#8e8e93" />
@@ -78,7 +88,9 @@ export const NovedadCardComponent: React.FC<NovedadCardProps> = ({ novedad }) =>
             {visita.destinatario_direccion && (
               <View style={styles.addressContainer}>
                 <Ionicons name="location-outline" size={14} color="#007aff" />
-                <Text style={styles.address}>{visita.destinatario_direccion}</Text>
+                <Text style={styles.address}>
+                  {visita.destinatario_direccion}
+                </Text>
               </View>
             )}
           </>
@@ -87,43 +99,38 @@ export const NovedadCardComponent: React.FC<NovedadCardProps> = ({ novedad }) =>
         {/* Descripción de la novedad */}
         <View style={styles.novedadContainer}>
           <Ionicons name="document-text-outline" size={14} color="#ff6b35" />
-          <Text style={styles.description}>
-            {novedad.descripcion}
-          </Text>
+          <Text style={styles.description}>{novedad.descripcion}</Text>
         </View>
-        
+
         {/* Información adicional y teléfono */}
         <View style={styles.infoRow}>
           <View style={styles.leftInfo}>
-            {/* Espacio para información futura */}
+            {/* Badge de error */}
+            {(novedad.estado_solucion === 'error' ||
+              novedad.estado === 'error') && (
+              <View style={styles.errorBadge}>
+                <Ionicons name="warning" size={12} color="#ffffff" />
+                <Text style={styles.errorText}>Error</Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.rightInfo}>
             {/* Botón de teléfono */}
             {displayPhone && (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.phoneButton}
                 onPress={handlePhonePress}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <Ionicons name="call" size={16} color="#007aff" />
-                <Text style={styles.phoneText}>
-                  {displayPhone}
-                </Text>
+                <Text style={styles.phoneText}>{displayPhone}</Text>
               </TouchableOpacity>
             )}
           </View>
         </View>
-
-        {/* Badge de error */}
-        {(novedad.estado_solucion === 'error' || novedad.estado === 'error') && (
-          <View style={styles.errorBadge}>
-            <Ionicons name="warning" size={12} color="#ffffff" />
-            <Text style={styles.errorText}>Error</Text>
-          </View>
-        )}
       </View>
-      
+
       {/* Indicador visual de selección */}
       {isSelected && (
         <View style={styles.selectedIndicator}>
