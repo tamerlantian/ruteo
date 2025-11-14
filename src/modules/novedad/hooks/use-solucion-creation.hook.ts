@@ -119,6 +119,12 @@ export const useSolucionCreation = () => {
                 dispatch(desmarcarVisitaConNovedad(novedad.visita_id));
               }
             } else {
+               // Get associated visita_id and unmark visita
+              const novedad = novedades.find(n => n.id === result.novedadId);
+              if (novedad?.visita_id) {
+                dispatch(desmarcarVisitaConNovedad(novedad.visita_id));
+              }
+              
               // Mark solution with error state for retry
               dispatch(guardarSolucionNovedad(result.solucionData));
               dispatch(
