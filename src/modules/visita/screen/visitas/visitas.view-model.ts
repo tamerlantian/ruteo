@@ -29,9 +29,6 @@ import {
   limpiarNovedades,
   limpiarSeleccionNovedades,
 } from '../../../novedad/store/slice/novedad.slice';
-import { useRetrySoluciones } from '../../../novedad/hooks/use-retry-soluciones.hook';
-import { useRetryNovedades } from '../../../novedad/hooks';
-import { useCoordinatedRetry } from '../../hooks/use-coordinated-retry.hook';
 
 /**
  * ViewModel para la pantalla de Visitas
@@ -41,10 +38,7 @@ type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
 export const useVisitasViewModel = () => {
   const dispatch = useAppDispatch();
-  const { isRetryLoading } = useRetryVisitas();
-  const { isRetryLoading: isRetrySolucionesLoading } = useRetrySoluciones();
-  const { isRetryLoading: isRetryNovedadesLoading } = useRetryNovedades();
-  const { executeCoordinatedRetry } = useCoordinatedRetry();
+  const { reintentarVisitasConError, isRetryLoading } = useRetryVisitas();
   const navigation = useNavigation<NavigationProp>();
 
   // Estados del store
@@ -169,13 +163,11 @@ export const useVisitasViewModel = () => {
     );
 
     try {
-      await executeCoordinatedRetry(visitasConErrorIds, {
-        logPrefix: 'Retry Visitas',
-      });
+      await reintentarVisitasConError(visitasConErrorIds);
     } catch (error) {
       console.error('Error al reintentar visitas:', error);
     }
-  }, [visitasSeleccionadasConDatosGuardados, executeCoordinatedRetry]);
+  }, [visitasSeleccionadasConDatosGuardados, reintentarVisitasConError]);
 
   // === ACCIONES DE LISTA ===
   const onRefresh = useCallback(() => {
@@ -272,8 +264,7 @@ export const useVisitasViewModel = () => {
     refreshing,
     hasVisitas,
     hasSelectedVisitas,
-    isRetryLoading:
-      isRetryLoading || isRetrySolucionesLoading || isRetryNovedadesLoading,
+    isRetryLoading,
 
     // Filter states
     activeFilter,

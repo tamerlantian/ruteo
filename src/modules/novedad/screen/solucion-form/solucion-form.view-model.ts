@@ -45,8 +45,8 @@ export const useSolucionFormViewModel = ({
     solucion: {
       required: 'La descripción de la solución es obligatoria',
       minLength: {
-        value: 10,
-        message: 'La solución debe tener al menos 10 caracteres',
+        value: 3,
+        message: 'La solución debe tener al menos 3 caracteres',
       },
       maxLength: {
         value: 500,

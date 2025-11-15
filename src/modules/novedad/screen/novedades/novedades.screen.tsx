@@ -17,7 +17,7 @@ export const NovedadesScreen = () => {
     hasNovedades,
     activeFilter,
     errorCount,
-    totalCount,
+    allCount,
     searchValue,
     onSearchChange,
     onClearFilters,
@@ -49,7 +49,7 @@ export const NovedadesScreen = () => {
             activeFilter={activeFilter}
             onFilterChange={onFilterChange}
             errorCount={errorCount}
-            totalCount={totalCount}
+            allCount={allCount}
             searchValue={searchValue}
             onSearchChange={onSearchChange}
             onClearFilters={onClearFilters}

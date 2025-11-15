@@ -45,10 +45,23 @@ export const selectNovedadesConError = createSelector(
 
 export const selectNovedadesConSolucionError = createSelector(
   selectNovedadRootState,
+  ({ novedades }) => {
+    const filtered = novedades.filter(
+      novedad =>
+        novedad.estado_solucion === 'error',
+    );
+    console.log(' SELECTOR: selectNovedadesConSolucionError devolviendo:', filtered.map(n => ({ id: n.id, id_real: n.id_real, estado_solucion: n.estado_solucion })));
+    return filtered;
+  },
+);
+
+export const selectNovedadesPendientesPorSolventar = createSelector(
+  selectNovedadRootState,
   ({ novedades }) =>
     novedades.filter(
       novedad =>
-        novedad.estado_solucion === 'error',
+        novedad.estado_solucion !== 'error' &&
+        novedad.estado_solucion !== 'sync',
     ),
 );
 

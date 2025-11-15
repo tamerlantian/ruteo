@@ -94,38 +94,33 @@ export const VisitasScreen = () => {
         // Optimización adicional para listas grandes
         legacyImplementation={false}
       />
-
       {/* Floating Action Bar */}
-      <VisitasFloatingActions
-        totalSeleccionadas={totalSeleccionadas}
-        totalConError={totalConErrorSeleccionadas}
-        activeFilter={activeFilter}
-        isRetryLoading={isRetryLoading}
-        onClearSelection={clearSelection}
-        onDeliverVisitas={deliverSelectedVisitas}
-        onRetryVisitas={retrySelectedVisitas}
-        onNovedadVisitas={reportNovedadSelectedVisitas}
-      />
-
-      <CustomBottomSheet
-        ref={bottomSheetRef}
-        initialSnapPoints={['30%']}
-      >
+      {activeFilter !== 'novedades' && (
+        <VisitasFloatingActions
+          totalSeleccionadas={totalSeleccionadas}
+          totalConError={totalConErrorSeleccionadas}
+          activeFilter={activeFilter}
+          isRetryLoading={isRetryLoading}
+          onClearSelection={clearSelection}
+          onDeliverVisitas={deliverSelectedVisitas}
+          onRetryVisitas={retrySelectedVisitas}
+          onNovedadVisitas={reportNovedadSelectedVisitas}
+        />
+      )}
+      <CustomBottomSheet ref={bottomSheetRef} initialSnapPoints={['30%']}>
         <CargarOrdenComponent />
       </CustomBottomSheet>
-
       <CustomBottomSheet
         ref={optionsBottomSheetRef}
         initialSnapPoints={['25%']}
       >
         <VisitasOptionsComponent onDesvincular={handleDesvincular} />
       </CustomBottomSheet>
-
       <CustomBottomSheet
         ref={confirmacionBottomSheetRef}
         initialSnapPoints={['42%']}
       >
-        <ConfirmacionDesvincularComponent 
+        <ConfirmacionDesvincularComponent
           onConfirmar={confirmarDesvinculacion}
           onCancelar={cancelarDesvinculacion}
         />

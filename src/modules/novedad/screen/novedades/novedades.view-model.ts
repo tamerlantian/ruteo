@@ -2,12 +2,12 @@ import { useCallback, useMemo, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppSelector, useAppDispatch } from '../../../../store/hooks';
-import {
-  selectNovedades,
-  selectNovedadesConVisitas,
-  selectNovedadesSeleccionadas,
-  selectTotalNovedadesSeleccionadas,
-  selectNovedadesConEstadosError,
+import { 
+  selectNovedades, 
+  selectNovedadesSeleccionadas, 
+  selectTotalNovedadesSeleccionadas, 
+  selectNovedadesConEstadosError, 
+  selectNovedadesPendientesPorSolventar 
 } from '../../store/selector/novedad.selector';
 import { limpiarSeleccionNovedades } from '../../store/slice/novedad.slice';
 import { Novedad } from '../../interfaces/novedad.interface';
@@ -38,55 +38,50 @@ export const useNovedadesViewModel = () => {
 
   // === SELECTORES DE REDUX ===
   const novedades = useAppSelector(selectNovedades);
-  const novedadesConVisitas = useAppSelector(selectNovedadesConVisitas);
   const novedadesSeleccionadas = useAppSelector(selectNovedadesSeleccionadas);
   const totalSeleccionadas = useAppSelector(selectTotalNovedadesSeleccionadas);
   const novedadesConError = useAppSelector(selectNovedadesConEstadosError);
+  const novedadesPendientesPorSolventar = useAppSelector(selectNovedadesPendientesPorSolventar);
 
   // === ESTADO COMPUTADO ===
   const hasNovedades = novedades.length > 0;
   const totalCount = novedades.length;
   const errorCount = novedadesConError.length;
+  const allCount = novedadesPendientesPorSolventar.length;
 
   // === FILTRADO Y BÚSQUEDA ===
   const novedadesFiltradas = useMemo(() => {
-    // Primero filtrar por categoría usando datos combinados
-    let filteredByCategory = novedadesConVisitas.filter(item => {
-      switch (activeFilter) {
-        case 'error':
-          return (
-            item.novedad.estado === 'error' ||
-            item.novedad.estado_solucion === 'error'
-          );
-        case 'all':
-        default:
-          return true;
-      }
-    });
+    // Usar selectores centralizados para filtrar
+    let filteredNovedades: Novedad[];
+    switch (activeFilter) {
+      case 'error':
+        filteredNovedades = novedadesConError;
+        break;
+      case 'all':
+        filteredNovedades = novedadesPendientesPorSolventar;
+        break;
+      default:
+        filteredNovedades = novedadesPendientesPorSolventar;
+    }
 
     // Luego filtrar por búsqueda
     if (!searchValue.trim()) {
-      return filteredByCategory.map(item => item.novedad);
+      return filteredNovedades;
     }
 
     const searchQuery = searchValue.toLowerCase();
-    const filtered = filteredByCategory.filter(item => {
-      const { novedad, visita } = item;
-
+    const filtered = filteredNovedades.filter(novedad => {
       // Buscar en datos de la novedad
       const matchesNovedad = novedad.visita_id.toString().includes(searchQuery);
 
-      // Buscar en datos de la visita si existe
-      const matchesVisita = visita
-        ? visita.numero.toString().toLowerCase().includes(searchQuery) ||
-          visita.documento.toLowerCase().includes(searchQuery)
-        : false;
+      // Buscar en descripción de la novedad
+      const matchesDescripcion = novedad.descripcion.toLowerCase().includes(searchQuery);
 
-      return matchesNovedad || matchesVisita;
+      return matchesNovedad || matchesDescripcion;
     });
 
-    return filtered.map(item => item.novedad);
-  }, [novedadesConVisitas, activeFilter, searchValue]);
+    return filtered;
+  }, [activeFilter, searchValue, novedadesConError, novedadesPendientesPorSolventar]);
 
   // === FUNCIONES DE CALLBACK ===
   const keyExtractor = useCallback((item: Novedad) => `novedad-${item.id}`, []);
@@ -156,6 +151,7 @@ export const useNovedadesViewModel = () => {
     hasNovedades,
     activeFilter,
     errorCount,
+    allCount,
     totalCount,
     searchValue,
     totalSeleccionadas,

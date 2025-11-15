@@ -7,18 +7,18 @@ import { SimpleSearch } from '../../../../shared/components/simple-search/simple
 interface NovedadFilterBadgeProps {
   activeFilter: 'all' | 'error';
   onFilterChange: (filter: 'all' | 'error') => void;
-  totalCount: number;
+  allCount: number;
   errorCount: number;
 }
 
 const NovedadFilterBadges: React.FC<NovedadFilterBadgeProps> = ({
   activeFilter,
   onFilterChange,
-  totalCount,
+  allCount,
   errorCount,
 }) => {
   const filters = [
-    { key: 'all' as const, label: 'Todas', count: totalCount },
+    { key: 'all' as const, label: 'Pendientes', count: allCount },
     { key: 'error' as const, label: 'Error', count: errorCount },
   ];
 
@@ -75,7 +75,7 @@ interface NovedadesHeaderProps {
   activeFilter: 'all' | 'error';
   onFilterChange: (filter: 'all' | 'error') => void;
   errorCount: number;
-  totalCount: number;
+  allCount: number;
   searchValue: string;
   onSearchChange: (text: string) => void;
   onClearFilters: () => void;
@@ -86,7 +86,7 @@ export const NovedadesHeader: React.FC<NovedadesHeaderProps> = ({
   activeFilter,
   onFilterChange,
   errorCount,
-  totalCount,
+  allCount,
   searchValue,
   onSearchChange,
   onClearFilters,
@@ -111,7 +111,7 @@ export const NovedadesHeader: React.FC<NovedadesHeaderProps> = ({
           <NovedadFilterBadges
             activeFilter={activeFilter}
             onFilterChange={onFilterChange}
-            totalCount={totalCount}
+            allCount={allCount}
             errorCount={errorCount}
           />
         </>

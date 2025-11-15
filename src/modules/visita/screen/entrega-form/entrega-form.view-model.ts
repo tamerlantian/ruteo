@@ -10,14 +10,13 @@ import {
 import { selectSubdominio } from '../../../settings';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 // selectVisitas no necesario - useVisitaProcessing tiene su propio selector
-import { 
-  limpiarSeleccionVisitas, 
+import {
+  limpiarSeleccionVisitas,
   guardarDatosFormularioEnVisita,
 } from '../../store/slice/visita.slice';
 import { useVisitaProcessing } from '../../hooks/use-visita-processing.hook';
 import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../../shared/styles/global.style';
-import { useCoordinatedRetry } from '../../hooks/use-coordinated-retry.hook';
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -25,12 +24,14 @@ type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
  * ViewModel para el formulario de entrega
  * Maneja la lógica de validación y envío del formulario
  */
-export const useEntregaFormViewModel = (visitasSeleccionadas: string[], navigation: NavigationProp) => {
+export const useEntregaFormViewModel = (
+  visitasSeleccionadas: string[],
+  navigation: NavigationProp,
+) => {
   const subdominio = useAppSelector(selectSubdominio);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const dispatch = useAppDispatch();
   const { procesarVisitasEnLote } = useVisitaProcessing();
-  const { prepareVisitasForProcessing} = useCoordinatedRetry()
 
   // Configuración de React Hook Form
   const {
@@ -121,20 +122,24 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[], navigati
         // Procesar todas las visitas usando el hook compartido (pasando datos directamente)
         setIsSubmitting(true);
         const visitaIds = visitasSeleccionadas.map(id => parseInt(id, 10));
-        
+
         // Guardar datos en Redux para posibles reintentos futuros
         visitaIds.forEach(visitaId => {
-          dispatch(guardarDatosFormularioEnVisita({ visitaId, datosFormulario: data }));
+          dispatch(
+            guardarDatosFormularioEnVisita({ visitaId, datosFormulario: data }),
+          );
         });
 
-        await prepareVisitasForProcessing(visitaIds);
-
-        await procesarVisitasEnLote(visitaIds, {
-          markErrorOnFailure: true,
-          logPrefix: 'Entrega',
-          messagePrefix: 'entrega',
-          clearSelectionsOnSuccess: true,
-        }, data);
+        await procesarVisitasEnLote(
+          visitaIds,
+          {
+            markErrorOnFailure: true,
+            logPrefix: 'Entrega',
+            messagePrefix: 'entrega',
+            clearSelectionsOnSuccess: true,
+          },
+          data,
+        );
 
         // Finalizar proceso
         finalizarProceso();
@@ -154,7 +159,6 @@ export const useEntregaFormViewModel = (visitasSeleccionadas: string[], navigati
       visitasSeleccionadas,
       dispatch,
       procesarVisitasEnLote,
-      prepareVisitasForProcessing,
       finalizarProceso,
     ],
   );
