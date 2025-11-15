@@ -11,6 +11,7 @@ import { updateSettingsThunk, selectSubdominio } from '../../../settings';
 import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../../shared/styles/global.style';
 import { useNovedadTipos } from '../../../novedad/view-models/novedad.view-model';
+import { networkService } from '../../../../shared/services/network.service';
 
 interface CargarOrdenFormValues {
   codigo: string;
@@ -38,6 +39,19 @@ const CargarOrdenComponent = () => {
   });
 
   const onCargarOrden = async (data: CargarOrdenFormValues) => {
+    // Verificar conectividad antes de intentar cargar la orden
+    const isConnected = await networkService.isConnected();
+    
+    if (!isConnected) {
+      Toast.show({
+        type: 'error',
+        text1: 'Sin conexión a internet',
+        text2: 'Verifica tu conexión e intenta nuevamente',
+        text1Style: toastTextOneStyle,
+      });
+      return;
+    }
+
     try {
       const entrega = await verticalRepository.getEntrega(data.codigo);
       if (entrega) {
