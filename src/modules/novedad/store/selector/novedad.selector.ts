@@ -50,7 +50,6 @@ export const selectNovedadesConSolucionError = createSelector(
       novedad =>
         novedad.estado_solucion === 'error',
     );
-    console.log(' SELECTOR: selectNovedadesConSolucionError devolviendo:', filtered.map(n => ({ id: n.id, id_real: n.id_real, estado_solucion: n.estado_solucion })));
     return filtered;
   },
 );
@@ -103,7 +102,7 @@ export const selectNovedadConVisita = (novedadId: string) =>
   createSelector(
     [selectNovedades, (state: RootState) => state.visita.visitas],
     (novedades, visitas) => {
-      const novedad = novedades.find(n => n.id === novedadId);
+      const novedad = novedades.find(n => n.id === novedadId || n.id_real === novedadId);
       if (!novedad) return null;
 
       const visita = visitas.find(v => v.id === novedad.visita_id);

@@ -64,6 +64,8 @@ export const useNovedadesViewModel = () => {
         filteredNovedades = novedadesPendientesPorSolventar;
     }
 
+    console.log('Novedades filtradas:', filteredNovedades);
+
     // Luego filtrar por búsqueda
     if (!searchValue.trim()) {
       return filteredNovedades;

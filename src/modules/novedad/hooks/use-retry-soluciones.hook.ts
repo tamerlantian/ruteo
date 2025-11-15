@@ -38,9 +38,9 @@ export const useRetrySoluciones = () => {
         
         novedadesConError.forEach(novedad => {
           if (
-            novedadIds.includes(novedad.id) &&
             novedad.solucion &&
-            novedad.id_real
+            novedad.id_real &&
+            novedadIds.includes(novedad.id_real)
           ) {
             solucionesAReintentar.push({
               id: novedad.id_real,
@@ -50,7 +50,7 @@ export const useRetrySoluciones = () => {
           } 
           else if (novedadIds.includes(novedad.id) && novedad.solucion) {
             solucionesAReintentar.push({
-              id: novedad.id,
+              id: novedad.id_real || novedad.id,
               tempId: novedad.id,
               solucion: novedad.solucion,
             });
@@ -80,7 +80,7 @@ export const useRetrySoluciones = () => {
 
             // Get associated visita_id and unmark visita
             const novedad = novedadesConError.find(
-              n => n.id === result.novedadId,
+              n => n.id === result.novedadId || n.id_real === result.novedadId,
             );
             if (novedad?.visita_id) {
               dispatch(desmarcarVisitaConNovedad(novedad.visita_id));

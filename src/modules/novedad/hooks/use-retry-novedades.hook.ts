@@ -28,9 +28,9 @@ export const useRetryNovedades = () => {
         const novedadesAReintentar: NovedadFormData[] = [];
 
         novedadesConError.forEach(novedad => {
-          if (novedadIds.includes(novedad.id)) {
+          if (novedadIds.includes(novedad.id_real || novedad.id)) {
             novedadesAReintentar.push({
-              id: novedad.id,
+              id: novedad.id_real || novedad.id,
               visitaId: novedad.visita_id,
               tipo: novedad.novedad_tipo_id.toString(),
               descripcion: novedad.descripcion,

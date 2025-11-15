@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { useAppDispatch } from '../../../store/hooks';
 import {
   guardarSolucionNovedad,
   limpiarNovedad,
@@ -14,7 +14,7 @@ import {
   SolucionBatchProcessingResult,
 } from './use-solucion-api.hook';
 import { isTempId } from '../../../shared/utils/id-generator.util';
-import { selectNovedades } from '../store/selector/novedad.selector';
+import { store } from '../../../store';
 
 /**
  * Configuration for the useSolucionCreation hook
@@ -29,7 +29,6 @@ export interface UseSolucionCreationConfig extends UseSolucionApiConfig {
  */
 export const useSolucionCreation = () => {
   const dispatch = useAppDispatch();
-  const novedades = useAppSelector(selectNovedades);
   const { procesarSolucionesApiEnLote, mostrarMensajesDeResultado } =
     useSolucionApi();
 
@@ -43,11 +42,34 @@ export const useSolucionCreation = () => {
       config: UseSolucionCreationConfig = {},
     ): Promise<SolucionBatchProcessingResult> => {
       try {
-        // Separate temp IDs from synced IDs
+        const novedades = store.getState().novedad.novedades;
+
+        // Buscar los IDs actualizados en el store y actualizar solucionesData
+        const solucionesConIdsActualizados = solucionesData.map(solucion => {
+          // Buscar la novedad en el store por id o id_real
+          const novedadEnStore = novedades.find(n => 
+            n.id === solucion.id || n.id_real === solucion.id
+          );
+          
+          if (novedadEnStore) {
+            // Si encontramos la novedad, usar el id_real si existe, sino el id original
+            const idActualizado = novedadEnStore.id_real || novedadEnStore.id;            
+            return {
+              ...solucion,
+              id: idActualizado
+            };
+          }
+          
+          // Si no encontramos la novedad, mantener el ID original
+          console.warn(`⚠️ No se encontró novedad en store para ID: ${solucion.id}`);
+          return solucion;
+        });
+
+        // Separate temp IDs from synced IDs usando los IDs actualizados
         const solucionesTemporales: SolucionFormData[] = [];
         const solucionesSincronizadas: SolucionFormData[] = [];
 
-        solucionesData.forEach(solucion => {
+        solucionesConIdsActualizados.forEach(solucion => {
           if (isTempId(solucion.id)) {
             solucionesTemporales.push(solucion);
           } else {
@@ -114,13 +136,13 @@ export const useSolucionCreation = () => {
               dispatch(limpiarNovedad(result.novedadId));
 
               // Get associated visita_id and unmark visita
-              const novedad = novedades.find(n => n.id === result.novedadId);
+              const novedad = novedades.find(n => n.id === result.novedadId || n.id_real === result.novedadId);
               if (novedad?.visita_id) {
                 dispatch(desmarcarVisitaConNovedad(novedad.visita_id));
               }
             } else {
                // Get associated visita_id and unmark visita
-              const novedad = novedades.find(n => n.id === result.novedadId);
+              const novedad = novedades.find(n => n.id === result.novedadId || n.id_real === result.novedadId);
               if (novedad?.visita_id) {
                 dispatch(desmarcarVisitaConNovedad(novedad.visita_id));
               }
@@ -175,7 +197,6 @@ export const useSolucionCreation = () => {
     },
     [
       dispatch,
-      novedades,
       procesarSolucionesApiEnLote,
       mostrarMensajesDeResultado,
     ],

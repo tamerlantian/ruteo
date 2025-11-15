@@ -24,11 +24,11 @@ export const NovedadCardComponent: React.FC<NovedadCardProps> = ({
   novedad,
 }) => {
   const dispatch = useAppDispatch();
-  const isSelected = useAppSelector(selectIsNovedadSeleccionada(novedad.id));
-  const novedadConVisita = useAppSelector(selectNovedadConVisita(novedad.id));
+  const isSelected = useAppSelector(selectIsNovedadSeleccionada(novedad.id_real || novedad.id));
+  const novedadConVisita = useAppSelector(selectNovedadConVisita(novedad.id_real || novedad.id));
 
   const handlePress = () => {
-    dispatch(toggleNovedadSeleccion(novedad.id));
+    dispatch(toggleNovedadSeleccion(novedad.id_real || novedad.id));
   };
 
   const handlePhonePress = (event: any) => {

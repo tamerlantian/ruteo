@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParamList } from '../../../../navigation/types';
 import { useSolucionCreation } from '../../hooks/solucion-hooks.index';
+import { useRetryNovedades } from '../../hooks';
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -24,6 +25,7 @@ export const useSolucionFormViewModel = ({
   // === HOOKS ===
   const navigation = useNavigation<NavigationProp>();
   const { crearNuevasSoluciones } = useSolucionCreation();
+  const { reintentarNovedadesConError } = useRetryNovedades();
 
   // === ESTADO LOCAL ===
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,6 +63,8 @@ export const useSolucionFormViewModel = ({
       setIsSubmitting(true);
 
       try {
+        await reintentarNovedadesConError(novedadesSeleccionadas);
+
         // Preparar datos de soluciones
         const solucionesData = novedadesSeleccionadas.map(novedadId => ({
           id: novedadId,
@@ -85,7 +89,13 @@ export const useSolucionFormViewModel = ({
         setIsSubmitting(false);
       }
     },
-    [novedadesSeleccionadas, reset, navigation, crearNuevasSoluciones],
+    [
+      novedadesSeleccionadas,
+      reset,
+      navigation,
+      crearNuevasSoluciones,
+      reintentarNovedadesConError,
+    ],
   );
 
   const onCancel = useCallback(() => {

@@ -25,7 +25,7 @@ const novedadSlice = createSlice({
     },
     limpiarNovedad: (state, action: PayloadAction<string>) => {
       const novedadId = action.payload;
-      const index = state.novedades.findIndex(entidad => entidad.id === novedadId);
+      const index = state.novedades.findIndex(entidad => entidad.id === novedadId || entidad.id_real === novedadId);
       if (index > -1) {
         state.novedades.splice(index, 1);
       }
@@ -56,7 +56,7 @@ const novedadSlice = createSlice({
     },
     cambiarEstadoSolucionNovedad: (state, action: PayloadAction<{ id: string; estado: NovedadEstadoSolucion }>) => {
       const { id, estado } = action.payload;
-      const novedad = state.novedades.find(entidad => entidad.id === id);
+      const novedad = state.novedades.find(entidad => entidad.id === id || entidad.id_real === id);
 
       if (novedad) {
         novedad.estado_solucion = estado;
