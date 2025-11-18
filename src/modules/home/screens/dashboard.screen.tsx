@@ -1,9 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-// import Ionicons from '@react-native-vector-icons/ionicons';
 import { useAuth } from '../../auth/context/auth.context';
-// import { usePermissions } from '../../../shared/hooks/usePermissions';
 import { useAppSelector } from '../../../store/hooks';
 import { 
   selectVisitasPendientes, 
@@ -14,13 +12,6 @@ import { selectOrdenEntrega } from '../../settings';
 
 export const DashboardScreen = () => {
   const { user } = useAuth();
-  
-  // Hook para permisos
-  // const { 
-  //   permissionsGranted, 
-  //   permissionsChecked, 
-  //   isRequestingPermissions 
-  // } = usePermissions();
   
   // Selectores para obtener estadísticas de visitas
   const ordenEntrega = useAppSelector(selectOrdenEntrega);
@@ -54,34 +45,6 @@ export const DashboardScreen = () => {
             )}
           </View>
         )}
-
-        {/* Indicador de estado de permisos */}
-        {/* {permissionsChecked && (
-          <View style={styles.permissionsStatus}>
-            <View style={styles.permissionItem}>
-              <Ionicons 
-                name={permissionsGranted ? "checkmark-circle" : "alert-circle"} 
-                size={20} 
-                color={permissionsGranted ? "#34c759" : "#ff9500"} 
-              />
-              <Text style={[
-                styles.permissionText,
-                permissionsGranted ? styles.permissionGranted : styles.permissionPending
-              ]}>
-                {permissionsGranted 
-                  ? "Permisos configurados correctamente" 
-                  : "Algunos permisos pendientes"
-                }
-              </Text>
-            </View>
-            
-            {isRequestingPermissions && (
-              <Text style={styles.requestingText}>
-                Configurando permisos...
-              </Text>
-            )}
-          </View>
-        )} */}
 
       {ordenEntrega && (
         <View style={styles.statsContainer}>
