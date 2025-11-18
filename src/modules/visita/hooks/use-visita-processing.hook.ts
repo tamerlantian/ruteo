@@ -92,12 +92,12 @@ export const useVisitaProcessing = () => {
       datosFormulario?: EntregaFormData,
     ): Promise<BatchProcessingResult> => {
       if (visitaIds.length === 0) {
-        const messagePrefix = config.messagePrefix || 'operación';
-        Toast.show({
-          type: 'warning',
-          text1: `No hay visitas para ${messagePrefix}`,
-          text1Style: toastTextOneStyle,
-        });
+        // const messagePrefix = config.messagePrefix || 'operación';
+        // Toast.show({
+        //   type: 'info',
+        //   text1: `No hay visitas para ${messagePrefix}`,
+        //   text1Style: toastTextOneStyle,
+        // });
         return { successCount: 0, errorCount: 0, results: [] };
       }
 
@@ -148,7 +148,7 @@ export const useVisitaProcessing = () => {
               break;
             case 'warning':
               Toast.show({
-                type: 'warning',
+                type: 'info',
                 text1: messageResult.message,
                 text1Style: toastTextOneStyle,
               });

@@ -23,6 +23,7 @@ import { useRetryVisitas } from '../../visita/hooks/use-retry-visitas.hook';
 import { selectNovedadesConEstadosError } from '../../novedad/store/selector/novedad.selector';
 import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../shared/styles/global.style';
+import { networkService } from '../../../shared/services/network.service';
 
 export const DashboardScreen = () => {
   const { user } = useAuth();
@@ -44,12 +45,24 @@ export const DashboardScreen = () => {
 
   // Función para manejar el retry de visitas con error
   const handleRetryErrorVisitas = async () => {
-    if (visitaIdsConError.length === 0) {
+    const isConnected = await networkService.isConnected();
+
+    if (!isConnected) {
       Toast.show({
-        type: 'info',
-        text1: 'Sin errores',
-        text2: 'No hay visitas con error para reintentar.',
+        type: 'error',
+        text1: 'Sin conexión a internet',
+        text2: 'Verifica tu conexión e intenta nuevamente',
+        text1Style: toastTextOneStyle,
       });
+      return;
+    }
+
+    if (visitaIdsConError.length === 0) {
+      // Toast.show({
+      //   type: 'info',
+      //   text1: 'Sin errores',
+      //   text2: 'No hay visitas con error para reintentar.',
+      // });
       return;
     }
 
@@ -71,7 +84,8 @@ export const DashboardScreen = () => {
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: 'Ocurrió un error al reintentar los envíos. Inténtalo nuevamente.',
+        text2:
+          'Ocurrió un error al reintentar los envíos. Inténtalo nuevamente.',
       });
     } finally {
       setIsRetrying(false);

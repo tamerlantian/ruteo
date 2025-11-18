@@ -62,11 +62,11 @@ export const useEntregaFormViewModel = (
    */
   const validateInitialConditions = useCallback(() => {
     if (!visitasSeleccionadas || visitasSeleccionadas.length === 0) {
-      Toast.show({
-        type: 'error',
-        text1: 'No hay visitas seleccionadas',
-        text1Style: toastTextOneStyle,
-      });
+      // Toast.show({
+      //   type: 'error',
+      //   text1: 'No hay visitas seleccionadas',
+      //   text1Style: toastTextOneStyle,
+      // });
       return false;
     }
 

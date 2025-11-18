@@ -226,7 +226,7 @@ export const useSolucionApi = () => {
       } else {
         // Mixed results
         Toast.show({
-          type: 'warning',
+          type: 'info',
           text1: `${successCount} ${messagePrefix}es enviadas, ${errorCount} con error`,
           text1Style: toastTextOneStyle,
         });

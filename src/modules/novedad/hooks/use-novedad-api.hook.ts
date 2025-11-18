@@ -136,7 +136,7 @@ export const useNovedadApi = () => {
             break;
           case 'warning':
             Toast.show({
-              type: 'warning',
+              type: 'info',
               text1: messageResult.message,
               text1Style: toastTextOneStyle,
             });
