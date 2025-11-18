@@ -42,7 +42,7 @@ export const NovedadFloatingActions: React.FC<NovedadFloatingActionsProps> = ({
         {/* Mostrar botón según el filtro activo y disponibilidad de datos */}
         {activeFilter === 'error' && totalConError > 0 && onRetryNovedades ? (
           <FormButton
-            title={`Reintentar (${totalConError})`}
+            title={`Reintentar`}
             onPress={onRetryNovedades}
             style={{ flex: 1 }}
             isLoading={isRetryLoading}

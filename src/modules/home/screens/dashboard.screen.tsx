@@ -1,34 +1,93 @@
-import React from 'react';
-import { View, Text, StyleSheet, StatusBar } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  StatusBar,
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../auth/context/auth.context';
 import { useAppSelector } from '../../../store/hooks';
-import { 
-  selectVisitasPendientes, 
-  selectVisitasEntregadas, 
-  selectVisitasConError 
+import {
+  selectVisitasPendientes,
+  selectVisitasEntregadas,
+  selectVisitaIdsConErrorCompleto,
+  selectVisitasConErrorCompleto,
+  selectVisitasConError,
 } from '../../visita/store/selector/visita.selector';
 import { selectOrdenEntrega } from '../../settings';
+import { useRetryNovedades } from '../../novedad/hooks';
+import { useRetrySoluciones } from '../../novedad/hooks/use-retry-soluciones.hook';
+import { useRetryVisitas } from '../../visita/hooks/use-retry-visitas.hook';
+import { selectNovedadesConEstadosError } from '../../novedad/store/selector/novedad.selector';
+import Toast from 'react-native-toast-message';
+import { toastTextOneStyle } from '../../../shared/styles/global.style';
 
 export const DashboardScreen = () => {
   const { user } = useAuth();
-  
+  const [isRetrying, setIsRetrying] = useState(false);
+  const { reintentarNovedadesConError } = useRetryNovedades();
+  const { reintentarSolucionesConError } = useRetrySoluciones();
+  const { reintentarVisitasConError } = useRetryVisitas();
+
   // Selectores para obtener estadísticas de visitas
   const ordenEntrega = useAppSelector(selectOrdenEntrega);
+  const visitasConError = useAppSelector(selectVisitasConError);
+  const novedadesConError = useAppSelector(selectNovedadesConEstadosError);
   const visitasPendientes = useAppSelector(selectVisitasPendientes);
   const visitasEntregadas = useAppSelector(selectVisitasEntregadas);
-  const visitasConError = useAppSelector(selectVisitasConError);
+  const visitasConErrorCompleto = useAppSelector(selectVisitasConErrorCompleto);
+  const visitaIdsConError = useAppSelector(selectVisitaIdsConErrorCompleto);
+
+  // Hook para retry coordinado
+
+  // Función para manejar el retry de visitas con error
+  const handleRetryErrorVisitas = async () => {
+    if (visitaIdsConError.length === 0) {
+      Toast.show({
+        type: 'info',
+        text1: 'Sin errores',
+        text2: 'No hay visitas con error para reintentar.',
+      });
+      return;
+    }
+
+    setIsRetrying(true);
+    try {
+      const visitasConErrorIds = visitasConError.map(visita => visita.id);
+      const novedadesConErrorIds = novedadesConError.map(novedad => novedad.id);
+
+      await reintentarNovedadesConError(novedadesConErrorIds);
+      await reintentarSolucionesConError(novedadesConErrorIds);
+      await reintentarVisitasConError(visitasConErrorIds);
+
+      Toast.show({
+        type: 'success',
+        text1: 'Se han reintentado los envíos correctamente.',
+        text1Style: toastTextOneStyle,
+      });
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Ocurrió un error al reintentar los envíos. Inténtalo nuevamente.',
+      });
+    } finally {
+      setIsRetrying(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <StatusBar 
-        barStyle="dark-content" 
-        backgroundColor="#f8f9fa" 
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#f8f9fa"
         translucent={false}
       />
       <View style={styles.content}>
         <Text style={styles.title}>Dashboard</Text>
-        
+
         {user && (
           <View style={styles.welcomeContainer}>
             <Text style={styles.welcomeText}>
@@ -46,24 +105,50 @@ export const DashboardScreen = () => {
           </View>
         )}
 
-      {ordenEntrega && (
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <Text style={[styles.statNumber, styles.pendingNumber]}>{visitasPendientes.length}</Text>
-            <Text style={styles.statLabel}>Pendientes</Text>
+        {ordenEntrega && (
+          <View style={styles.statsContainer}>
+            <View style={styles.statCard}>
+              <Text style={[styles.statNumber, styles.pendingNumber]}>
+                {visitasPendientes.length}
+              </Text>
+              <Text style={styles.statLabel}>Pendientes</Text>
+            </View>
+
+            <View style={styles.statCard}>
+              <Text style={[styles.statNumber, styles.completedNumber]}>
+                {visitasEntregadas.length}
+              </Text>
+              <Text style={styles.statLabel}>Entregadas</Text>
+            </View>
+
+            <View style={styles.statCard}>
+              <Text style={[styles.statNumber, styles.errorNumber]}>
+                {visitasConErrorCompleto.length}
+              </Text>
+              <Text style={styles.statLabel}>Error</Text>
+            </View>
           </View>
-          
-          <View style={styles.statCard}>
-            <Text style={[styles.statNumber, styles.completedNumber]}>{visitasEntregadas.length}</Text>
-            <Text style={styles.statLabel}>Entregadas</Text>
-          </View>
-          
-          <View style={styles.statCard}>
-            <Text style={[styles.statNumber, styles.errorNumber]}>{visitasConError.length}</Text>
-            <Text style={styles.statLabel}>Error</Text>
-          </View>
-        </View>
-      )}
+        )}
+
+        {/* Botón de retry para visitas con error */}
+        {ordenEntrega && visitasConErrorCompleto.length > 0 && (
+          <TouchableOpacity
+            style={[
+              styles.retryButton,
+              isRetrying && styles.retryButtonDisabled,
+            ]}
+            onPress={handleRetryErrorVisitas}
+            disabled={isRetrying}
+          >
+            <Text style={styles.retryButtonText}>
+              {isRetrying
+                ? 'Reintentando...'
+                : `Reintentar ${visitasConErrorCompleto.length} envío${
+                    visitasConErrorCompleto.length > 1 ? 's' : ''
+                  }`}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -199,5 +284,27 @@ const styles = StyleSheet.create({
   },
   permissionPending: {
     color: '#ff9500',
+  },
+  retryButton: {
+    backgroundColor: '#ff3b30',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  retryButtonDisabled: {
+    backgroundColor: '#8e8e93',
+    opacity: 0.6,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });

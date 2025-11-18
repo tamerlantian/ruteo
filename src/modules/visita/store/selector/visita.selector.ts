@@ -66,6 +66,46 @@ export const selectVisitasConError = createSelector(
   ({ visitas }) => visitas.filter(visita => visita.estado === 'error'),
 );
 
+// Selector para obtener IDs de visitas con error (optimizado para retry)
+export const selectVisitaIdsConError = createSelector(
+  selectVisitasConError,
+  visitasConError => visitasConError.map(visita => visita.id),
+);
+
+// Selector completo que incluye visitas con error Y visitas con novedades con error
+export const selectVisitaIdsConErrorCompleto = createSelector(
+  [
+    selectVisitasConError, // Visitas con estado error directo
+    (state: RootState) => state.novedad.novedades, // Novedades del estado
+  ],
+  (visitasConError, novedades) => {
+    // IDs de visitas con error directo
+    const visitaIdsConErrorDirecto = visitasConError.map(visita => visita.id);
+    
+    // IDs de visitas que tienen novedades con error (estado o estado_solucion)
+    const visitaIdsConNovedadesError = novedades
+      .filter(novedad => 
+        novedad.estado === 'error' || novedad.estado_solucion === 'error'
+      )
+      .map(novedad => novedad.visita_id);
+    
+    // Combinar y eliminar duplicados
+    const todosLosIds = [...visitaIdsConErrorDirecto, ...visitaIdsConNovedadesError];
+    return [...new Set(todosLosIds)];
+  },
+);
+
+// Selector que obtiene todas las visitas (objetos completos) que tienen algún tipo de error
+export const selectVisitasConErrorCompleto = createSelector(
+  [
+    selectVisitas, // Todas las visitas
+    selectVisitaIdsConErrorCompleto, // IDs con error completo
+  ],
+  (visitas, idsConError) => {
+    return visitas.filter(visita => idsConError.includes(visita.id));
+  },
+);
+
 // Selector para obtener una visita específica por ID
 export const selectVisitaPorId = (visitaId: number) =>
   createSelector(selectVisitas, visitas =>

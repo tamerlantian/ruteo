@@ -32,8 +32,10 @@ const novedadSlice = createSlice({
     },
     guardarSolucionNovedad: (state, action: PayloadAction<{ id: string; solucion: string }>) => {
       const { id, solucion } = action.payload;
-      const novedad = state.novedades.find(entidad => entidad.id === id);
-
+      console.log(id, solucion);
+      const novedad = state.novedades.find(entidad => entidad.id === id || entidad.id_real === id);
+      console.log(novedad);
+      
       if (novedad) {
         novedad.solucion = solucion;
       }
