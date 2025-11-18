@@ -157,7 +157,7 @@ export const DashboardScreen = () => {
             <Text style={styles.retryButtonText}>
               {isRetrying
                 ? 'Reintentando...'
-                : `Reintentar ${visitasConErrorCompleto.length} envío${
+                : `Sincronizar ${visitasConErrorCompleto.length} pendiente${
                     visitasConErrorCompleto.length > 1 ? 's' : ''
                   }`}
             </Text>
