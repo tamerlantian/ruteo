@@ -52,7 +52,7 @@ export const LoginScreen = () => {
     defaultValues: {
       username: '',
       password: '',
-      proyecto: 'REDDOCAPP',
+      proyecto: 'RUTEOAPP',
     },
     mode: 'onChange',
   });
