@@ -20,7 +20,10 @@ import { selectOrdenEntrega } from '../../settings';
 import { useRetryNovedades } from '../../novedad/hooks';
 import { useRetrySoluciones } from '../../novedad/hooks/use-retry-soluciones.hook';
 import { useRetryVisitas } from '../../visita/hooks/use-retry-visitas.hook';
-import { selectNovedadesConEstadosError } from '../../novedad/store/selector/novedad.selector';
+import {
+  selectNovedadesConEstadosError,
+  selectNovedadesPendientesPorSolventar,
+} from '../../novedad/store/selector/novedad.selector';
 import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../shared/styles/global.style';
 import { networkService } from '../../../shared/services/network.service';
@@ -36,6 +39,7 @@ export const DashboardScreen = () => {
   const ordenEntrega = useAppSelector(selectOrdenEntrega);
   const visitasConError = useAppSelector(selectVisitasConError);
   const novedadesConError = useAppSelector(selectNovedadesConEstadosError);
+  const novedades = useAppSelector(selectNovedadesPendientesPorSolventar);
   const visitasPendientes = useAppSelector(selectVisitasPendientes);
   const visitasEntregadas = useAppSelector(selectVisitasEntregadas);
   const visitasConErrorCompleto = useAppSelector(selectVisitasConErrorCompleto);
@@ -120,26 +124,36 @@ export const DashboardScreen = () => {
         )}
 
         {ordenEntrega && (
-          <View style={styles.statsContainer}>
-            <View style={styles.statCard}>
-              <Text style={[styles.statNumber, styles.pendingNumber]}>
-                {visitasPendientes.length}
-              </Text>
-              <Text style={styles.statLabel}>Pendientes</Text>
-            </View>
+          <View>
+            <View style={styles.statsContainer}>
+              <View style={styles.statCard}>
+                <Text style={[styles.statNumber, styles.pendingNumber]}>
+                  {visitasPendientes.length}
+                </Text>
+                <Text style={styles.statLabel}>Pendientes</Text>
+              </View>
 
-            <View style={styles.statCard}>
-              <Text style={[styles.statNumber, styles.completedNumber]}>
-                {visitasEntregadas.length}
-              </Text>
-              <Text style={styles.statLabel}>Entregadas</Text>
+              <View style={styles.statCard}>
+                <Text style={[styles.statNumber, styles.completedNumber]}>
+                  {visitasEntregadas.length}
+                </Text>
+                <Text style={styles.statLabel}>Entregadas</Text>
+              </View>
             </View>
+            <View style={[styles.statsContainer, { marginTop: 8 }]}>
+              <View style={styles.statCard}>
+                <Text style={[styles.statNumber, styles.novedadesNumber]}>
+                  {novedades.length}
+                </Text>
+                <Text style={styles.statLabel}>Novedades</Text>
+              </View>
 
-            <View style={styles.statCard}>
-              <Text style={[styles.statNumber, styles.errorNumber]}>
-                {visitasConErrorCompleto.length}
-              </Text>
-              <Text style={styles.statLabel}>Sincronizar</Text>
+              <View style={styles.statCard}>
+                <Text style={[styles.statNumber, styles.errorNumber]}>
+                  {visitasConErrorCompleto.length}
+                </Text>
+                <Text style={styles.statLabel}>Sincronizar</Text>
+              </View>
             </View>
           </View>
         )}
@@ -228,7 +242,6 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
   },
   statCard: {
     flex: 1,
@@ -254,6 +267,9 @@ const styles = StyleSheet.create({
   },
   completedNumber: {
     color: '#34c759', // Verde para entregadas
+  },
+  novedadesNumber: {
+    color: '#5856d6', // Púrpura para novedades
   },
   errorNumber: {
     color: '#ff3b30', // Rojo para errores
