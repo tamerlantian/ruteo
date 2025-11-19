@@ -50,21 +50,12 @@ export class NovedadFormDataBuilder {
       return { isValid: false, error: 'Tipo de novedad es requerido' };
     }
 
-    if (!data.descripcion || data.descripcion.trim() === '') {
-      return { isValid: false, error: 'Descripción es requerida' };
-    }
-
     if (!data.foto || data.foto.length === 0) {
       return { isValid: false, error: 'Al menos una foto es requerida' };
     }
 
     if (!data.visitaId || data.visitaId <= 0) {
       return { isValid: false, error: 'ID de visita inválido' };
-    }
-
-    // Validate description length
-    if (data.descripcion.length > 500) {
-      return { isValid: false, error: 'La descripción no puede exceder 500 caracteres' };
     }
 
     // Validate photos

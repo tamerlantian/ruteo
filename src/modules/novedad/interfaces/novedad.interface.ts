@@ -6,7 +6,7 @@ export interface Novedad {
   visita_id: number;
   novedad_tipo_id: number;
   fecha: string;
-  descripcion: string;
+  descripcion: string | null;
   solucion?: string;
   imagenes: { uri: string }[];
   // campos para tracking local
@@ -27,6 +27,6 @@ export interface NovedadFormData {
   id: string;
   visitaId: number;
   tipo: string;
-  descripcion: string;
+  descripcion: string | null;
   foto: PhotoData[];
 }

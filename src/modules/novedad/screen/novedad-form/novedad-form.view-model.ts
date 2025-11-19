@@ -73,7 +73,7 @@ export const useNovedadFormViewModel = (
             id: generateTempId(),
             visitaId: parseInt(id, 10),
             tipo: data.tipo,
-            descripcion: data.descripcion,
+            descripcion: data.descripcion?.trim() === '' ? null : data.descripcion,
             foto: data.foto,
           };
         });

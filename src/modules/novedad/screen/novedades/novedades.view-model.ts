@@ -77,7 +77,7 @@ export const useNovedadesViewModel = () => {
       const matchesNovedad = novedad.visita_id.toString().includes(searchQuery);
 
       // Buscar en descripción de la novedad
-      const matchesDescripcion = novedad.descripcion.toLowerCase().includes(searchQuery);
+      const matchesDescripcion = novedad.descripcion?.toLowerCase().includes(searchQuery);
 
       return matchesNovedad || matchesDescripcion;
     });

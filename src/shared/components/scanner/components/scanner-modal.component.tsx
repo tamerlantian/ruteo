@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   StatusBar,
   Alert,
+  AppState,
 } from 'react-native';
 import { Camera } from 'react-native-camera-kit';
 import Ionicons from '@react-native-vector-icons/ionicons';
@@ -21,20 +22,31 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
   onClose,
   onScanResult,
 }) => {
-  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraKey, setCameraKey] = useState(0);
 
-  // Reinicializar cámara cuando el modal se abre
+  // Reinicializar cámara cuando el modal se abre o cuando la app vuelve del background
   useEffect(() => {
     if (visible) {
-      // Pequeño delay para asegurar que el modal esté completamente montado
-      const timer = setTimeout(() => {
-        setCameraReady(true);
-      }, 300);
-      
-      return () => clearTimeout(timer);
-    } else {
-      setCameraReady(false);
+      setCameraKey(prev => prev + 1);
     }
+  }, [visible]);
+
+  // Listener para detectar cuando la app vuelve del background (después de conceder permisos)
+  useEffect(() => {
+    if (!visible) return;
+
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'active') {
+        // La app volvió al foreground, reinicializar cámara
+        setCameraKey(prev => prev + 1);
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    
+    return () => {
+      subscription?.remove();
+    };
   }, [visible]);
   /**
    * Maneja el resultado del escaneo
@@ -113,20 +125,15 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
 
         {/* Camera */}
         <View style={styles.cameraContainer}>
-          {cameraReady ? (
-            <Camera
-              style={styles.camera}
-              scanBarcode={true}
-              onReadCode={handleBarCodeRead}
-              showFrame={true}
-              laserColor="#007aff"
-              frameColor="#fff"
-            />
-          ) : (
-            <View style={[styles.camera, styles.loadingContainer]}>
-              <Text style={styles.loadingText}>Iniciando cámara...</Text>
-            </View>
-          )}
+          <Camera
+            key={cameraKey}
+            style={styles.camera}
+            scanBarcode={true}
+            onReadCode={handleBarCodeRead}
+            showFrame={true}
+            laserColor="#007aff"
+            frameColor="#fff"
+          />
           
           {/* Overlay */}
           <View style={styles.overlay}>
@@ -270,16 +277,6 @@ const styles = StyleSheet.create({
   instructionsSubtext: {
     fontSize: 14,
     color: '#8e8e93',
-    textAlign: 'center',
-  },
-  loadingContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#000',
-  },
-  loadingText: {
-    color: '#fff',
-    fontSize: 16,
     textAlign: 'center',
   },
 });
