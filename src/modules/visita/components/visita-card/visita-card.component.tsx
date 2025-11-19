@@ -87,7 +87,7 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
             <View style={visitaCardStyle.weightContainer}>
               <Ionicons name="cube-outline" size={12} color="#8e8e93" />
               <Text style={visitaCardStyle.infoText}>
-                {visita.unidades} und • {visita.peso}kg
+                {Math.round(visita.unidades)} und • {Math.round(visita.peso)} kg
               </Text>
             </View>
             

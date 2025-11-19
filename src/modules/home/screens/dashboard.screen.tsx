@@ -139,7 +139,7 @@ export const DashboardScreen = () => {
               <Text style={[styles.statNumber, styles.errorNumber]}>
                 {visitasConErrorCompleto.length}
               </Text>
-              <Text style={styles.statLabel}>Error</Text>
+              <Text style={styles.statLabel}>Sincronizar</Text>
             </View>
           </View>
         )}

@@ -54,11 +54,11 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
 
         <View style={entregaFormStyles.headerContent}>
           <Text style={entregaFormStyles.title}>Formulario de entrega</Text>
-          <Text style={entregaFormStyles.subtitle}>
+          {/* <Text style={entregaFormStyles.subtitle}>
             {visitasSeleccionadas.length} visita
             {visitasSeleccionadas.length !== 1 ? 's' : ''} seleccionada
             {visitasSeleccionadas.length !== 1 ? 's' : ''}
-          </Text>
+          </Text> */}
         </View>
       </View>
 
@@ -79,7 +79,7 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
             {/* Info de visitas seleccionadas */}
             <View style={entregaFormStyles.visitasInfo}>
               <Text style={entregaFormStyles.visitasInfoTitle}>
-                Visitas seleccionadas
+                Visitas seleccionadas ({visitasSeleccionadas.length})
               </Text>
               <ScrollView
                 horizontal

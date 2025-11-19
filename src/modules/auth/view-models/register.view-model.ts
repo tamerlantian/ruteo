@@ -2,9 +2,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { RegisterCredentials } from '../models/Auth';
 import { authController } from '../controllers/auth.controller';
 import { authKeys } from '../constants/auth-keys';
-import { ApiErrorResponse } from '../../../core/interfaces/api.interface';
 import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../shared/styles/global.style';
+import { AuthErrorMapperService } from '../services/auth-error-mapper.service';
 import { useAuthNavigation } from '../../../navigation/hooks/useTypedNavigation';
 
 // Hook para manejar el registro
@@ -30,11 +30,12 @@ export const useRegister = () => {
       navigation.navigate('Login');
     },
     onError: (error: any) => {
-      const errorData = error as ApiErrorResponse;
+      const mappedError = AuthErrorMapperService.mapError(error, 'register');
+      
       Toast.show({
         type: 'error',
-        text1: errorData?.mensaje || 'Error al registrarse',
-        text2: 'Por favor, verifica los datos e intenta nuevamente',
+        text1: mappedError.title,
+        text2: mappedError.message,
         text1Style: toastTextOneStyle,
       });
     },

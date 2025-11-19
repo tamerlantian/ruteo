@@ -2,9 +2,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { LoginCredentials } from '../models/Auth';
 import { authController } from '../controllers/auth.controller';
 import { authKeys } from '../constants/auth-keys';
-import { ApiErrorResponse } from '../../../core/interfaces/api.interface';
 import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../shared/styles/global.style';
+import { AuthErrorMapperService } from '../services/auth-error-mapper.service';
 
 // Hook para manejar el login
 export const useLogin = () => {
@@ -28,10 +28,12 @@ export const useLogin = () => {
       });
     },
     onError: (error: any) => {
-      const errorData = error as ApiErrorResponse;
+      const mappedError = AuthErrorMapperService.mapError(error, 'login');
+      
       Toast.show({
         type: 'error',
-        text1: errorData?.mensaje || 'Error al iniciar sesión',
+        text1: mappedError.title,
+        text2: mappedError.message,
         text1Style: toastTextOneStyle,
       });
     },

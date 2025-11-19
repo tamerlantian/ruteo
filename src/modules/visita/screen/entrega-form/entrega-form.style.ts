@@ -167,14 +167,14 @@ export const entregaFormStyles = StyleSheet.create({
   visitasInfo: {
     backgroundColor: '#f0f8ff',
     borderRadius: 8,
-    padding: 16,
+    padding: 14,
     marginBottom: 20,
   },
   visitasInfoTitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
     color: '#007aff',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   visitasScrollContainer: {
     maxHeight: 50,

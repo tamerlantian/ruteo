@@ -19,7 +19,7 @@ const NovedadFilterBadges: React.FC<NovedadFilterBadgeProps> = ({
 }) => {
   const filters = [
     { key: 'all' as const, label: 'Pendientes', count: allCount },
-    { key: 'error' as const, label: 'Error', count: errorCount },
+    { key: 'error' as const, label: 'Sincronizar', count: errorCount },
   ];
 
   return (

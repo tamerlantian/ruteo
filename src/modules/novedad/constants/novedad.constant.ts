@@ -5,7 +5,6 @@ export const novedadValidationRules = {
       required: 'El tipo de novedad es obligatorio',
     },
     descripcion: {
-      required: 'La descripción es obligatoria',
       maxLength: {
         value: 500,
         message: 'La descripción no puede exceder 500 caracteres',

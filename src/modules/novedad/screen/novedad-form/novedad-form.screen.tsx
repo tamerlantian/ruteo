@@ -53,11 +53,6 @@ export const NovedadFormScreen: React.FC<NovedadFormScreenProps> = ({
 
         <View style={novedadFormStyles.headerContent}>
           <Text style={novedadFormStyles.title}>Formulario de novedad</Text>
-          <Text style={novedadFormStyles.subtitle}>
-            {visitasSeleccionadas.length} visita
-            {visitasSeleccionadas.length !== 1 ? 's' : ''} seleccionada
-            {visitasSeleccionadas.length !== 1 ? 's' : ''}
-          </Text>
         </View>
       </View>
 
@@ -78,7 +73,7 @@ export const NovedadFormScreen: React.FC<NovedadFormScreenProps> = ({
             {/* Info de visitas seleccionadas */}
             <View style={novedadFormStyles.visitasInfo}>
               <Text style={novedadFormStyles.visitasInfoTitle}>
-                Visitas seleccionadas
+                Visitas seleccionadas ({visitasSeleccionadas.length})
               </Text>
               <ScrollView
                 horizontal
@@ -93,20 +88,6 @@ export const NovedadFormScreen: React.FC<NovedadFormScreenProps> = ({
                 ))}
               </ScrollView>
             </View>
-
-              {/* Campo: Descripción */}
-            <FormInputController
-              control={viewModel.control}
-              name="descripcion"
-              label="Descripción *"
-              placeholder="Describe detalladamente la novedad encontrada..."
-              rules={viewModel.validationRules.descripcion}
-              error={viewModel.errors.descripcion}
-              multiline={true}
-              numberOfLines={4}
-              textAlignVertical="top"
-              style={novedadFormStyles.textArea}
-            />
 
             {/* Campo: Tipo de Novedad */}
             <FormSelectorController
@@ -133,6 +114,20 @@ export const NovedadFormScreen: React.FC<NovedadFormScreenProps> = ({
               required={true}
               maxPhotos={1}
             />
+
+            {/* Campo: Descripción */}
+            <FormInputController
+              control={viewModel.control}
+              name="descripcion"
+              label="Descripción"
+              placeholder="Describe detalladamente la novedad encontrada..."
+              rules={viewModel.validationRules.descripcion}
+              error={viewModel.errors.descripcion}
+              multiline={true}
+              numberOfLines={4}
+              textAlignVertical="top"
+              style={novedadFormStyles.textArea}
+            />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -140,7 +135,11 @@ export const NovedadFormScreen: React.FC<NovedadFormScreenProps> = ({
       {/* Footer Actions */}
       <View style={novedadFormStyles.footer}>
         <FormButton
-          title={viewModel.isValid && !viewModel.isSubmitting ? "Enviar novedad" : "Complete los campos obligatorios"}
+          title={
+            viewModel.isValid && !viewModel.isSubmitting
+              ? 'Enviar novedad'
+              : 'Complete los campos requeridos'
+          }
           disabled={!viewModel.isValid || viewModel.isSubmitting}
           isLoading={viewModel.isSubmitting}
           onPress={viewModel.onSubmit}

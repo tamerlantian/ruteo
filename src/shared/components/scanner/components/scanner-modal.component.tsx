@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -21,6 +21,21 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
   onClose,
   onScanResult,
 }) => {
+  const [cameraReady, setCameraReady] = useState(false);
+
+  // Reinicializar cámara cuando el modal se abre
+  useEffect(() => {
+    if (visible) {
+      // Pequeño delay para asegurar que el modal esté completamente montado
+      const timer = setTimeout(() => {
+        setCameraReady(true);
+      }, 300);
+      
+      return () => clearTimeout(timer);
+    } else {
+      setCameraReady(false);
+    }
+  }, [visible]);
   /**
    * Maneja el resultado del escaneo
    */
@@ -98,14 +113,20 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
 
         {/* Camera */}
         <View style={styles.cameraContainer}>
-          <Camera
-            style={styles.camera}
-            scanBarcode={true}
-            onReadCode={handleBarCodeRead}
-            showFrame={true}
-            laserColor="#007aff"
-            frameColor="#fff"
-          />
+          {cameraReady ? (
+            <Camera
+              style={styles.camera}
+              scanBarcode={true}
+              onReadCode={handleBarCodeRead}
+              showFrame={true}
+              laserColor="#007aff"
+              frameColor="#fff"
+            />
+          ) : (
+            <View style={[styles.camera, styles.loadingContainer]}>
+              <Text style={styles.loadingText}>Iniciando cámara...</Text>
+            </View>
+          )}
           
           {/* Overlay */}
           <View style={styles.overlay}>
@@ -249,6 +270,16 @@ const styles = StyleSheet.create({
   instructionsSubtext: {
     fontSize: 14,
     color: '#8e8e93',
+    textAlign: 'center',
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000',
+  },
+  loadingText: {
+    color: '#fff',
+    fontSize: 16,
     textAlign: 'center',
   },
 });

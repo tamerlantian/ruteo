@@ -21,10 +21,12 @@ const CargarOrdenComponent = () => {
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector(selectIsLoading);
   const subdominio = useAppSelector(selectSubdominio);
-  
-  // Query para cargar tipos de novedad cuando hay subdominio
-  const { refetch: refetchNovedadTipos } = useNovedadTipos(subdominio || '', !!subdominio);
 
+  // Query para cargar tipos de novedad cuando hay subdominio
+  const { refetch: refetchNovedadTipos } = useNovedadTipos(
+    subdominio || '',
+    !!subdominio,
+  );
 
   const {
     control,
@@ -41,7 +43,7 @@ const CargarOrdenComponent = () => {
   const onCargarOrden = async (data: CargarOrdenFormValues) => {
     // Verificar conectividad antes de intentar cargar la orden
     const isConnected = await networkService.isConnected();
-    
+
     if (!isConnected) {
       Toast.show({
         type: 'error',
@@ -103,6 +105,7 @@ const CargarOrdenComponent = () => {
     <View>
       <Text style={styles.title}>Cargar orden</Text>
       <FormInputController
+        keyboardType="numeric"
         control={control}
         name="codigo"
         label=""
