@@ -47,6 +47,7 @@ export const VisitasScreen = () => {
     isRetryLoading,
     totalSeleccionadas,
     totalConErrorSeleccionadas,
+    selectAllErrors,
   } = useVisitasViewModel();
 
   const renderVisitaItem: ListRenderItem<VisitaResponse> = useCallback(
@@ -105,6 +106,8 @@ export const VisitasScreen = () => {
           onDeliverVisitas={deliverSelectedVisitas}
           onRetryVisitas={retrySelectedVisitas}
           onNovedadVisitas={reportNovedadSelectedVisitas}
+          onSelectAllErrors={selectAllErrors}
+          totalErrorsInFilter={errorCount}
         />
       )}
       <CustomBottomSheet ref={bottomSheetRef} initialSnapPoints={['30%']}>

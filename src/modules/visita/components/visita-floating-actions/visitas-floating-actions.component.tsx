@@ -13,6 +13,8 @@ interface VisitasFloatingActionsProps {
   onDeliverVisitas: () => void;
   onRetryVisitas?: () => void;
   onNovedadVisitas?: () => void;
+  onSelectAllErrors?: () => void;
+  totalErrorsInFilter?: number;
 }
 
 export const VisitasFloatingActions: React.FC<VisitasFloatingActionsProps> = ({
@@ -24,8 +26,26 @@ export const VisitasFloatingActions: React.FC<VisitasFloatingActionsProps> = ({
   onDeliverVisitas,
   onRetryVisitas,
   onNovedadVisitas,
+  onSelectAllErrors,
+  totalErrorsInFilter = 0,
 }) => {
+  // Mostrar botón de "Seleccionar todos" cuando no hay selecciones y estamos en filtro error
   if (totalSeleccionadas === 0) {
+    if (activeFilter === 'error' && totalErrorsInFilter > 0 && onSelectAllErrors) {
+      return (
+        <View style={visitasStyles.floatingActionBar}>
+          <TouchableOpacity 
+            style={visitasStyles.selectAllButton}
+            onPress={onSelectAllErrors}
+            disabled={isRetryLoading}
+          >
+            <Text style={visitasStyles.selectAllText}>
+              Seleccionar todos ({totalErrorsInFilter})
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
     return null;
   }
 

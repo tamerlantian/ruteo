@@ -18,6 +18,7 @@ import {
 import {
   removerVisitas,
   limpiarSeleccionVisitas,
+  seleccionarMultiplesVisitas,
 } from '../../store/slice/visita.slice';
 import { VisitaResponse } from '../../interfaces/visita.interface';
 import { MainStackParamList } from '../../../../navigation/types';
@@ -127,6 +128,13 @@ export const useVisitasViewModel = () => {
   const clearSelection = useCallback(() => {
     dispatch(limpiarSeleccionVisitas());
   }, [dispatch]);
+
+  const selectAllErrors = useCallback(() => {
+    if (activeFilter === 'error' && visitasConError.length > 0) {
+      const errorIds = visitasConError.map(visita => visita.id);
+      dispatch(seleccionarMultiplesVisitas(errorIds));
+    }
+  }, [dispatch, activeFilter, visitasConError]);
 
   const deliverSelectedVisitas = useCallback(() => {
     if (visitasSeleccionadas.length === 0) {
@@ -301,6 +309,7 @@ export const useVisitasViewModel = () => {
 
     // Acciones de Selección
     clearSelection,
+    selectAllErrors,
     deliverSelectedVisitas,
     retrySelectedVisitas,
     reportNovedadSelectedVisitas,

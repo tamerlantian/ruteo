@@ -207,4 +207,23 @@ export const visitasStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  selectAllButton: {
+    flex: 1,
+    backgroundColor: '#007aff',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  selectAllText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
