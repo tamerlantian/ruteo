@@ -31,6 +31,7 @@ export const VisitasScreen = () => {
     totalCount,
     searchValue,
     onSearchChange,
+    onScanResult,
     onClearFilters,
     listConfig,
     bottomSheetRef,
@@ -75,6 +76,7 @@ export const VisitasScreen = () => {
             totalCount={totalCount}
             searchValue={searchValue}
             onSearchChange={onSearchChange}
+            onScanResult={onScanResult}
             onClearFilters={onClearFilters}
           />
         }

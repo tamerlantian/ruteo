@@ -4,7 +4,8 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import { visitasStyles } from '../../screen/visitas/visitas.style';
 import { FilterType } from '../filter-badges/filter-badges.component';
 import { FilterBadges } from '../filter-badges/filter-badges.component';
-import { SimpleSearch } from '../../../../shared/components/simple-search/simple-search.component';
+import { SimpleSearchWithScanner } from '../../../../shared/components/simple-search-with-scanner';
+import { ScanResult } from '../../../../shared/components/scanner';
 
 interface VisitasHeaderProps {
   hasVisitas: boolean;
@@ -20,6 +21,7 @@ interface VisitasHeaderProps {
   // Search props
   searchValue: string;
   onSearchChange: (value: string) => void;
+  onScanResult: (result: ScanResult) => void;
   onClearFilters: () => void;
 }
 
@@ -36,6 +38,7 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
   totalCount,
   searchValue,
   onSearchChange,
+  onScanResult,
   onClearFilters,
 }) => {
   // Función para manejar el clear
@@ -78,11 +81,12 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
       {/* Search and Filter - Only show when there are visitas */}
       {hasVisitas && (
         <>
-          <SimpleSearch
+          <SimpleSearchWithScanner
             searchValue={searchValue}
             onSearchChange={onSearchChange}
             placeholder="Buscar por número o documento..."
             onClear={handleClear}
+            onScanResult={onScanResult}
           />
           <FilterBadges
             activeFilter={activeFilter}

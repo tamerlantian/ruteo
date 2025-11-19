@@ -164,6 +164,22 @@ export class PermissionsService {
     }
   }
 
+  // NOTA: Funciones de permisos de cámara comentadas para evitar conflictos
+  // react-native-camera-kit maneja permisos automáticamente
+  // react-native-image-picker no requiere permisos CAMERA en el manifest
+  
+  /*
+  static async requestCameraPermission(): Promise<PermissionResult> {
+    // Implementación comentada para evitar conflictos
+    return { granted: true };
+  }
+
+  static async checkCameraPermission(): Promise<boolean> {
+    // Implementación comentada para evitar conflictos
+    return true;
+  }
+  */
+
   /**
    * Muestra un diálogo explicando por qué se necesitan los permisos
    */
@@ -184,4 +200,5 @@ export class PermissionsService {
       ]
     );
   }
+
 }

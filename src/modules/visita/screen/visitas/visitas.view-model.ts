@@ -203,6 +203,12 @@ export const useVisitasViewModel = () => {
     setSearchValue(value);
   }, []);
 
+  const handleScanResult = useCallback((result: any) => {
+    // Actualizar el valor de búsqueda con el código escaneado
+    setSearchValue(result.value);
+    console.log('Scan result processed:', result);
+  }, []);
+
   const clearFilters = useCallback(() => {
     setSearchValue('');
     setActiveFilter('pending');
@@ -285,6 +291,7 @@ export const useVisitasViewModel = () => {
     // Search states
     searchValue,
     onSearchChange: handleSearchChange,
+    onScanResult: handleScanResult,
     onClearFilters: clearFilters,
 
     // Referencias
