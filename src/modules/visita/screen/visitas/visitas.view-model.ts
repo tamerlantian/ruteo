@@ -1,6 +1,6 @@
 import { useCallback, useState, useRef, useMemo } from 'react';
 import BottomSheet from '@gorhom/bottom-sheet';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppSelector, useAppDispatch } from '../../../../store/hooks';
 import {
@@ -60,6 +60,7 @@ export const useVisitasViewModel = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterType>('pending');
   const [searchValue, setSearchValue] = useState('');
+  const [shouldClearSearchOnFocus, setShouldClearSearchOnFocus] = useState(false);
 
   // Referencias
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -142,6 +143,9 @@ export const useVisitasViewModel = () => {
       return;
     }
 
+    // Activar flag para limpiar search al regresar
+    setShouldClearSearchOnFocus(true);
+    
     navigation.navigate('EntregaForm', {
       visitasSeleccionadas: visitasSeleccionadas.map(id => id.toString()),
     });
@@ -152,6 +156,9 @@ export const useVisitasViewModel = () => {
       console.warn('No hay visitas seleccionadas para reportar novedad');
       return;
     }
+
+    // Activar flag para limpiar search al regresar
+    setShouldClearSearchOnFocus(true);
 
     navigation.navigate('NovedadForm', {
       visitasSeleccionadas: visitasSeleccionadas.map(id => id.toString()),
@@ -266,6 +273,17 @@ export const useVisitasViewModel = () => {
   if (isSuccess) {
     closeDevModeSheet();
   }
+
+  // Limpiar search cuando la pantalla recibe el foco (al volver de otras pantallas)
+  useFocusEffect(
+    useCallback(() => {
+      // Solo limpiar si el flag está activado y hay texto de búsqueda
+      if (shouldClearSearchOnFocus && searchValue.trim()) {
+        setSearchValue('');
+        setShouldClearSearchOnFocus(false); // Resetear el flag
+      }
+    }, [shouldClearSearchOnFocus, searchValue])
+  );
 
   return {
     // Estados
