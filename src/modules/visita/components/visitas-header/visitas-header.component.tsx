@@ -9,6 +9,7 @@ import { ScanResult } from '../../../../shared/components/scanner';
 
 interface VisitasHeaderProps {
   hasVisitas: boolean;
+  hasOrdenCargada: boolean;
   onOpenDevModeSheet: () => void;
   onOpenOptionsSheet: () => void;
   activeFilter: FilterType;
@@ -26,7 +27,7 @@ interface VisitasHeaderProps {
 }
 
 export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
-  hasVisitas,
+  hasOrdenCargada,
   onOpenDevModeSheet,
   onOpenOptionsSheet,
   activeFilter,
@@ -50,7 +51,7 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
       <View style={visitasStyles.titleRow}>
         <Text style={visitasStyles.title}>Entregas</Text>
         <View style={visitasStyles.headerActions}>
-          {hasVisitas && totalCount > 0 && (
+          {hasOrdenCargada && (
             <View style={visitasStyles.summaryContainer}>
               <Ionicons 
                 name="checkmark-circle" 
@@ -63,7 +64,7 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
               </Text>
             </View>
           )}
-          {hasVisitas && (
+          {hasOrdenCargada && (
             <TouchableOpacity 
               style={visitasStyles.optionsButton}
               onPress={onOpenOptionsSheet}
@@ -79,7 +80,7 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
       </View>
 
       {/* Search and Filter - Only show when there are visitas */}
-      {hasVisitas && (
+      {hasOrdenCargada && (
         <>
           <SimpleSearchWithScanner
             searchValue={searchValue}
@@ -98,11 +99,11 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
         </>
       )}
             
-      {!hasVisitas && (
+      {!hasOrdenCargada && (
         <View style={visitasStyles.emptyState}>
-          <Text style={visitasStyles.emptyTitle}>No tienes visitas cargadas</Text>
+          <Text style={visitasStyles.emptyTitle}>No tienes una orden cargada</Text>
           <Text style={visitasStyles.emptySubtitle}>
-            Las visitas aparecerán aquí cuando estén disponibles
+            Carga una orden de entrega para comenzar
           </Text>
           <TouchableOpacity 
             style={visitasStyles.emptyButtonContainer} 

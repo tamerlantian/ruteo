@@ -23,6 +23,7 @@ export const VisitasScreen = () => {
     refreshing,
     isLoading,
     hasVisitas,
+    hasOrdenCargada,
     activeFilter,
     pendingCount,
     errorCount,
@@ -65,6 +66,7 @@ export const VisitasScreen = () => {
         ListHeaderComponent={
           <VisitasHeader
             hasVisitas={hasVisitas}
+            hasOrdenCargada={hasOrdenCargada}
             onOpenDevModeSheet={openDevModeSheet}
             onOpenOptionsSheet={openOptionsSheet}
             activeFilter={activeFilter}

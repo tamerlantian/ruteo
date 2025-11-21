@@ -25,7 +25,7 @@ import { MainStackParamList } from '../../../../navigation/types';
 import { LIST_OPTIMIZATION_CONFIG } from '../../constants/visita.constant';
 import { FilterType } from '../../components/filter-badges/filter-badges.component';
 import { useRetryVisitas } from '../../hooks/use-retry-visitas.hook';
-import { resetSettings } from '../../../settings';
+import { resetSettings, selectOrdenEntrega } from '../../../settings';
 import {
   limpiarNovedades,
   limpiarSeleccionNovedades,
@@ -48,6 +48,7 @@ export const useVisitasViewModel = () => {
   const isSuccess = useAppSelector(selectIsSucceeded);
   const totalSeleccionadas = useAppSelector(selectTotalVisitasSeleccionadas);
   const visitasSeleccionadas = useAppSelector(selectVisitasSeleccionadas);
+  const ordenEntrega = useAppSelector(selectOrdenEntrega);
   const visitasConError = useAppSelector(selectVisitasConError);
   const visitasConNovedades = useAppSelector(selectVisitasConNovedades);
   const visitasSeleccionadasConDatosGuardados = useAppSelector(
@@ -259,6 +260,7 @@ export const useVisitasViewModel = () => {
   ]);
 
   const hasVisitas = useMemo(() => visitas.length > 0, [visitas.length]);
+  const hasOrdenCargada = useMemo(() => !!ordenEntrega, [ordenEntrega]);
   const hasSelectedVisitas = useMemo(
     () => totalSeleccionadas > 0,
     [totalSeleccionadas],
@@ -295,6 +297,7 @@ export const useVisitasViewModel = () => {
     totalConErrorSeleccionadas,
     refreshing,
     hasVisitas,
+    hasOrdenCargada,
     hasSelectedVisitas,
     isRetryLoading,
 

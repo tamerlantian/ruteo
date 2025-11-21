@@ -26,29 +26,45 @@
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-	  <key>NSExceptionDomains</key>
-      <dict>
-        <key>reddocapi.online</key>
-        <dict>
-          <key>NSIncludesSubdomains</key>
-          <true/>
-          <key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
-          <true/>
-          <key>NSTemporaryExceptionMinimumTLSVersion</key>
-          <string>TLSv1.1</string>
-      </dict>
-      </dict>
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>reddocapi.online</key>
+			<dict>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSTemporaryExceptionMinimumTLSVersion</key>
+				<string>TLSv1.1</string>
+			</dict>
+		</dict>
 	</dict>
+	<key>NSCalendarsUsageDescription</key>
+	<string>La app necesita acceder al calendario para gestionar eventos relacionados con tus entregas.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>La app necesita acceder a los contactos para mejorar la experiencia al elegir destinatarios.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>El micrófono es necesario para funciones que utilizan audio dentro de la aplicación.</string>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>La app puede acceder a tu biblioteca de música para mejorar la experiencia del usuario.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>El acceso al movimiento del dispositivo se usa para mejorar características relacionadas a tu actividad.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>La app requiere reconocimiento de voz para permitir comandos por voz o dictado.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>La app necesita tu ubicación precisa para rastrear y mejorar el proceso de entrega.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Esta aplicación necesita acceso para agregar fotos a la galería cuando se guarden las firmas digitales.</string>
+	<string>La app utiliza tu ubicación para mostrar rutas y ofrecer funcionalidades basadas en localización.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>La app requiere acceso a Bluetooth para funciones que utilizan dispositivos cercanos.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Esta aplicación necesita acceso a la cámara para tomar fotos de las entregas y escanear códigos QR y códigos de barras.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Esta aplicación necesita acceso para agregar fotos a la galería cuando se guarden las firmas digitales.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Esta aplicación necesita permiso para guardar las firmas digitales en la galería de fotos.</string>
 	<key>RCTNewArchEnabled</key>
@@ -67,5 +83,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Ionicons.ttf</string>
+	</array>
 </dict>
 </plist>
