@@ -109,7 +109,6 @@ export const novedadFormStyles = StyleSheet.create({
   footer: {
     paddingHorizontal: 20,
     paddingVertical: 16,
-    paddingBottom: 32,
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#e1e5e9',

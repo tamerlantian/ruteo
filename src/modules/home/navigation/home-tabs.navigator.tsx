@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MainTabParamList } from '../../../navigation/types';
 import { DashboardScreen } from '../screens/dashboard.screen';
 import { VisitasScreen } from '../../visita/screen/visitas/visitas.screen';
@@ -33,6 +34,8 @@ const getTabBarIcon = (route: any, focused: boolean, color: string, size: number
 };
 
 export const HomeTabsNavigator = () => {
+  const insets = useSafeAreaInsets();
+  
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -44,9 +47,9 @@ export const HomeTabsNavigator = () => {
           backgroundColor: '#fff',
           borderTopWidth: 1,
           borderTopColor: '#e5e5ea',
-          paddingBottom: 8,
+          paddingBottom: Math.max(insets.bottom, 8),
           paddingTop: 8,
-          height: 88,
+          height: 60 + Math.max(insets.bottom, 8),
         },
         tabBarLabelStyle: {
           fontSize: 12,

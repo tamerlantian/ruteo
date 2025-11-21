@@ -7,7 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MainStackParamList } from '../../../../navigation/types';
 import Ionicons from '@react-native-vector-icons/ionicons';
@@ -33,6 +33,9 @@ export const SolucionFormScreen: React.FC<SolucionFormScreenProps> = ({
   // Estado para controlar el scroll durante la interacción
   const [scrollEnabled, _setScrollEnabled] = useState(true);
   const scrollViewRef = useRef<ScrollView>(null);
+
+  // Obtener los insets del área segura para manejar correctamente el espacio del footer
+  const insets = useSafeAreaInsets();
 
   const handleGoBack = () => {
     navigation.goBack();
@@ -62,7 +65,8 @@ export const SolucionFormScreen: React.FC<SolucionFormScreenProps> = ({
       {/* Content */}
       <KeyboardAvoidingView
         style={solucionFormStyles.keyboardContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         <ScrollView
           ref={scrollViewRef}
@@ -110,7 +114,12 @@ export const SolucionFormScreen: React.FC<SolucionFormScreenProps> = ({
       </KeyboardAvoidingView>
 
       {/* Footer Actions */}
-      <View style={solucionFormStyles.footer}>
+      <View style={[
+        solucionFormStyles.footer,
+        {
+          paddingBottom: Math.max(insets.bottom, 4), // Asegurar espacio mínimo de 8px o el inset del área segura
+        }
+      ]}>
         <FormButton
           title={viewModel.isSubmitting ? "Enviando..." : "Enviar solución"}
           onPress={viewModel.onSubmit}
