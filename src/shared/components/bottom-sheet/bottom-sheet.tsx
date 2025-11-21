@@ -63,7 +63,7 @@ const CustomBottomSheet = forwardRef<BottomSheet, CustomBottomSheetProps>(
         handleIndicatorStyle={styles.indicator}
         backgroundStyle={styles.background}
         onClose={onDismiss}
-        keyboardBehavior="extend"
+        keyboardBehavior="interactive"
         keyboardBlurBehavior="restore"
         android_keyboardInputMode="adjustResize"
         enableDynamicSizing
