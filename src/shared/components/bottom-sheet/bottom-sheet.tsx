@@ -1,5 +1,5 @@
 import React, { forwardRef, useCallback, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetProps,
@@ -63,7 +63,7 @@ const CustomBottomSheet = forwardRef<BottomSheet, CustomBottomSheetProps>(
         handleIndicatorStyle={styles.indicator}
         backgroundStyle={styles.background}
         onClose={onDismiss}
-        keyboardBehavior="interactive"
+        keyboardBehavior={Platform.OS === 'ios' ? 'interactive' : 'fillParent'}
         keyboardBlurBehavior="restore"
         android_keyboardInputMode="adjustResize"
         enableDynamicSizing

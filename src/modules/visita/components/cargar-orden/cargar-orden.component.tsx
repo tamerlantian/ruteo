@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native';
 import React from 'react';
-import { FormInputController } from '../../../../shared/components/ui/form/FormInputController';
 import { useForm } from 'react-hook-form';
+import { BottomSheetFormInputController } from '../../../../shared/components/ui/form/BottomSheetFormInputController';
 import { verticalRepository } from '../../../vertical/repositories/vertical.repository';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { cargarVisitasThunk } from '../../store/thunk/visita.thunk';
@@ -12,6 +12,7 @@ import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../../shared/styles/global.style';
 import { useNovedadTipos } from '../../../novedad/view-models/novedad.view-model';
 import { networkService } from '../../../../shared/services/network.service';
+// import { FormInputController } from '../../../../shared/components/ui/form';
 
 interface CargarOrdenFormValues {
   codigo: string;
@@ -104,17 +105,30 @@ const CargarOrdenComponent = () => {
   return (
     <View>
       <Text style={styles.title}>Cargar orden</Text>
-      <FormInputController
+      <BottomSheetFormInputController
         keyboardType="numeric"
         control={control}
         name="codigo"
         label=""
-        placeholder="#"
+        placeholder="Ingrese el código de la orden"
         error={errors.codigo}
         rules={{
           required: 'El código es obligatorio',
         }}
+        isNumeric={true}
       />
+      {/* <FormInputController
+        keyboardType="numeric"
+        control={control}
+        name="codigo"
+        label=""
+        placeholder="Ingrese el código de la orden"
+        error={errors.codigo}
+        rules={{
+          required: 'El código es obligatorio',
+        }}
+        isNumeric={true}
+      /> */}
       <FormButton
         title="Cargar orden"
         onPress={handleSubmit(onCargarOrden)}
