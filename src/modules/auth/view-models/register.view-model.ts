@@ -6,6 +6,7 @@ import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../shared/styles/global.style';
 import { AuthErrorMapperService } from '../services/auth-error-mapper.service';
 import { useAuthNavigation } from '../../../navigation/hooks/useTypedNavigation';
+import { networkService } from '../../../shared/services/network.service';
 
 // Hook para manejar el registro
 export const useRegister = () => {
@@ -13,7 +14,16 @@ export const useRegister = () => {
   const navigation = useAuthNavigation();
 
   const registerMutation = useMutation({
-    mutationFn: (userData: RegisterCredentials) => authController.register(userData),
+    mutationFn: async (userData: RegisterCredentials) => {
+      // Verificar conectividad antes de intentar registro
+      const isConnected = await networkService.isConnected();
+      
+      if (!isConnected) {
+        throw new Error('NO_INTERNET_CONNECTION');
+      }
+      
+      return authController.register(userData);
+    },
     onSuccess: () => {
       // Actualizar el estado de autenticación y usuario
       queryClient.invalidateQueries({ queryKey: authKeys.session() });
@@ -30,6 +40,18 @@ export const useRegister = () => {
       navigation.navigate('Login');
     },
     onError: (error: any) => {
+      // Manejar error específico de conectividad
+      if (error.message === 'NO_INTERNET_CONNECTION') {
+        Toast.show({
+          type: 'error',
+          text1: 'Sin conexión a internet',
+          text2: 'Verifica tu conexión e intenta nuevamente',
+          text1Style: toastTextOneStyle,
+        });
+        return;
+      }
+      
+      // Manejar otros errores usando el mapper existente
       const mappedError = AuthErrorMapperService.mapError(error, 'register');
       
       Toast.show({

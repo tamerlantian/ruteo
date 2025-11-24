@@ -5,13 +5,23 @@ import Toast from 'react-native-toast-message';
 import { ApiErrorResponse } from '../../../core/interfaces/api.interface';
 import { useAuthNavigation } from '../../../navigation/hooks';
 import { toastTextOneStyle } from '../../../shared/styles/global.style';
+import { networkService } from '../../../shared/services/network.service';
 
 // Hook para manejar la recuperación de contraseña
 export const useForgotPassword = () => {
   const navigation = useAuthNavigation();
 
   const forgotPasswordMutation = useMutation({
-    mutationFn: (data: ForgotPasswordFormValues) => authController.forgotPassword(data),
+    mutationFn: async (data: ForgotPasswordFormValues) => {
+      // Verificar conectividad antes de intentar recuperación de contraseña
+      const isConnected = await networkService.isConnected();
+      
+      if (!isConnected) {
+        throw new Error('NO_INTERNET_CONNECTION');
+      }
+      
+      return authController.forgotPassword(data);
+    },
     onSuccess: () => {
       Toast.show({
         type: 'success',
@@ -21,6 +31,18 @@ export const useForgotPassword = () => {
       navigation.navigate('Login');
     },
     onError: (error: any) => {
+      // Manejar error específico de conectividad
+      if (error.message === 'NO_INTERNET_CONNECTION') {
+        Toast.show({
+          type: 'error',
+          text1: 'Sin conexión a internet',
+          text2: 'Verifica tu conexión e intenta nuevamente',
+          text1Style: toastTextOneStyle,
+        });
+        return;
+      }
+      
+      // Manejar otros errores usando la lógica existente
       const errorData = error as ApiErrorResponse;
       Toast.show({
         type: 'error',

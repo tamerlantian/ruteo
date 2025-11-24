@@ -5,13 +5,23 @@ import { authKeys } from '../constants/auth-keys';
 import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../shared/styles/global.style';
 import { AuthErrorMapperService } from '../services/auth-error-mapper.service';
+import { networkService } from '../../../shared/services/network.service';
 
 // Hook para manejar el login
 export const useLogin = () => {
   const queryClient = useQueryClient();
 
   const loginMutation = useMutation({
-    mutationFn: (credentials: LoginCredentials) => authController.login(credentials),
+    mutationFn: async (credentials: LoginCredentials) => {
+      // Verificar conectividad antes de intentar login
+      const isConnected = await networkService.isConnected();
+      
+      if (!isConnected) {
+        throw new Error('NO_INTERNET_CONNECTION');
+      }
+      
+      return authController.login(credentials);
+    },
     onSuccess: (response) => {
       // Actualizar el estado de autenticación inmediatamente
       queryClient.setQueryData(authKeys.session(), true);
@@ -28,6 +38,18 @@ export const useLogin = () => {
       });
     },
     onError: (error: any) => {
+      // Manejar error específico de conectividad
+      if (error.message === 'NO_INTERNET_CONNECTION') {
+        Toast.show({
+          type: 'error',
+          text1: 'Sin conexión a internet',
+          text2: 'Verifica tu conexión e intenta nuevamente',
+          text1Style: toastTextOneStyle,
+        });
+        return;
+      }
+      
+      // Manejar otros errores usando el mapper existente
       const mappedError = AuthErrorMapperService.mapError(error, 'login');
       
       Toast.show({
