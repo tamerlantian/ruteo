@@ -84,9 +84,9 @@ export const visitaCardStyle = StyleSheet.create({
     justifyContent: 'center',
   },
   rightInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: 6,
   },
   infoText: {
     fontSize: 11,
@@ -121,6 +121,23 @@ export const visitaCardStyle = StyleSheet.create({
     fontWeight: '500',
     marginLeft: 3,
     flexShrink: 1, // Puede encogerse si es necesario
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  locationButton: {
+    backgroundColor: '#f8f9fa',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 28,
+    minHeight: 22,
   },
   containerSelected: {
     backgroundColor: '#f0f8ff', // Azul muy suave

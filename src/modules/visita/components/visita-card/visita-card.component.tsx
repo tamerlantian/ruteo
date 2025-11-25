@@ -7,6 +7,7 @@ import { selectIsVisitaSeleccionada } from '../../store/selector/visita.selector
 import { toggleVisitaSeleccion } from '../../store/slice/visita.slice'
 import { visitaCardStyle } from './visita-card.style'
 import { getFirstPhoneNumber } from '../../../../shared/utils/phone.util'
+import { useMaps } from '../../../../shared/hooks/use-maps.hook'
 
 interface VisitaCardProps {
   visita: VisitaResponse;
@@ -16,6 +17,7 @@ interface VisitaCardProps {
 const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
   const dispatch = useAppDispatch();
   const isSelected = useAppSelector(selectIsVisitaSeleccionada(visita.id));
+  const { openLocationInMaps } = useMaps();
 
   const handlePress = () => {
     dispatch(toggleVisitaSeleccion(visita.id));
@@ -30,10 +32,25 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
     }
   };
 
+  const handleLocationPress = (event: any) => {
+    event.stopPropagation();
+    if (visita.latitud && visita.longitud) {
+      openLocationInMaps({
+        latitude: visita.latitud,
+        longitude: visita.longitud,
+        address: visita.destinatario_direccion
+      });
+    }
+  };
+
   // Obtener el primer número para mostrar
   const displayPhone = visita.destinatario_telefono 
     ? getFirstPhoneNumber(visita.destinatario_telefono)
     : '';
+
+  // Verificar si tiene coordenadas válidas
+  const hasValidCoordinates = visita.latitud && visita.longitud && 
+    visita.latitud !== 0 && visita.longitud !== 0;
 
   return (
     <TouchableOpacity 
@@ -91,19 +108,33 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
               </Text>
             </View>
             
-            {/* Botón de teléfono */}
-            {displayPhone && (
-              <TouchableOpacity 
-                style={visitaCardStyle.phoneButton}
-                onPress={handlePhonePress}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons name="call" size={16} color="#007aff" />
-                <Text style={visitaCardStyle.phoneText}>
-                  {displayPhone}
-                </Text>
-              </TouchableOpacity>
-            )}
+            {/* Botones de acción */}
+            <View style={visitaCardStyle.actionButtons}>
+              {/* Botón de teléfono */}
+              {displayPhone && (
+                <TouchableOpacity 
+                  style={visitaCardStyle.phoneButton}
+                  onPress={handlePhonePress}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="call" size={16} color="#007aff" />
+                  <Text style={visitaCardStyle.phoneText}>
+                    {displayPhone}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              
+              {/* Botón de ubicación */}
+              {hasValidCoordinates && (
+                <TouchableOpacity 
+                  style={visitaCardStyle.locationButton}
+                  onPress={handleLocationPress}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="location" size={16} color="#007aff" />
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </View>
       </View>
