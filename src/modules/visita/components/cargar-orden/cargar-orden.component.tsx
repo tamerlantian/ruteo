@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { BottomSheetFormInputController } from '../../../../shared/components/ui/form/BottomSheetFormInputController';
@@ -12,6 +12,7 @@ import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../../shared/styles/global.style';
 import { useNovedadTipos } from '../../../novedad/view-models/novedad.view-model';
 import { networkService } from '../../../../shared/services/network.service';
+import { FormInputController } from '../../../../shared/components/ui/form';
 // import { FormInputController } from '../../../../shared/components/ui/form';
 
 interface CargarOrdenFormValues {
@@ -105,30 +106,33 @@ const CargarOrdenComponent = () => {
   return (
     <View>
       <Text style={styles.title}>Cargar orden</Text>
-      <BottomSheetFormInputController
-        keyboardType="numeric"
-        control={control}
-        name="codigo"
-        label=""
-        placeholder="Ingrese el código de la orden"
-        error={errors.codigo}
-        rules={{
-          required: 'El código es obligatorio',
-        }}
-        isNumeric={true}
-      />
-      {/* <FormInputController
-        keyboardType="numeric"
-        control={control}
-        name="codigo"
-        label=""
-        placeholder="Ingrese el código de la orden"
-        error={errors.codigo}
-        rules={{
-          required: 'El código es obligatorio',
-        }}
-        isNumeric={true}
-      /> */}
+      {Platform.OS === 'ios' ? (
+        <BottomSheetFormInputController
+          keyboardType="numeric"
+          control={control}
+          name="codigo"
+          label=""
+          placeholder="Ingrese el código de la orden"
+          error={errors.codigo}
+          rules={{
+            required: 'El código es obligatorio',
+          }}
+          isNumeric={true}
+        />
+      ) : (
+        <FormInputController
+          keyboardType="numeric"
+          control={control}
+          name="codigo"
+          label=""
+          placeholder="Ingrese el código de la orden"
+          error={errors.codigo}
+          rules={{
+            required: 'El código es obligatorio',
+          }}
+          isNumeric={true}
+        />
+      )}
       <FormButton
         title="Cargar orden"
         onPress={handleSubmit(onCargarOrden)}
