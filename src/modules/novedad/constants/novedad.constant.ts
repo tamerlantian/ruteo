@@ -6,8 +6,8 @@ export const novedadValidationRules = {
     },
     descripcion: {
       maxLength: {
-        value: 500,
-        message: 'La descripción no puede exceder 500 caracteres',
+        value: 250,
+        message: 'La descripción no puede exceder 250 caracteres',
       },
     },
     foto: {

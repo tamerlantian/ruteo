@@ -40,6 +40,7 @@ export const useSolucionFormViewModel = ({
     defaultValues: {
       solucion: '',
     },
+    mode:'onChange'
   });
 
   // === REGLAS DE VALIDACIÓN ===
@@ -51,8 +52,8 @@ export const useSolucionFormViewModel = ({
         message: 'La solución debe tener al menos 3 caracteres',
       },
       maxLength: {
-        value: 500,
-        message: 'La solución no puede exceder 500 caracteres',
+        value: 250,
+        message: 'La solución no puede exceder 250 caracteres',
       },
     },
   };

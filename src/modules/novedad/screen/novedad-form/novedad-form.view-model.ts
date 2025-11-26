@@ -45,6 +45,7 @@ export const useNovedadFormViewModel = (
       descripcion: '',
       foto: [],
     },
+    mode:'onChange'
   });
 
   const tiposOptions =
