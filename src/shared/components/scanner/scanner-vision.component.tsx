@@ -8,7 +8,7 @@ import { ScannerProps } from './interfaces/scanner.interface';
  * Componente principal del scanner QR/Barcode usando react-native-vision-camera
  * Combina el botón y el modal de escaneo con Vision Camera
  */
-export const Scanner: React.FC<ScannerProps> = ({
+export const ScannerVision: React.FC<ScannerProps> = ({
   onScanResult,
   disabled = false,
 }) => {
