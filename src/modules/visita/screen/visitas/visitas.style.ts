@@ -11,6 +11,11 @@ export const visitasStyles = StyleSheet.create({
   contentContainer: {
     flexGrow: 1,
   },
+  summaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   header: {
     padding: 20,
     paddingBottom: 10,
@@ -19,7 +24,7 @@ export const visitasStyles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: '#1c1c1e',
-    marginBottom: 20,
+    marginBottom:4,
   },
   emptyState: {
     alignItems: 'center',
@@ -63,6 +68,7 @@ export const visitasStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 8,
   },
   headerActions: {
     flexDirection: 'row',

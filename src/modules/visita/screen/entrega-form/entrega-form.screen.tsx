@@ -180,8 +180,8 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
         }
       ]}>
         <FormButton
-          title="Enviar"
-          disabled={viewModel.isSubmitting}
+          title="Entregar"
+          disabled={!viewModel.isValid || viewModel.isSubmitting}
           isLoading={viewModel.isSubmitting}
           onPress={viewModel.onSubmit}
         />

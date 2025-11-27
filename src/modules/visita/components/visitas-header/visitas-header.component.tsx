@@ -52,6 +52,7 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
         <Text style={visitasStyles.title}>Entregas</Text>
         <View style={visitasStyles.headerActions}>
           {hasOrdenCargada && (
+            <View style={visitasStyles.summaryRow}>
             <View style={visitasStyles.summaryContainer}>
               <Ionicons 
                 name="checkmark-circle" 
@@ -62,6 +63,18 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
               <Text style={visitasStyles.summaryText}>
                 {deliveredCount} de {totalCount}
               </Text>
+            </View>
+            <View style={visitasStyles.summaryContainer}>
+              <Ionicons 
+                name="alert-circle" 
+                size={16} 
+                color="#ffbd30ff" 
+                style={visitasStyles.summaryIcon}
+              />
+              <Text style={visitasStyles.summaryText}>
+               {novedadesCount}
+              </Text>
+            </View>
             </View>
           )}
           {hasOrdenCargada && (
