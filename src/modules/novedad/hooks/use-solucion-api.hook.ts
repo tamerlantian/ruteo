@@ -4,45 +4,7 @@ import { selectSubdominio } from '../../settings';
 import { novedadRepository } from '../repositories/novedad.repository';
 import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../shared/styles/global.style';
-
-/**
- * Configuration for the useSolucionApi hook
- */
-export interface UseSolucionApiConfig {
-  showToasts?: boolean;
-  logPrefix?: string;
-  messagePrefix?: string;
-}
-
-/**
- * Data structure for solution submission
- */
-export interface SolucionFormData {
-  id: string;
-  tempId: string;
-  solucion: string;
-}
-
-/**
- * Result of a single solution processing
- */
-export interface SolucionProcessingResult {
-  success: boolean;
-  novedadId: string;
-  novedadTempId?: string;
-  solucionData: SolucionFormData;
-  error?: string;
-  apiError?: any;
-}
-
-/**
- * Result of batch solution processing
- */
-export interface SolucionBatchProcessingResult {
-  successCount: number;
-  errorCount: number;
-  results: SolucionProcessingResult[];
-}
+import { SolucionBatchProcessingResult, SolucionFormData, SolucionProcessingResult, UseSolucionApiConfig } from '../interfaces/solucion.interface';
 
 /**
  * Hook for solution API communication only

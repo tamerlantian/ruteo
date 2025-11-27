@@ -5,8 +5,9 @@ import {
   limpiarSeleccionNovedades,
 } from '../store/slice/novedad.slice';
 import { desmarcarVisitaConNovedad } from '../../visita/store/slice/visita.slice';
-import { useSolucionApi, SolucionFormData } from './use-solucion-api.hook';
+import { useSolucionApi } from './use-solucion-api.hook';
 import { store } from '../../../store';
+import { SolucionFormData } from '../interfaces/solucion.interface';
 
 /**
  * Hook specifically for retrying solutions with error state

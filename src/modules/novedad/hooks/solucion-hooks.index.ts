@@ -9,5 +9,5 @@ export type {
   SolucionFormData,
   SolucionProcessingResult,
   SolucionBatchProcessingResult
-} from './use-solucion-api.hook';
-export type { UseSolucionCreationConfig } from './use-solucion-creation.hook';
+} from '../interfaces/solucion.interface';
+export type { UseSolucionCreationConfig } from '../interfaces/solucion.interface';

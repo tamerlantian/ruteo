@@ -7,21 +7,10 @@ import {
   cambiarEstadoSolucionNovedad,
 } from '../store/slice/novedad.slice';
 import { desmarcarVisitaConNovedad } from '../../visita/store/slice/visita.slice';
-import {
-  useSolucionApi,
-  UseSolucionApiConfig,
-  SolucionFormData,
-  SolucionBatchProcessingResult,
-} from './use-solucion-api.hook';
 import { isTempId } from '../../../shared/utils/id-generator.util';
 import { store } from '../../../store';
-
-/**
- * Configuration for the useSolucionCreation hook
- */
-export interface UseSolucionCreationConfig extends UseSolucionApiConfig {
-  clearSelectionsOnSuccess?: boolean;
-}
+import { useSolucionApi } from './use-solucion-api.hook';
+import { SolucionBatchProcessingResult, SolucionFormData, UseSolucionCreationConfig } from '../interfaces/solucion.interface';
 
 /**
  * Hook specifically for creating new solutions
