@@ -27,10 +27,10 @@ export const PhotoCaptureVision: React.FC<PhotoCaptureProps> = ({
     closeCamera 
   } = usePhotoCaptureVision(maxPhotos);
 
-  const canAddMore = photos.length < maxPhotos && !disabled;
+  const canAddMore = photos.length < maxPhotos;
 
   const handleAddPhoto = async () => {
-    if (!canAddMore || isLoading) return;
+    if (!canAddMore || isLoading || disabled) return;
     await addPhoto(photos, onPhotosChange);
   };
 
@@ -112,7 +112,7 @@ export const PhotoCaptureVision: React.FC<PhotoCaptureProps> = ({
                 isLoading && photoCaptureStyles.addPhotoButtonDisabled,
               ]}
               onPress={handleAddPhoto}
-              disabled={isLoading}
+              disabled={isLoading || disabled}
             >
               <Ionicons
                 name={'camera-outline'}

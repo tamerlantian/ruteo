@@ -10,6 +10,7 @@ interface PhotoFieldProps {
   name: string;
   label: string;
   error?: any;
+  disabled?: boolean;
   rules?: any;
   required?: boolean;
   maxPhotos?: number;
@@ -24,6 +25,7 @@ export const PhotoField: React.FC<PhotoFieldProps> = ({
   name,
   label,
   error,
+  disabled,
   rules,
   maxPhotos = 5,
 }) => {
@@ -46,6 +48,7 @@ export const PhotoField: React.FC<PhotoFieldProps> = ({
               onChange(photos);
             }}
             maxPhotos={maxPhotos}
+            disabled={disabled}
           />
         )}
       />

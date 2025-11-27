@@ -23,6 +23,7 @@ interface FormSelectorProps {
   placeholder?: string;
   options: Option[];
   value?: string;
+  disabled?: boolean;
   onValueChange: (_value: string) => void;
   error?: string;
   isLoading?: boolean;
@@ -35,6 +36,7 @@ export const FormSelector = ({
   placeholder = 'Seleccionar...',
   options,
   value,
+  disabled,
   onValueChange,
   error,
   isLoading,
@@ -120,6 +122,7 @@ export const FormSelector = ({
 
       <TouchableOpacity
         style={[styles.selector, error ? styles.selectorError : null]}
+        disabled={disabled}
         onPress={openModal}
         activeOpacity={0.7}
       >

@@ -5,6 +5,7 @@ import { FormSelector, Option } from './FormSelector';
 interface FormSelectorControllerProps<T extends FieldValues> {
   control: Control<T>;
   name: FieldPath<T>;
+  disabled?: boolean;
   label: string;
   placeholder?: string;
   options: Option[];
@@ -19,6 +20,7 @@ interface FormSelectorControllerProps<T extends FieldValues> {
 export const FormSelectorController = <T extends FieldValues>({
   control,
   name,
+  disabled,
   label,
   placeholder,
   options,
@@ -45,6 +47,7 @@ export const FormSelectorController = <T extends FieldValues>({
           isLoading={isLoading}
           onRetry={onRetry}
           emptyOptionsMessage={emptyOptionsMessage}
+          disabled={disabled}
         />
       )}
     />

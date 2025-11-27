@@ -7,7 +7,10 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MainStackParamList } from '../../../../navigation/types';
 import Ionicons from '@react-native-vector-icons/ionicons';
@@ -17,6 +20,8 @@ import { FormButton } from '../../../../shared/components/ui/button/FormButton';
 import { FormInputController } from '../../../../shared/components/ui/form/FormInputController';
 import { FormSelectorController } from '../../../../shared/components/ui/form/form-selector/FormSelectorController';
 import { PhotoField } from '../../../visita/screen/entrega-form/components/PhotoField';
+import { useGradualAnimation } from '../../../../shared/hooks/use-gradual-animation.hook';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
 type NovedadFormScreenProps = NativeStackScreenProps<
   MainStackParamList,
@@ -35,6 +40,7 @@ export const NovedadFormScreen: React.FC<NovedadFormScreenProps> = ({
   // Estado para controlar el scroll durante la interacción
   const [scrollEnabled, _setScrollEnabled] = useState(true);
   const scrollViewRef = useRef<ScrollView>(null);
+  const { height } = useGradualAnimation();
 
   // Obtener los insets del área segura para manejar correctamente el espacio del footer
   const insets = useSafeAreaInsets();
@@ -42,6 +48,12 @@ export const NovedadFormScreen: React.FC<NovedadFormScreenProps> = ({
   const handleGoBack = () => {
     navigation.goBack();
   };
+
+  const keyboardPadding = useAnimatedStyle(() => {
+    return {
+      height: height.value,
+    };
+  }, []);
 
   return (
     <SafeAreaView style={novedadFormStyles.container}>
@@ -96,6 +108,7 @@ export const NovedadFormScreen: React.FC<NovedadFormScreenProps> = ({
             {/* Campo: Tipo de Novedad */}
             <FormSelectorController
               control={viewModel.control}
+              disabled={viewModel.isSubmitting}
               name="tipo"
               label="Tipo de novedad *"
               placeholder="Selecciona el tipo de novedad"
@@ -111,6 +124,7 @@ export const NovedadFormScreen: React.FC<NovedadFormScreenProps> = ({
             {/* Campo: Foto de Novedad */}
             <PhotoField
               control={viewModel.control}
+              disabled={viewModel.isSubmitting}
               name="foto"
               label="Foto *"
               rules={viewModel.validationRules.foto}
@@ -123,6 +137,7 @@ export const NovedadFormScreen: React.FC<NovedadFormScreenProps> = ({
             <FormInputController
               control={viewModel.control}
               name="descripcion"
+              disabled={viewModel.isSubmitting}
               label="Descripción"
               placeholder="Describe detalladamente la novedad encontrada..."
               rules={viewModel.validationRules.descripcion}
@@ -137,22 +152,23 @@ export const NovedadFormScreen: React.FC<NovedadFormScreenProps> = ({
       </KeyboardAvoidingView>
 
       {/* Footer Actions */}
-      <View style={[
-        novedadFormStyles.footer,
-        {
-          paddingBottom: Math.max(insets.bottom, 4), // Asegurar espacio mínimo de 8px o el inset del área segura
-        }
-      ]}>
+      <View
+        style={[
+          novedadFormStyles.footer,
+          {
+            paddingBottom:
+              Platform.OS === 'ios' ? 0 : Math.max(insets.bottom, 14), // Asegurar espacio mínimo de 8px o el inset del área segura
+          },
+        ]}
+      >
         <FormButton
-          title={
-            viewModel.isValid && !viewModel.isSubmitting
-              ? 'Enviar novedad'
-              : 'Complete los campos requeridos'
-          }
+          title="Enviar novedad"
           disabled={!viewModel.isValid || viewModel.isSubmitting}
           isLoading={viewModel.isSubmitting}
           onPress={viewModel.onSubmit}
         />
+
+        <Animated.View style={keyboardPadding} />
       </View>
     </SafeAreaView>
   );
