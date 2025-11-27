@@ -111,7 +111,7 @@ export const solucionFormStyles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 14,
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#e1e5e9',

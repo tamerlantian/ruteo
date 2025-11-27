@@ -17,6 +17,8 @@ import { Provider } from 'react-redux';
 import { store } from './src/store';
 import { initializeServices } from './src/core/services/init-services';
 import Toast from 'react-native-toast-message';
+import { KeyboardProvider } from "react-native-keyboard-controller";
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,6 +39,7 @@ function App() {
     <Provider store={store}>
       <GestureHandlerRootView style={styles.gestureHandler}>
         <QueryClientProvider client={queryClient}>
+          <KeyboardProvider>
           <BottomSheetModalProvider>
             <ToastProvider>
               <DevModeProvider>
@@ -51,6 +54,7 @@ function App() {
               </DevModeProvider>
             </ToastProvider>
           </BottomSheetModalProvider>
+          </KeyboardProvider>
         </QueryClientProvider>
       </GestureHandlerRootView>
       <Toast visibilityTime={2000} />

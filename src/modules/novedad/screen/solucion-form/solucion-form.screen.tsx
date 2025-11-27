@@ -7,7 +7,10 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MainStackParamList } from '../../../../navigation/types';
 import Ionicons from '@react-native-vector-icons/ionicons';
@@ -15,6 +18,8 @@ import { FormButton } from '../../../../shared/components/ui/button/FormButton';
 import { FormInputController } from '../../../../shared/components/ui/form/FormInputController';
 import { solucionFormStyles } from './solucion-form.style';
 import { useSolucionFormViewModel } from './solucion-form.view-model';
+import { useGradualAnimation } from '../../../../shared/hooks/use-gradual-animation.hook';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
 type SolucionFormScreenProps = NativeStackScreenProps<
   MainStackParamList,
@@ -33,6 +38,7 @@ export const SolucionFormScreen: React.FC<SolucionFormScreenProps> = ({
   // Estado para controlar el scroll durante la interacción
   const [scrollEnabled, _setScrollEnabled] = useState(true);
   const scrollViewRef = useRef<ScrollView>(null);
+  const { height } = useGradualAnimation();
 
   // Obtener los insets del área segura para manejar correctamente el espacio del footer
   const insets = useSafeAreaInsets();
@@ -40,6 +46,12 @@ export const SolucionFormScreen: React.FC<SolucionFormScreenProps> = ({
   const handleGoBack = () => {
     navigation.goBack();
   };
+
+  const keyboardPadding = useAnimatedStyle(() => {
+    return {
+      height: height.value,
+    };
+  }, []);
 
   return (
     <SafeAreaView style={solucionFormStyles.container}>
@@ -115,18 +127,23 @@ export const SolucionFormScreen: React.FC<SolucionFormScreenProps> = ({
       </KeyboardAvoidingView>
 
       {/* Footer Actions */}
-      <View style={[
-        solucionFormStyles.footer,
-        {
-          paddingBottom: Math.max(insets.bottom, 4), // Asegurar espacio mínimo de 8px o el inset del área segura
-        }
-      ]}>
+      <View
+        style={[
+          solucionFormStyles.footer,
+          {
+            paddingBottom:
+              Platform.OS === 'ios' ? 0 : Math.max(insets.bottom, 14), // Asegurar espacio mínimo de 8px o el inset del área segura
+          },
+        ]}
+      >
         <FormButton
-          title={viewModel.isSubmitting ? "Enviando..." : "Enviar solución"}
+          title={viewModel.isSubmitting ? 'Enviando...' : 'Enviar solución'}
           onPress={viewModel.onSubmit}
-          disabled={viewModel.isSubmitting || !viewModel.isValid }
+          disabled={viewModel.isSubmitting || !viewModel.isValid}
           variant="primary"
         />
+
+        <Animated.View style={keyboardPadding} />
       </View>
     </SafeAreaView>
   );
