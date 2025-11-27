@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Controller } from 'react-hook-form';
-import { PhotoCapture } from '../../../../../shared/components/ui/photo-capture/PhotoCapture';
+import { PhotoCaptureVision } from '../../../../../shared/components/ui/photo-capture/PhotoCaptureVision';
 import { PhotoData } from '../../../../../shared/components/ui/photo-capture/PhotoCapture.types';
 import { entregaFormStyles } from '../entrega-form.style';
 
@@ -17,7 +17,7 @@ interface PhotoFieldProps {
 
 /**
  * Campo de fotos para formularios usando React Hook Form
- * Integra PhotoCapture con el sistema de formularios
+ * Integra PhotoCaptureVision (Vision Camera) con el sistema de formularios
  */
 export const PhotoField: React.FC<PhotoFieldProps> = ({
   control,
@@ -40,7 +40,7 @@ export const PhotoField: React.FC<PhotoFieldProps> = ({
         name={name}
         rules={rules}
         render={({ field: { onChange, value } }) => (
-          <PhotoCapture
+          <PhotoCaptureVision
             photos={value || []}
             onPhotosChange={(photos: PhotoData[]) => {
               onChange(photos);
