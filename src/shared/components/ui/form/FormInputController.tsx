@@ -6,6 +6,7 @@ import { loginStyles } from '../../../../modules/auth/styles/login.style';
 interface FormInputControllerProps<T extends FieldValues>
   extends Omit<TextInputProps, 'value' | 'onChangeText'> {
   control: Control<T>;
+  disabled?: boolean;
   name: FieldPath<T>;
   label: string;
   error?: FieldError;
@@ -15,6 +16,7 @@ interface FormInputControllerProps<T extends FieldValues>
 
 export const FormInputController = <T extends FieldValues>({
   control,
+  disabled,
   name,
   label,
   error,
@@ -42,6 +44,7 @@ export const FormInputController = <T extends FieldValues>({
             }}
             onBlur={onBlur}
             value={isNumeric ? (value ? value.toString() : '') : value || ''}
+            editable={!disabled}
             {...props}
           />
           {error ? <Text style={loginStyles.errorText}>{error.message}</Text> : null}

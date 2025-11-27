@@ -34,7 +34,7 @@ export const useSolucionFormViewModel = ({
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
     reset,
   } = useForm<SolucionFormViewData>({
     defaultValues: {
@@ -109,6 +109,7 @@ export const useSolucionFormViewModel = ({
     control,
     errors,
     validationRules,
+    isValid,
 
     // Estado
     isSubmitting,

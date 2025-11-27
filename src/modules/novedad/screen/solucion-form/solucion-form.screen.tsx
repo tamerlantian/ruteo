@@ -99,6 +99,7 @@ export const SolucionFormScreen: React.FC<SolucionFormScreenProps> = ({
             {/* Campo: Descripción de la Solución */}
             <FormInputController
               control={viewModel.control}
+              disabled={viewModel.isSubmitting}
               name="solucion"
               label="Descripción de la solución *"
               placeholder="Describe detalladamente la solución aplicada a las novedades..."
@@ -123,8 +124,8 @@ export const SolucionFormScreen: React.FC<SolucionFormScreenProps> = ({
         <FormButton
           title={viewModel.isSubmitting ? "Enviando..." : "Enviar solución"}
           onPress={viewModel.onSubmit}
+          disabled={viewModel.isSubmitting || !viewModel.isValid }
           variant="primary"
-          disabled={viewModel.isSubmitting}
         />
       </View>
     </SafeAreaView>
