@@ -104,6 +104,7 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
               control={viewModel.control}
               name="fotos"
               label="Fotos"
+              disabled={viewModel.isSubmitting}
               rules={viewModel.visitaFormValidationRules.fotos}
               error={viewModel.errors.fotos}
               required={false}
