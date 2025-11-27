@@ -1,6 +1,3 @@
-// Componente actual (react-native-image-picker)
-export { PhotoCapture } from './PhotoCapture';
-
 // Componente nuevo (react-native-vision-camera) - PARALELO
 export { PhotoCaptureVision } from './PhotoCaptureVision';
 
@@ -8,7 +5,6 @@ export { PhotoCaptureVision } from './PhotoCaptureVision';
 export { PhotoItem } from './PhotoItem';
 
 // Hooks
-export { usePhotoCapture } from './hooks/usePhotoCapture';
 export { usePhotoCaptureVision } from './hooks/usePhotoCaptureVision';
 
 // Tipos compartidos
