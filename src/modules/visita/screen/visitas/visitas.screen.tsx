@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { FlatList, ListRenderItem } from 'react-native';
 import { visitasStyles } from './visitas.style';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomBottomSheet from '../../../../shared/components/bottom-sheet/bottom-sheet';
 import CargarOrdenComponent from '../../components/cargar-orden/cargar-orden.component';
 import VisitaCardComponent from '../../components/visita-card/visita-card.component';
@@ -52,6 +52,7 @@ export const VisitasScreen = () => {
     selectAllErrors,
   } = useVisitasViewModel();
 
+  const insets = useSafeAreaInsets();
   const renderVisitaItem: ListRenderItem<VisitaResponse> = useCallback(
     ({ item, index }) => <VisitaCardComponent visita={item} index={index} />,
     [],
@@ -114,7 +115,9 @@ export const VisitasScreen = () => {
           totalErrorsInFilter={errorCount}
         />
       )}
-      <CustomBottomSheet ref={bottomSheetRef} initialSnapPoints={['30%']}>
+      <CustomBottomSheet ref={bottomSheetRef} initialSnapPoints={['30%']} 
+      topInset={insets.top + 260}
+      >
         <CargarOrdenComponent />
       </CustomBottomSheet>
       <CustomBottomSheet
