@@ -124,9 +124,35 @@ export const selectVisitaIdByNovedadId = (novedadId: string) =>
 export const selectNovedadesConVisitas = createSelector(
   [selectNovedades, (state: RootState) => state.visita.visitas],
   (novedades, visitas) => {
-    console.log('Novedades', novedades);
-
     return novedades.map(novedad => {
+      const visita = visitas.find(v => v.id === novedad.visita_id);
+      return {
+        novedad,
+        visita: visita || null,
+      };
+    });
+  },
+);
+
+// Selector optimizado para obtener novedades con error y sus visitas
+export const selectNovedadesConErrorYVisitas = createSelector(
+  [selectNovedadesConEstadosError, (state: RootState) => state.visita.visitas],
+  (novedadesConError, visitas) => {
+    return novedadesConError.map(novedad => {
+      const visita = visitas.find(v => v.id === novedad.visita_id);
+      return {
+        novedad,
+        visita: visita || null,
+      };
+    });
+  },
+);
+
+// Selector optimizado para obtener novedades pendientes y sus visitas
+export const selectNovedadesPendientesYVisitas = createSelector(
+  [selectNovedadesPendientesPorSolventar, (state: RootState) => state.visita.visitas],
+  (novedadesPendientes, visitas) => {
+    return novedadesPendientes.map(novedad => {
       const visita = visitas.find(v => v.id === novedad.visita_id);
       return {
         novedad,

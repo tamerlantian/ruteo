@@ -22,6 +22,7 @@ export const NovedadesScreen = () => {
     onSearchChange,
     onClearFilters,
     onFilterChange,
+    handleScanResult,
     listConfig,
     totalSeleccionadas,
     onClearSelection,
@@ -52,6 +53,7 @@ export const NovedadesScreen = () => {
             allCount={allCount}
             searchValue={searchValue}
             onSearchChange={onSearchChange}
+            onScanResult={handleScanResult}
             onClearFilters={onClearFilters}
           />
         }

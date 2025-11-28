@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { visitasStyles } from '../../../visita/screen/visitas/visitas.style';
-import { SimpleSearch } from '../../../../shared/components/simple-search/simple-search.component';
+import { SimpleSearchWithScanner } from '../../../../shared/components/simple-search-with-scanner';
+import { ScanResult } from '../../../../shared/components/scanner';
 
 // Crear un componente de filtros específico para novedades
 interface NovedadFilterBadgeProps {
@@ -78,6 +79,7 @@ interface NovedadesHeaderProps {
   allCount: number;
   searchValue: string;
   onSearchChange: (text: string) => void;
+  onScanResult: (result: ScanResult) => void;
   onClearFilters: () => void;
 }
 
@@ -89,6 +91,7 @@ export const NovedadesHeader: React.FC<NovedadesHeaderProps> = ({
   allCount,
   searchValue,
   onSearchChange,
+  onScanResult,
   onClearFilters,
 }) => {
   const handleClear = () => {
@@ -102,11 +105,12 @@ export const NovedadesHeader: React.FC<NovedadesHeaderProps> = ({
 
       {hasNovedades && (
         <>
-          <SimpleSearch
+          <SimpleSearchWithScanner
             searchValue={searchValue}
             onSearchChange={onSearchChange}
             placeholder="Buscar por número o documento..."
             onClear={handleClear}
+            onScanResult={onScanResult}
           />
           <NovedadFilterBadges
             activeFilter={activeFilter}
