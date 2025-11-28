@@ -69,20 +69,14 @@ export const useNovedadesViewModel = () => {
     // Filtrar por búsqueda con acceso completo a datos de visita
     const searchQuery = searchValue.toLowerCase();
     const filtered = novedadesConVisitas.filter(item => {
-      const { novedad, visita } = item;
+      const { visita } = item;
       
       // Buscar en ID de visita
-      const matchesVisitaId = novedad.visita_id.toString().toLowerCase().includes(searchQuery);
+      const matchesVisitaId = visita?.numero.toString().toLowerCase().includes(searchQuery);
       
-      // Buscar en descripción de la novedad
-      const matchesDescripcion = novedad.descripcion?.toLowerCase().includes(searchQuery);
-      
-      // Buscar en datos de la visita si existe
-      const matchesNumeroVisita = visita?.numero_visita?.toLowerCase().includes(searchQuery);
       const matchesDocumento = visita?.documento?.toLowerCase().includes(searchQuery);
-      const matchesNombre = visita?.nombre?.toLowerCase().includes(searchQuery);
 
-      return matchesVisitaId || matchesDescripcion || matchesNumeroVisita || matchesDocumento || matchesNombre;
+      return matchesVisitaId || matchesDocumento;
     });
 
     return filtered;
