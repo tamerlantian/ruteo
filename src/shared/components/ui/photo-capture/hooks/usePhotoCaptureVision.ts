@@ -68,7 +68,7 @@ export const usePhotoCaptureVision = (maxPhotos: number = 5) => {
       setIsLoading(true);
       
       const photo: PhotoFile = await cameraRef.current.takePhoto({
-        flash: 'auto',
+        flash: 'off',
         enableShutterSound: true,
       });
 
