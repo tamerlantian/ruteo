@@ -15,6 +15,8 @@ import {
 } from '../../store/selector/novedad.selector';
 import { toggleNovedadSeleccion } from '../../store/slice/novedad.slice';
 import { getFirstPhoneNumber } from '../../../../shared/utils/phone.util';
+import { useNovedadTipos } from '../../view-models/novedad.view-model';
+import { selectSubdominio } from '../../../settings';
 
 interface NovedadCardProps {
   novedad: Novedad;
@@ -26,6 +28,23 @@ export const NovedadCardComponent: React.FC<NovedadCardProps> = ({
   const dispatch = useAppDispatch();
   const isSelected = useAppSelector(selectIsNovedadSeleccionada(novedad.id_real || novedad.id));
   const novedadConVisita = useAppSelector(selectNovedadConVisita(novedad.id_real || novedad.id));
+  const subdominio = useAppSelector(selectSubdominio);
+  const {
+      data: novedadTiposResponse,
+    } = useNovedadTipos(subdominio || '', !!subdominio);
+
+  // Función para obtener el nombre del tipo de novedad
+  const getTipoNovedadNombre = () => {
+    if (!novedadTiposResponse?.results || !novedad.novedad_tipo_id) {
+      return `Tipo ${novedad.novedad_tipo_id}`;
+    }
+    
+    const tipo = novedadTiposResponse.results.find(
+      (tipo) => tipo.id === novedad.novedad_tipo_id
+    );
+    
+    return tipo ? tipo.nombre : `Tipo ${novedad.novedad_tipo_id}`;
+  };
 
   const handlePress = () => {
     dispatch(toggleNovedadSeleccion(novedad.id_real || novedad.id));
@@ -104,8 +123,7 @@ export const NovedadCardComponent: React.FC<NovedadCardProps> = ({
 
         {/* Información adicional y teléfono */}
         <View style={styles.infoRow}>
-          <View style={styles.leftInfo}>
-            {/* Badge de error */}
+          {/* <View style={styles.leftInfo}>
             {(novedad.estado_solucion === 'error' ||
               novedad.estado === 'error') && (
               <View style={styles.errorBadge}>
@@ -113,6 +131,9 @@ export const NovedadCardComponent: React.FC<NovedadCardProps> = ({
                 <Text style={styles.errorText}>Error</Text>
               </View>
             )}
+          </View> */}
+          <View style={styles.leftInfo}>
+            <Text style={styles.leftInfoText}>{getTipoNovedadNombre()}</Text>
           </View>
 
           <View style={styles.rightInfo}>
@@ -233,7 +254,18 @@ const styles = StyleSheet.create({
   },
   leftInfo: {
     flex: 1,
+    marginRight: 6,
     justifyContent: 'center',
+  },
+  leftInfoText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#007aff',
+    backgroundColor: '#f0f8ff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
   },
   rightInfo: {
     flexDirection: 'row',

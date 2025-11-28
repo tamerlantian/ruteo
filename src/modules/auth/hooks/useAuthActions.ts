@@ -1,6 +1,8 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useAppDispatch } from '../../../store/hooks';
 import { clearSettingsThunk, resetSettings } from '../../settings';
 import { removerVisitas, limpiarSeleccionVisitas } from '../../visita/store/slice/visita.slice';
+import { limpiarNovedades, limpiarSeleccionNovedades } from '../../novedad/store/slice/novedad.slice';
 import { persistor } from '../../../store';
 
 /**
@@ -9,6 +11,7 @@ import { persistor } from '../../../store';
  */
 export const useAuthActions = () => {
   const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
 
   const clearAppData = async () => {
     try {
@@ -20,7 +23,14 @@ export const useAuthActions = () => {
       dispatch(removerVisitas());
       dispatch(limpiarSeleccionVisitas());
       
-      // 3. Purgar Redux Persist
+      // 3. Limpiar datos de novedades
+      dispatch(limpiarNovedades());
+      dispatch(limpiarSeleccionNovedades());
+      
+      // 4. Limpiar React Query cache
+      queryClient.clear();
+      
+      // 5. Purgar Redux Persist
       await persistor.purge();
       
       return true;
