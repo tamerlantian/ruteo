@@ -1,7 +1,10 @@
 import React, { useCallback } from 'react';
 import { FlatList, ListRenderItem } from 'react-native';
 import { visitasStyles } from './visitas.style';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import CustomBottomSheet from '../../../../shared/components/bottom-sheet/bottom-sheet';
 import CargarOrdenComponent from '../../components/cargar-orden/cargar-orden.component';
 import VisitaCardComponent from '../../components/visita-card/visita-card.component';
@@ -12,6 +15,8 @@ import { VisitasFloatingActions } from '../../components/visita-floating-actions
 import { VisitasLoadingFooter } from '../../components/visitas-loading-footer/visitas-loading-footer.component';
 import { VisitasOptionsComponent } from '../../components/visitas-options/visitas-options.component';
 import { ConfirmacionDesvincularComponent } from '../../components/confirmacion-desvincular/confirmacion-desvincular.component';
+import { selectConteoVisitasQueImpidenDesvinculacion, selectPuedeDesvincular } from '../../store/selector/visita.selector';
+import { useAppSelector } from '../../../../store/hooks';
 
 export const VisitasScreen = () => {
   const {
@@ -51,6 +56,8 @@ export const VisitasScreen = () => {
     totalConErrorSeleccionadas,
     selectAllErrors,
   } = useVisitasViewModel();
+  const puedeDesvincular = useAppSelector(selectPuedeDesvincular);
+  const conteoVisitas = useAppSelector(selectConteoVisitasQueImpidenDesvinculacion);
 
   const insets = useSafeAreaInsets();
   const renderVisitaItem: ListRenderItem<VisitaResponse> = useCallback(
@@ -115,8 +122,10 @@ export const VisitasScreen = () => {
           totalErrorsInFilter={errorCount}
         />
       )}
-      <CustomBottomSheet ref={bottomSheetRef} initialSnapPoints={['30%']} 
-      topInset={insets.top + 260}
+      <CustomBottomSheet
+        ref={bottomSheetRef}
+        initialSnapPoints={['30%']}
+        topInset={insets.top + 260}
       >
         <CargarOrdenComponent />
       </CustomBottomSheet>
@@ -133,6 +142,8 @@ export const VisitasScreen = () => {
         <ConfirmacionDesvincularComponent
           onConfirmar={confirmarDesvinculacion}
           onCancelar={cancelarDesvinculacion}
+          puedeDesvincular={puedeDesvincular}
+          conteoVisitas={conteoVisitas}
         />
       </CustomBottomSheet>
     </SafeAreaView>

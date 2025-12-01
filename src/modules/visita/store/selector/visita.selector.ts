@@ -136,3 +136,71 @@ export const selectVisitasConNovedades = createSelector(
         visitaIdsWithNovedades.includes(visita.id) && visita.estado_novedad,
     ),
 );
+
+/**
+ * Selector para detectar si hay visitas que impiden la desvinculación
+ * Incluye visitas con errores (error) y visitas que tienen novedades con error
+ */
+export const selectVisitasQueImpidenDesvinculacion = createSelector(
+  [
+    selectVisitas, // Todas las visitas
+    (state: RootState) => state.novedad.novedades, // Novedades del estado
+  ],
+  (visitas, novedades) => {
+    // Visitas con error directo
+    const visitasConErrorDirecto = visitas.filter(visita => visita.estado === 'error');
+    
+    // IDs de visitas que tienen novedades con error (estado o estado_solucion)
+    const visitaIdsConNovedadesError = novedades
+      .filter(novedad => 
+        novedad.estado === 'error' || novedad.estado_solucion === 'error'
+      )
+      .map(novedad => novedad.visita_id);
+    
+    // Visitas que tienen novedades con error
+    const visitasConNovedadesError = visitas.filter(visita => 
+      visitaIdsConNovedadesError.includes(visita.id)
+    );
+    
+    // Combinar ambos tipos y eliminar duplicados
+    const todasLasVisitasConError = [...visitasConErrorDirecto, ...visitasConNovedadesError];
+    const visitasUnicas = todasLasVisitasConError.filter((visita, index, array) => 
+      array.findIndex(v => v.id === visita.id) === index
+    );
+    
+    return visitasUnicas;
+  },
+);
+
+/**
+ * Selector para verificar si se puede desvincular (no hay entregas pendientes ni errores)
+ */
+export const selectPuedeDesvincular = createSelector(
+  [selectVisitasQueImpidenDesvinculacion],
+  (visitasQueImpiden) => visitasQueImpiden.length === 0,
+);
+
+/**
+ * Selector para obtener el conteo de visitas que impiden la desvinculación
+ */
+export const selectConteoVisitasQueImpidenDesvinculacion = createSelector(
+  [
+    selectVisitasQueImpidenDesvinculacion,
+    (state: RootState) => state.novedad.novedades, // Para contar novedades con error
+  ],
+  (visitasQueImpiden, novedades) => {
+    // Contar visitas con error directo
+    const visitasConErrorDirecto = visitasQueImpiden.filter(v => v.estado === 'error').length;
+    
+    // Contar novedades con error (estado o estado_solucion)
+    const novedadesConError = novedades.filter(novedad => 
+      novedad.estado === 'error' || novedad.estado_solucion === 'error'
+    ).length;
+    
+    return {
+      total: visitasQueImpiden.length,
+      visitasConError: visitasConErrorDirecto,
+      novedadesConError: novedadesConError,
+    };
+  },
+);

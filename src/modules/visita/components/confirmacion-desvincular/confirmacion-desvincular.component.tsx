@@ -7,13 +7,46 @@ interface ConfirmacionDesvincularProps {
   onConfirmar: () => void;
   onCancelar: () => void;
   isLoading?: boolean;
+  puedeDesvincular?: boolean;
+  conteoVisitas?: {
+    total: number;
+    visitasConError: number;
+    novedadesConError: number;
+  };
 }
 
 export const ConfirmacionDesvincularComponent: React.FC<ConfirmacionDesvincularProps> = ({
   onConfirmar,
   onCancelar,
   isLoading = false,
+  puedeDesvincular = true,
+  conteoVisitas,
 }) => {
+  const getDescriptionText = () => {
+    if (!puedeDesvincular && conteoVisitas && conteoVisitas.total > 0) {
+      const { visitasConError, novedadesConError } = conteoVisitas;
+      let mensaje = 'No puedes desvincular la orden porque tienes:\n\n';
+      
+      if (visitasConError > 0) {
+        mensaje += `• ${visitasConError} visita${visitasConError > 1 ? 's' : ''} con error${visitasConError > 1 ? 'es' : ''}\n`;
+      }
+      
+      if (novedadesConError > 0) {
+        mensaje += `• ${novedadesConError} novedad${novedadesConError > 1 ? 'es' : ''} con error${novedadesConError > 1 ? 'es' : ''}\n`;
+      }
+      
+      return mensaje;
+    }
+    
+    return 'Esta acción limpiará todas las visitas cargadas. No podrás deshacer esta acción.';
+  };
+
+  const getWarningMessage = () => {
+    if (!puedeDesvincular && conteoVisitas && conteoVisitas.total > 0) {
+      return 'Tienes visitas y/o novedades con error. No puedes desvincular la orden.';
+    }
+    return null;
+  };
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
@@ -24,14 +57,27 @@ export const ConfirmacionDesvincularComponent: React.FC<ConfirmacionDesvincularP
         />
       </View>
       
-      <Text style={styles.title}>¿Desvincular orden?</Text>
+      <Text style={styles.title}>
+        {puedeDesvincular ? '¿Desvincular orden?' : 'No se puede desvincular'}
+      </Text>
       
       <Text style={styles.description}>
-        Esta acción limpiará todas las visitas cargadas. 
-        No podrás deshacer esta acción.
+        {getDescriptionText()}
       </Text>
 
- 
+      {getWarningMessage() && (
+        <View style={styles.warningBox}>
+          <Ionicons 
+            name="alert-circle" 
+            size={20} 
+            color="#d1940c" 
+            style={styles.warningIcon}
+          />
+          <Text style={styles.warningText}>
+            {getWarningMessage()}
+          </Text>
+        </View>
+      )}
 
       <View style={styles.buttonContainer}>
         <FormButton
@@ -42,11 +88,12 @@ export const ConfirmacionDesvincularComponent: React.FC<ConfirmacionDesvincularP
           disabled={isLoading}
         />
         <FormButton
-          title="Desvincular"
+          title={puedeDesvincular ? "Desvincular" : "No disponible"}
           variant="danger"
           onPress={onConfirmar}
           style={styles.confirmButton}
           isLoading={isLoading}
+          disabled={isLoading || !puedeDesvincular}
         />
       </View>
     </View>
@@ -79,7 +126,7 @@ const styles = StyleSheet.create({
     color: '#8e8e93',
     textAlign: 'center',
     lineHeight: 22,
-    marginBottom: 20,
+    marginBottom: 14,
     paddingHorizontal: 8,
   },
   warningBox: {
