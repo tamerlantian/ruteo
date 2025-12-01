@@ -1,7 +1,8 @@
 import { useState, useCallback, useRef } from 'react';
 import { Alert } from 'react-native';
-import { Camera, useCameraPermission, PhotoFile } from 'react-native-vision-camera';
+import { Camera, PhotoFile } from 'react-native-vision-camera';
 import { PhotoData } from '../PhotoCapture.types';
+import { useCameraPermissionsService } from '../../../../services/camera-permissions.service';
 
 /**
  * Hook para manejar la lógica de captura de fotos con Vision Camera
@@ -13,36 +14,17 @@ export const usePhotoCaptureVision = (maxPhotos: number = 5) => {
   const [showCamera, setShowCamera] = useState(false);
   
   const cameraRef = useRef<Camera>(null);
-  const { hasPermission, requestPermission } = useCameraPermission();
-
-  const checkCameraPermissions = useCallback(async (): Promise<boolean> => {
-    try {
-      if (hasPermission) {
-        return true;
-      }
-
-      const result = await requestPermission();
-      return result;
-    } catch (err) {
-      console.error('Error checking camera permissions:', err);
-      setError('Error al verificar permisos de cámara');
-      return false;
-    }
-  }, [hasPermission, requestPermission]);
+  const { hasPermission, checkAndRequest } = useCameraPermissionsService();
 
   const openCamera = useCallback(async (): Promise<PhotoData | null> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Verificar permisos de cámara
-      const hasCameraPermission = await checkCameraPermissions();
-      if (!hasCameraPermission) {
-        Alert.alert(
-          'Permisos Requeridos',
-          'Necesitamos permisos para acceder a la cámara.',
-          [{ text: 'OK' }]
-        );
+      // Usar el servicio mejorado de permisos
+      const permissionGranted = await checkAndRequest();
+      if (!permissionGranted) {
+        // El servicio ya mostró el alert apropiado
         return null;
       }
 
@@ -56,7 +38,7 @@ export const usePhotoCaptureVision = (maxPhotos: number = 5) => {
     } finally {
       setIsLoading(false);
     }
-  }, [checkCameraPermissions]);
+  }, [checkAndRequest]);
 
   const takePhoto = useCallback(async (): Promise<PhotoData | null> => {
     if (!cameraRef.current) {
@@ -151,6 +133,5 @@ export const usePhotoCaptureVision = (maxPhotos: number = 5) => {
     openCamera,
     takePhoto,
     closeCamera,
-    checkCameraPermissions,
   };
 };

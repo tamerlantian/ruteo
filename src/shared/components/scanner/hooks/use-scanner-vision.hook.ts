@@ -1,13 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useCameraPermission } from 'react-native-vision-camera';
 import { ScannerState, ScanResult } from '../interfaces/scanner.interface';
+import { useCameraPermissionsService } from '../../../services/camera-permissions.service';
 
 /**
  * Hook para manejar la lógica del scanner QR/Barcode con react-native-vision-camera
  * Incluye manejo avanzado de permisos y estados de carga
  */
 export const useScannerVision = () => {
-  const { hasPermission, requestPermission } = useCameraPermission();
+  const { hasPermission, checkAndRequest } = useCameraPermissionsService();
   
   const [state, setState] = useState<ScannerState>({
     isModalVisible: false,
@@ -23,24 +23,22 @@ export const useScannerVision = () => {
 
   /**
    * Abre el modal del scanner, solicitando permisos si es necesario
+   * Ahora usa el servicio mejorado que maneja permisos denegados permanentemente
    */
   const openScanner = useCallback(async () => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
 
-      // Si no tenemos permisos, solicitarlos
-      if (!hasPermission) {
-        console.log('Solicitando permisos de cámara...');
-        const permissionResult = await requestPermission();
-        
-        if (!permissionResult) {
-          setState(prev => ({ 
-            ...prev, 
-            isLoading: false, 
-            error: 'Permisos de cámara denegados' 
-          }));
-          return;
-        }
+      // Usar el servicio mejorado de permisos
+      const permissionGranted = await checkAndRequest();
+      
+      if (!permissionGranted) {
+        setState(prev => ({ 
+          ...prev, 
+          isLoading: false, 
+          error: null // No mostrar error aquí, el servicio ya mostró el alert apropiado
+        }));
+        return;
       }
 
       // Abrir modal
@@ -59,7 +57,7 @@ export const useScannerVision = () => {
         error: 'Error al inicializar la cámara' 
       }));
     }
-  }, [hasPermission, requestPermission]);
+  }, [checkAndRequest]);
 
   /**
    * Cierra el modal del scanner
