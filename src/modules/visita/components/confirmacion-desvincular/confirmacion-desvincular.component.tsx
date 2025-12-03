@@ -28,11 +28,11 @@ export const ConfirmacionDesvincularComponent: React.FC<ConfirmacionDesvincularP
       let mensaje = 'No puedes desvincular la orden porque tienes:\n\n';
       
       if (visitasConError > 0) {
-        mensaje += `• ${visitasConError} visita${visitasConError > 1 ? 's' : ''} con error${visitasConError > 1 ? 'es' : ''}\n`;
+        mensaje += `• ${visitasConError} visita${visitasConError > 1 ? 's' : ''} sin sincronizar\n`;
       }
       
       if (novedadesConError > 0) {
-        mensaje += `• ${novedadesConError} novedad${novedadesConError > 1 ? 'es' : ''} con error${novedadesConError > 1 ? 'es' : ''}\n`;
+        mensaje += `• ${novedadesConError} novedad${novedadesConError > 1 ? 'es' : ''} sin sincronizar\n`;
       }
       
       return mensaje;
@@ -41,12 +41,12 @@ export const ConfirmacionDesvincularComponent: React.FC<ConfirmacionDesvincularP
     return 'Esta acción limpiará todas las visitas cargadas. No podrás deshacer esta acción.';
   };
 
-  const getWarningMessage = () => {
-    if (!puedeDesvincular && conteoVisitas && conteoVisitas.total > 0) {
-      return 'Tienes visitas y/o novedades con error. No puedes desvincular la orden.';
-    }
-    return null;
-  };
+  // const getWarningMessage = () => {
+  //   if (!puedeDesvincular && conteoVisitas && conteoVisitas.total > 0) {
+  //     return 'Tienes visitas y/o novedades con error. No puedes desvincular la orden.';
+  //   }
+  //   return null;
+  // };
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
@@ -65,7 +65,7 @@ export const ConfirmacionDesvincularComponent: React.FC<ConfirmacionDesvincularP
         {getDescriptionText()}
       </Text>
 
-      {getWarningMessage() && (
+      {/* {getWarningMessage() && (
         <View style={styles.warningBox}>
           <Ionicons 
             name="alert-circle" 
@@ -77,7 +77,7 @@ export const ConfirmacionDesvincularComponent: React.FC<ConfirmacionDesvincularP
             {getWarningMessage()}
           </Text>
         </View>
-      )}
+      )} */}
 
       <View style={styles.buttonContainer}>
         <FormButton

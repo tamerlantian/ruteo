@@ -16,7 +16,7 @@ export const AboutScreen = () => {
             <Text style={aboutStyles.appIconText}>R</Text>
           </View>
           
-          <Text style={aboutStyles.appName}>Ruteo</Text>
+          <Text style={aboutStyles.appName}>Ruteo.co</Text>
           <Text style={aboutStyles.appVersion}>Versión {appVersion}</Text>
           <Text style={aboutStyles.appDescription}>
             Aplicación para gestión de entregas y visitas

@@ -7,7 +7,7 @@ export const SplashScreen: React.FC = () => {
       <View style={styles.content}>
         {/* Logo o título de la app */}
         <View style={styles.logoContainer}>
-          <Text style={styles.appName}>Ruteo</Text>
+          <Text style={styles.appName}>Ruteo.co</Text>
           <Text style={styles.subtitle}>Sistema de Gestión</Text>
         </View>
         
