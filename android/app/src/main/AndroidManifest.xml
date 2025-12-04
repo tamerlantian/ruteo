@@ -4,6 +4,9 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
+    <!-- PUBLICIDAD Y ANALÍTICA -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID"/> <!-- Acceso al identificador de anuncios de Google -->
+
     <application
       android:name=".MainApplication"
       android:label="@string/app_name"
@@ -13,6 +16,12 @@
       android:theme="@style/AppTheme"
       android:usesCleartextTraffic="true"
       android:supportsRtl="true">
+
+      <!-- Declaración de que NO se utiliza ID de publicidad -->
+      <meta-data
+        android:name="com.google.android.gms.ads.AD_ID_OPT_OUT"
+        android:value="true" />
+
       <activity
         android:name=".MainActivity"
         android:label="@string/app_name"
