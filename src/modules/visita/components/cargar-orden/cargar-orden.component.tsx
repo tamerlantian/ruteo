@@ -11,7 +11,8 @@ import { updateSettingsThunk, selectSubdominio } from '../../../settings';
 import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../../shared/styles/global.style';
 import { useNovedadTipos } from '../../../novedad/view-models/novedad.view-model';
-import { networkService } from '../../../../shared/services/network.service';
+import { networkService, backgroundGeolocationService } from '../../../../shared/services';
+import { useAuth } from '../../../auth/context/auth.context';
 // import { FormInputController } from '../../../../shared/components/ui/form';
 
 interface CargarOrdenFormValues {
@@ -22,6 +23,7 @@ const CargarOrdenComponent = () => {
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector(selectIsLoading);
   const subdominio = useAppSelector(selectSubdominio);
+  const { user } = useAuth();
 
   // Query para cargar tipos de novedad cuando hay subdominio
   const { refetch: refetchNovedadTipos } = useNovedadTipos(
@@ -83,6 +85,20 @@ const CargarOrdenComponent = () => {
             text1Style: toastTextOneStyle,
           });
           // No bloquear el flujo principal si falla la carga de tipos de novedad
+        }
+
+        // Iniciar background geolocation tracking
+        try {
+          console.log('📍 Iniciando background geolocation tracking...');
+          await backgroundGeolocationService.startTracking({
+            schemaName: schema_name,
+            despacho: despacho_id,
+            usuarioId: user?.id || 0, // Usar el ID del usuario autenticado
+          });
+          console.log('📍 Background geolocation iniciado correctamente');
+        } catch (geoError) {
+          console.warn('Error iniciando background geolocation:', geoError);
+          // No mostrar error al usuario, el tracking es opcional
         }
 
         Toast.show({

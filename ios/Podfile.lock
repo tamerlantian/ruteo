@@ -1,6 +1,9 @@
 PODS:
   - BEMCheckBox (1.4.1)
   - boost (1.84.0)
+  - CocoaLumberjack (3.8.5):
+    - CocoaLumberjack/Core (= 3.8.5)
+  - CocoaLumberjack/Core (3.8.5)
   - DoubleConversion (1.1.6)
   - fast_float (8.0.0)
   - FBLazyVector (0.81.5)
@@ -2485,6 +2488,11 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
+  - RNBackgroundFetch (4.2.8):
+    - React-Core
+  - RNBackgroundGeolocation (4.19.3):
+    - CocoaLumberjack (~> 3.8.5)
+    - React-Core
   - RNCAsyncStorage (2.2.0):
     - boost
     - DoubleConversion
@@ -2868,6 +2876,8 @@ DEPENDENCIES:
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - ReactNativeCameraKit (from `../node_modules/react-native-camera-kit`)
+  - RNBackgroundFetch (from `../node_modules/react-native-background-fetch`)
+  - RNBackgroundGeolocation (from `../node_modules/react-native-background-geolocation`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCCheckbox (from `../node_modules/@react-native-community/checkbox`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
@@ -2881,6 +2891,7 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - BEMCheckBox
+    - CocoaLumberjack
     - SocketRocket
 
 EXTERNAL SOURCES:
@@ -3039,6 +3050,10 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   ReactNativeCameraKit:
     :path: "../node_modules/react-native-camera-kit"
+  RNBackgroundFetch:
+    :path: "../node_modules/react-native-background-fetch"
+  RNBackgroundGeolocation:
+    :path: "../node_modules/react-native-background-geolocation"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
   RNCCheckbox:
@@ -3059,6 +3074,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   BEMCheckBox: 5ba6e37ade3d3657b36caecc35c8b75c6c2b1a4e
   boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
+  CocoaLumberjack: 6a459bc897d6d80bd1b8c78482ec7ad05dffc3f0
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
   fast_float: b32c788ed9c6a8c584d114d0047beda9664e7cc6
   FBLazyVector: 5beb8028d5a2e75dd9634917f23e23d3a061d2aa
@@ -3135,6 +3151,8 @@ SPEC CHECKSUMS:
   ReactCodegen: 6c26f8c25d0b5ae66f86a1cce1777076ac8bcbd8
   ReactCommon: 5f0e5c09a64a2717215dd84380e1a747810406f2
   ReactNativeCameraKit: 269e2abf46202f729ac49a07829d0b6d1b5a91ad
+  RNBackgroundFetch: e44c9e85d7fb3122c37d8a806278f62c7682d7ea
+  RNBackgroundGeolocation: 85bd841ecce6b26181230e83a99cbb074ab632bc
   RNCAsyncStorage: 29f0230e1a25f36c20b05f65e2eb8958d6526e82
   RNCCheckbox: 33b44487ca8008394ce658cc32b26eab04f426ef
   RNGestureHandler: a2da8723f22d5ccc67e091b921684a7ed2832f98

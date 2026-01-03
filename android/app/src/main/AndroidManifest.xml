@@ -17,6 +17,8 @@
       android:usesCleartextTraffic="true"
       android:supportsRtl="true">
 
+      <meta-data android:name="com.transistorsoft.locationmanager.license" android:value="e086d476ab9ab478806056b426fa5b1ea61b6188dd397bf57da274352c4f6802" />
+
       <!-- Declaración de que NO se utiliza ID de publicidad -->
       <meta-data
         android:name="com.google.android.gms.ads.AD_ID_OPT_OUT"

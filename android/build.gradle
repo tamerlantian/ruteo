@@ -19,3 +19,18 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        // Repositorio requerido para react-native-background-geolocation
+        maven {
+            url("${project(':react-native-background-geolocation').projectDir}/libs")
+        }
+        // Repositorio adicional para dependencias de TransistorSoft
+        maven {
+            url 'https://transistorsoft.jfrog.io/artifactory/libs-release-local'
+        }
+    }
+}

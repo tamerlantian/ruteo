@@ -30,6 +30,7 @@ import {
   limpiarNovedades,
   limpiarSeleccionNovedades,
 } from '../../../novedad/store/slice/novedad.slice';
+import { backgroundGeolocationService } from '../../../../shared/services';
 
 /**
  * ViewModel para la pantalla de Visitas
@@ -107,18 +108,28 @@ export const useVisitasViewModel = () => {
     }, 300); // Delay para que se cierre suavemente el anterior
   }, [openConfirmacionSheet]);
 
-  const confirmarDesvinculacion = useCallback(() => {
-    // Limpiar todas las visitas y selecciones
+  const confirmarDesvinculacion = useCallback(async () => {
+    try {
+      // 1. Detener background geolocation tracking
+      console.log('📍 Deteniendo background geolocation por desvinculación...');
+      await backgroundGeolocationService.cleanup();
+      console.log('📍 Background geolocation detenido correctamente');
+    } catch (geoError) {
+      console.warn('Error deteniendo background geolocation:', geoError);
+      // No bloquear la desvinculación si falla la limpieza del geolocation
+    }
+
+    // 2. Limpiar todas las visitas y selecciones
     dispatch(removerVisitas());
     dispatch(limpiarNovedades());
     dispatch(limpiarSeleccionVisitas());
     dispatch(limpiarSeleccionNovedades());
     dispatch(resetSettings());
 
-    // Resetear filtro a pending
+    // 3. Resetear filtro a pending
     setActiveFilter('pending');
 
-    // Cerrar el sheet de confirmación
+    // 4. Cerrar el sheet de confirmación
     closeConfirmacionSheet();
   }, [dispatch, closeConfirmacionSheet]);
 

@@ -30,7 +30,10 @@ const queryClient = new QueryClient({
 });
 
 // Inicializar servicios una sola vez al cargar la aplicación
-initializeServices();
+// IMPORTANTE: Incluye inicialización de BackgroundGeolocation
+initializeServices().catch(error => {
+  console.error('🚀 [App] Error inicializando servicios:', error);
+});
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
