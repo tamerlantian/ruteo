@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array/>
+	<key>LSApplicationCategoryType</key>
+	<string></string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
@@ -49,12 +53,12 @@
 	<string>La app necesita tu ubicación precisa para rastrear y mejorar el proceso de entrega.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>La app utiliza tu ubicación para mostrar rutas y ofrecer funcionalidades basadas en localización.</string>
+	<key>NSMotionUsageDescription</key>
+	<string> Motion permission helps detect when device in in-motion</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Esta aplicación necesita acceso para agregar fotos a la galería cuando se guarden las firmas digitales.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Esta aplicación necesita permiso para guardar las firmas digitales en la galería de fotos.</string>
-	<key>NSMotionUsageDescription</key>
-	<string> Motion permission helps detect when device in in-motion</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIAppFonts</key>

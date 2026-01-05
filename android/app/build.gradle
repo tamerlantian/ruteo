@@ -82,7 +82,7 @@ android {
         applicationId "com.anonymous.lutencio"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 39
+        versionCode 40
         versionName "9.18.0"
     }
     signingConfigs {

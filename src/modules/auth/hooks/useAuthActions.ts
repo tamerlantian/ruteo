@@ -16,10 +16,10 @@ export const useAuthActions = () => {
 
   const clearAppData = async () => {
     try {
-      // 1. Detener y limpiar background geolocation
+      // 1. Detener y limpiar background geolocation COMPLETAMENTE (logout)
       try {
-        await backgroundGeolocationService.cleanup();
-        console.log('📍 Background geolocation limpiado correctamente');
+        await backgroundGeolocationService.fullCleanup();
+        console.log('📍 Background geolocation limpiado completamente para logout');
       } catch (geoError) {
         console.warn('Error limpiando background geolocation:', geoError);
         // No bloquear el logout si falla la limpieza del geolocation

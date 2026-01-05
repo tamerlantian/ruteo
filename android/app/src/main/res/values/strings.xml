@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">Ruteo.co</string>
+    
+    <!-- Justificación para permisos de ubicación en segundo plano -->
+    <string name="background_location_permission_rationale">Ruteo necesita acceso a tu ubicación en segundo plano para registrar entregas y rutas de manera precisa, incluso cuando la aplicación no esté abierta. Esto es esencial para el seguimiento de entregas y la optimización de rutas.</string>
 </resources>
