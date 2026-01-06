@@ -2,7 +2,7 @@ import BackgroundGeolocation, {
   Location,
 } from 'react-native-background-geolocation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Alert, Linking } from 'react-native';
+import { Alert, Linking, Platform, PermissionsAndroid } from 'react-native';
 import { locationTrackingRepository } from '../repositories/location-tracking.repository';
 import {
   BackgroundGeolocationState,
@@ -52,8 +52,8 @@ export class BackgroundGeolocationService {
     return {
       // Configuración básica de ubicación
       desiredAccuracy: BackgroundGeolocation.DESIRED_ACCURACY_HIGH,
-      distanceFilter: 10, // Enviar cada 10 metros de movimiento
-      stationaryRadius: 20, // Radio de detección de parada
+      distanceFilter: 35, // Enviar cada 50 metros de movimiento
+      stationaryRadius: 25, // Radio de detección de parada
 
       // CRÍTICO: Configuración para supervivencia de la app
       stopOnTerminate: false, // NO detener cuando la app se cierra
@@ -86,6 +86,9 @@ export class BackgroundGeolocationService {
       notification: {
         title: 'Seguimiento activo',
         text: 'Compartiendo ubicación en segundo plano',
+        priority: BackgroundGeolocation.NOTIFICATION_PRIORITY_HIGH,
+        sticky: true, // Persistente
+        channelName: 'Seguimiento de Ubicación',
       },
 
       autoSync: true,
@@ -101,6 +104,40 @@ export class BackgroundGeolocationService {
         ? BackgroundGeolocation.LOG_LEVEL_VERBOSE
         : BackgroundGeolocation.LOG_LEVEL_OFF,
     };
+  }
+
+  /**
+   * Solicita permisos de notificación para Android 13+ (API 33+)
+   */
+  private async requestNotificationPermission(): Promise<boolean> {
+    if (Platform.OS !== 'android') {
+      return true; // iOS no necesita este permiso
+    }
+
+    try {
+      if (Platform.Version >= 33) { // Android 13+
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+          {
+            title: 'Permisos de Notificación',
+            message: 'Ruteo necesita mostrar notificaciones para el seguimiento de ubicación en segundo plano.',
+            buttonNeutral: 'Preguntar después',
+            buttonNegative: 'Denegar',
+            buttonPositive: 'Permitir',
+          }
+        );
+        
+        const isGranted = granted === PermissionsAndroid.RESULTS.GRANTED;
+        console.log('📱 [Notification Permission]:', isGranted ? 'Granted' : 'Denied');
+        return isGranted;
+      }
+      
+      // Android < 13 no necesita este permiso
+      return true;
+    } catch (error) {
+      console.warn('📱 [Notification Permission] Error:', error);
+      return false;
+    }
   }
 
   /**
@@ -121,6 +158,12 @@ export class BackgroundGeolocationService {
       );
 
       const config = this.getDefaultConfig();
+
+      // Solicitar permisos de notificación ANTES de configurar BackgroundGeolocation
+      const hasNotificationPermission = await this.requestNotificationPermission();
+      if (!hasNotificationPermission) {
+        console.warn('📱 [BGS] Permisos de notificación denegados - las notificaciones pueden no aparecer');
+      }
 
       // Configurar event listeners
       this.setupEventListeners();
@@ -516,6 +559,20 @@ export class BackgroundGeolocationService {
    */
   public getState(): BackgroundGeolocationState {
     return { ...this.state };
+  }
+
+  /**
+   * Verifica si el tracking está activo
+   */
+  public isTrackingActive(): boolean {
+    return this.state.isTracking;
+  }
+
+  /**
+   * Verifica si hay una configuración de tracking válida
+   */
+  public hasValidTrackingConfig(): boolean {
+    return !!(this.state.schemaName && this.state.despacho && this.state.usuarioId);
   }
 }
 

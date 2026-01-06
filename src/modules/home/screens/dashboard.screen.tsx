@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import {
   selectVisitasConErrorCompleto,
   selectVisitasConError,
 } from '../../visita/store/selector/visita.selector';
-import { selectOrdenEntrega } from '../../settings';
+import { selectOrdenEntrega, selectSubdominio, selectDespacho } from '../../settings';
 import { useRetryNovedades } from '../../novedad/hooks';
 import { useRetrySoluciones } from '../../novedad/hooks/use-retry-soluciones.hook';
 import { useRetryVisitas } from '../../visita/hooks/use-retry-visitas.hook';
@@ -27,16 +27,22 @@ import {
 import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../shared/styles/global.style';
 import { networkService } from '../../../shared/services/network.service';
+import { backgroundGeolocationService } from '../../../shared/services/background-geolocation.service';
 
 export const DashboardScreen = () => {
   const { user } = useAuth();
   const [isRetrying, setIsRetrying] = useState(false);
+  const [isLocationTracking, setIsLocationTracking] = useState(true);
+  const [isTogglingLocation, setIsTogglingLocation] = useState(false);
+  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { reintentarNovedadesConError } = useRetryNovedades();
   const { reintentarSolucionesConError } = useRetrySoluciones();
   const { reintentarVisitasConError } = useRetryVisitas();
 
   // Selectores para obtener estadísticas de visitas
   const ordenEntrega = useAppSelector(selectOrdenEntrega);
+  const subdominio = useAppSelector(selectSubdominio);
+  const despacho = useAppSelector(selectDespacho);
   const visitasConError = useAppSelector(selectVisitasConError);
   const novedadesConError = useAppSelector(selectNovedadesConEstadosError);
   const novedades = useAppSelector(selectNovedadesPendientesPorSolventar);
@@ -45,7 +51,118 @@ export const DashboardScreen = () => {
   const visitasConErrorCompleto = useAppSelector(selectVisitasConErrorCompleto);
   const visitaIdsConError = useAppSelector(selectVisitaIdsConErrorCompleto);
 
-  // Hook para retry coordinado
+  // Automatic location stop when no pending deliveries
+  useEffect(() => {
+    // Only proceed if we have the required configuration and location is currently tracking
+    if (!ordenEntrega || !subdominio || !despacho || !user?.id || !isLocationTracking) {
+      return;
+    }
+
+    // Clear any existing timeout
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    // If there are no pending deliveries, schedule automatic stop
+    if (visitasPendientes.length === 0) {
+      debounceTimeoutRef.current = setTimeout(async () => {
+        try {
+          console.log('📍 Auto-stopping location tracking: no pending deliveries');
+          await backgroundGeolocationService.stopTracking();
+          setIsLocationTracking(false);
+          
+          Toast.show({
+            type: 'info',
+            text1: 'Ubicación detenida automáticamente',
+            text2: 'No hay entregas pendientes',
+            text1Style: toastTextOneStyle,
+          });
+        } catch (error) {
+          console.error('Error auto-stopping location tracking:', error);
+          // Don't show error toast for automatic actions to avoid user confusion
+        }
+      }, 1000); // 3 second debounce to prevent rapid on/off cycles
+    }
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, [visitasPendientes.length, isLocationTracking, ordenEntrega, subdominio, despacho, user?.id]);
+
+  // Verificar estado del tracking al cargar el componente
+  // useEffect(() => {
+  //   const checkTrackingStatus = () => {
+  //     const isTracking = backgroundGeolocationService.isTrackingActive();
+  //     setIsLocationTracking(isTracking);
+  //   };
+
+  //   checkTrackingStatus();
+    
+  //   // Verificar cada 5 segundos para mantener el estado actualizado
+  //   const interval = setInterval(checkTrackingStatus, 3000);
+    
+  //   return () => clearInterval(interval);
+  // }, []);
+
+  // Función para toggle del tracking de ubicación
+  const handleToggleLocationTracking = async () => {
+    if (!ordenEntrega || !subdominio || !despacho || !user?.id) {
+      Toast.show({
+        type: 'error',
+        text1: 'Configuración incompleta',
+        text2: 'Faltan datos necesarios para el tracking de ubicación',
+        text1Style: toastTextOneStyle,
+      });
+      return;
+    }
+
+    setIsTogglingLocation(true);
+    
+    try {
+      if (isLocationTracking) {
+        // Detener tracking
+        await backgroundGeolocationService.stopTracking();
+        setIsLocationTracking(false);
+        
+        Toast.show({
+          type: 'info',
+          text1: 'Tracking detenido',
+          text2: 'El envío de ubicación se ha pausado',
+          text1Style: toastTextOneStyle,
+        });
+      } else {
+        // Iniciar tracking
+        const trackingConfig = {
+          schemaName: subdominio,
+          despacho: parseInt(despacho, 10),
+          usuarioId: user.id,
+        };
+        
+        await backgroundGeolocationService.startTracking(trackingConfig);
+        setIsLocationTracking(true);
+        
+        Toast.show({
+          type: 'success',
+          text1: 'Tracking iniciado',
+          text2: 'El envío de ubicación está activo',
+          text1Style: toastTextOneStyle,
+        });
+      }
+    } catch (error) {
+      console.error('Error toggling location tracking:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'No se pudo cambiar el estado del tracking',
+        text1Style: toastTextOneStyle,
+      });
+    } finally {
+      setIsTogglingLocation(false);
+    }
+  };
 
   // Función para manejar el retry de visitas con error
   const handleRetryErrorVisitas = async () => {
@@ -174,6 +291,31 @@ export const DashboardScreen = () => {
                 : `Sincronizar ${visitasConErrorCompleto.length} pendiente${
                     visitasConErrorCompleto.length > 1 ? 's' : ''
                   }`}
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Botón para controlar tracking de ubicación */}
+        {ordenEntrega && (
+          <TouchableOpacity
+            style={[
+              styles.locationButton,
+              isLocationTracking ? styles.locationButtonActive : styles.locationButtonInactive,
+              isTogglingLocation && styles.locationButtonDisabled,
+            ]}
+            onPress={handleToggleLocationTracking}
+            disabled={isTogglingLocation}
+          >
+            <Text style={[
+              styles.locationButtonText,
+              isLocationTracking ? styles.locationButtonTextActive : styles.locationButtonTextInactive,
+            ]}>
+              {isTogglingLocation
+                ? 'Cambiando...'
+                : isLocationTracking
+                ? '📍 Detener ubicación'
+                : '📍 Iniciar ubicación'
+              }
             </Text>
           </TouchableOpacity>
         )}
@@ -336,5 +478,37 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  locationButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginTop: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  locationButtonActive: {
+    backgroundColor: '#34c759', // Verde cuando está activo
+  },
+  locationButtonInactive: {
+    backgroundColor: '#007aff', // Azul cuando está inactivo
+  },
+  locationButtonDisabled: {
+    backgroundColor: '#8e8e93',
+    opacity: 0.6,
+  },
+  locationButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  locationButtonTextActive: {
+    color: '#fff',
+  },
+  locationButtonTextInactive: {
+    color: '#fff',
   },
 });
