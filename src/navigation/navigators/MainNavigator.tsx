@@ -65,6 +65,7 @@ export const MainNavigator: React.FC = () => {
         options={{
           title: 'Perfil',
           headerShown: true,
+          headerBackTitle: 'Ajustes',
         }}
       />
       <MainStack.Screen 
@@ -73,6 +74,7 @@ export const MainNavigator: React.FC = () => {
         options={{
           title: 'Acerca de',
           headerShown: true,
+          headerBackTitle: 'Ajustes',
         }}
       />
     </MainStack.Navigator>
