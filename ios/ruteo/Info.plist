@@ -59,6 +59,18 @@
 	<string>Esta aplicación necesita acceso para agregar fotos a la galería cuando se guarden las firmas digitales.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Esta aplicación necesita permiso para guardar las firmas digitales en la galería de fotos.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Esta aplicación no accede a tu calendario. Este permiso es requerido por librerías externas pero no se utiliza en la funcionalidad de la app.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Esta aplicación no accede a tus contactos. Este permiso es requerido por librerías externas pero no se utiliza en la funcionalidad de la app.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Esta aplicación no accede al micrófono. Este permiso es requerido por librerías externas pero no se utiliza en la funcionalidad de la app.</string>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>Esta aplicación no accede a tu biblioteca de música. Este permiso es requerido por librerías externas pero no se utiliza en la funcionalidad de la app.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Esta aplicación no utiliza reconocimiento de voz. Este permiso es requerido por librerías externas pero no se utiliza en la funcionalidad de la app.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Esta aplicación no utiliza Bluetooth. Este permiso es requerido por librerías externas pero no se utiliza en la funcionalidad de la app.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIAppFonts</key>

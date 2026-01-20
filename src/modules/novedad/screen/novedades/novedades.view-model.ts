@@ -70,11 +70,15 @@ export const useNovedadesViewModel = () => {
     const searchQuery = searchValue.toLowerCase();
     const filtered = novedadesConVisitas.filter(item => {
       const { visita } = item;
-      
+
       // Buscar en ID de visita
-      const matchesVisitaId = visita?.numero.toString().toLowerCase().includes(searchQuery);
-      
-      const matchesDocumento = visita?.documento?.toLowerCase().includes(searchQuery);
+      const matchesVisitaId = visita?.numero
+        ? visita.numero.toString().toLowerCase().includes(searchQuery)
+        : false;
+
+      const matchesDocumento = visita?.documento
+        ? visita.documento.toLowerCase().includes(searchQuery)
+        : false;
 
       return matchesVisitaId || matchesDocumento;
     });

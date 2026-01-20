@@ -62,7 +62,8 @@ export const useVisitasViewModel = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterType>('pending');
   const [searchValue, setSearchValue] = useState('');
-  const [shouldClearSearchOnFocus, setShouldClearSearchOnFocus] = useState(false);
+  const [shouldClearSearchOnFocus, setShouldClearSearchOnFocus] =
+    useState(false);
 
   // Referencias
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -157,7 +158,7 @@ export const useVisitasViewModel = () => {
 
     // Activar flag para limpiar search al regresar
     setShouldClearSearchOnFocus(true);
-    
+
     navigation.navigate('EntregaForm', {
       visitasSeleccionadas: visitasSeleccionadas.map(id => id.toString()),
     });
@@ -254,11 +255,16 @@ export const useVisitasViewModel = () => {
     // Luego aplicar búsqueda por número si hay texto de búsqueda
     if (searchValue.trim()) {
       const searchQuery = searchValue.toLowerCase().trim();
-      return filteredByCategory.filter(
-        visita =>
-          visita.numero.toString().toLowerCase().includes(searchQuery) ||
-          visita.documento.toLowerCase().includes(searchQuery),
-      );
+      return filteredByCategory.filter(visita => {
+        const numeroMatch = visita.numero
+          ? visita.numero.toString().toLowerCase().includes(searchQuery)
+          : false;
+        const documentoMatch = visita.documento
+          ? visita.documento.toLowerCase().includes(searchQuery)
+          : false;
+
+        return numeroMatch || documentoMatch;
+      });
     }
 
     return filteredByCategory;
@@ -295,7 +301,7 @@ export const useVisitasViewModel = () => {
         setSearchValue('');
         setShouldClearSearchOnFocus(false); // Resetear el flag
       }
-    }, [shouldClearSearchOnFocus, searchValue])
+    }, [shouldClearSearchOnFocus, searchValue]),
   );
 
   return {

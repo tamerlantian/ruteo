@@ -4,7 +4,7 @@ export interface VisitaResponse {
   id: number;
   numero: number;
   fecha: string;
-  documento: string;
+  documento: string | null;
   remitente: any;
   destinatario: string;
   destinatario_direccion: string;
