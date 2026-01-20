@@ -237,6 +237,7 @@ export const LoginScreen = () => {
         {/* Bottom Sheet para el selector de modo desarrollador */}
         <CustomBottomSheet
           ref={bottomSheetRef}
+          enableDynamicSizing={false}
           initialSnapPoints={['27%']}
         >
           <DevModeSelector onClose={handleCloseDevModeSheet} />

@@ -1,9 +1,10 @@
 import React, { forwardRef, useCallback, useMemo } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetProps,
   BottomSheetScrollView,
+  BottomSheetView,
 } from '@gorhom/bottom-sheet';
 
 interface CustomBottomSheetProps extends Partial<BottomSheetProps> {
@@ -12,6 +13,17 @@ interface CustomBottomSheetProps extends Partial<BottomSheetProps> {
   showsScrollIndicator?: boolean;
   useScrollView?: boolean;
   onDismiss?: () => void;
+  /** Maximum height for dynamic sizing. Defaults to 90% of screen height */
+  maxDynamicContentSize?: number;
+  /** Whether to enable dynamic sizing. When true, snapPoints are optional */
+  enableDynamicSizing?: boolean;
+  /**
+   * Determines when keyboard should stay visible when tapping.
+   * - 'always': Keyboard stays visible, taps go through
+   * - 'handled': Taps on interactive elements work, taps on scroll view dismiss keyboard
+   * - 'never': First tap dismisses keyboard (default React Native behavior)
+   */
+  keyboardShouldPersistTaps?: 'always' | 'never' | 'handled';
 }
 
 const CustomBottomSheet = forwardRef<BottomSheet, CustomBottomSheetProps>(
@@ -22,11 +34,14 @@ const CustomBottomSheet = forwardRef<BottomSheet, CustomBottomSheetProps>(
       showsScrollIndicator = false,
       useScrollView = true,
       onDismiss,
+      maxDynamicContentSize,
+      enableDynamicSizing: enableDynamicSizingProp = true,
+      keyboardShouldPersistTaps = 'handled',
       ...rest
     },
     ref,
   ) => {
-    // Variables para snapPoints dinámicos
+    // Variables para snapPoints - solo se usan si dynamic sizing está deshabilitado
     const initialSnapPointsArray = useMemo(() => initialSnapPoints, [initialSnapPoints]);
 
     // Renderizar el backdrop (fondo oscuro)
@@ -44,20 +59,23 @@ const CustomBottomSheet = forwardRef<BottomSheet, CustomBottomSheetProps>(
           <BottomSheetScrollView
             showsVerticalScrollIndicator={showsScrollIndicator}
             contentContainerStyle={styles.contentContainer}
+            keyboardShouldPersistTaps={keyboardShouldPersistTaps}
           >
             {children}
           </BottomSheetScrollView>
         );
       }
 
-      return <View style={styles.contentContainer}>{children}</View>;
+      // Usar BottomSheetView en lugar de View regular para dynamic sizing
+      return <BottomSheetView style={styles.contentContainer}>{children}</BottomSheetView>;
     };
 
     return (
       <BottomSheet
         ref={ref}
         index={-1}
-        snapPoints={initialSnapPointsArray}
+        // Solo usar snapPoints si dynamic sizing está deshabilitado
+        snapPoints={enableDynamicSizingProp ? undefined : initialSnapPointsArray}
         enablePanDownToClose
         backdropComponent={renderBackdrop}
         handleIndicatorStyle={styles.indicator}
@@ -66,7 +84,8 @@ const CustomBottomSheet = forwardRef<BottomSheet, CustomBottomSheetProps>(
         keyboardBehavior={Platform.OS === 'ios' ? 'interactive' : 'fillParent'}
         keyboardBlurBehavior="restore"
         android_keyboardInputMode="adjustResize"
-        enableDynamicSizing
+        enableDynamicSizing={enableDynamicSizingProp}
+        maxDynamicContentSize={maxDynamicContentSize}
         enableContentPanningGesture={false}
         {...rest}
       >

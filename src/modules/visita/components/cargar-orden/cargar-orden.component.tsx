@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Keyboard } from 'react-native';
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { BottomSheetFormInputController } from '../../../../shared/components/ui/form/BottomSheetFormInputController';
@@ -107,6 +107,8 @@ const CargarOrdenComponent = () => {
           text1Style: toastTextOneStyle,
         });
         reset();
+        // Cerrar teclado después de cargar exitosamente
+        Keyboard.dismiss();
       }
     } catch (error) {
       console.log(error);
@@ -115,6 +117,8 @@ const CargarOrdenComponent = () => {
         text1: 'La orden no existe',
         text1Style: toastTextOneStyle,
       });
+      // Cerrar teclado también en caso de error
+      Keyboard.dismiss();
     }
   };
 

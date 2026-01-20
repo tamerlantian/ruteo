@@ -265,7 +265,11 @@ export const RegisterScreen = () => {
         </ScrollView>
 
         {/* Bottom Sheet para el selector de modo desarrollador */}
-        <CustomBottomSheet ref={bottomSheetRef} initialSnapPoints={['27%']}>
+        <CustomBottomSheet
+          ref={bottomSheetRef}
+          enableDynamicSizing={false}
+          initialSnapPoints={['27%']}
+        >
           <DevModeSelector onClose={handleCloseDevModeSheet} />
         </CustomBottomSheet>
       </View>

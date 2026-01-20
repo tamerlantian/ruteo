@@ -1,4 +1,5 @@
 import { useCallback, useState, useRef, useMemo } from 'react';
+import { Keyboard } from 'react-native';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -82,6 +83,11 @@ export const useVisitasViewModel = () => {
 
   const closeDevModeSheet = useCallback(() => {
     bottomSheetRef.current?.close();
+  }, []);
+
+  const handleCargarOrdenDismiss = useCallback(() => {
+    // Cerrar teclado cuando se cierra el bottom sheet de cargar orden
+    Keyboard.dismiss();
   }, []);
 
   const openOptionsSheet = useCallback(() => {
@@ -344,6 +350,7 @@ export const useVisitasViewModel = () => {
     closeOptionsSheet,
     openConfirmacionSheet,
     closeConfirmacionSheet,
+    handleCargarOrdenDismiss,
 
     // Acciones de Desvinculación
     handleDesvincular,

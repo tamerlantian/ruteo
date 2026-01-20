@@ -55,6 +55,7 @@ export const VisitasScreen = () => {
     totalSeleccionadas,
     totalConErrorSeleccionadas,
     selectAllErrors,
+    handleCargarOrdenDismiss,
   } = useVisitasViewModel();
   const puedeDesvincular = useAppSelector(selectPuedeDesvincular);
   const conteoVisitas = useAppSelector(selectConteoVisitasQueImpidenDesvinculacion);
@@ -124,20 +125,22 @@ export const VisitasScreen = () => {
       )}
       <CustomBottomSheet
         ref={bottomSheetRef}
+        enableDynamicSizing={false}
         initialSnapPoints={['30%']}
-        topInset={insets.top + 260}
+        onDismiss={handleCargarOrdenDismiss}
       >
         <CargarOrdenComponent />
       </CustomBottomSheet>
       <CustomBottomSheet
         ref={optionsBottomSheetRef}
+        enableDynamicSizing={false}
         initialSnapPoints={['25%']}
       >
         <VisitasOptionsComponent onDesvincular={handleDesvincular} />
       </CustomBottomSheet>
       <CustomBottomSheet
         ref={confirmacionBottomSheetRef}
-        initialSnapPoints={['42%']}
+        maxDynamicContentSize={500}
       >
         <ConfirmacionDesvincularComponent
           onConfirmar={confirmarDesvinculacion}
