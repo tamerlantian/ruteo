@@ -12,6 +12,7 @@ interface SignatureFieldProps {
   rules?: any;
   required?: boolean;
   onScrollEnable?: (enabled: boolean) => void;
+  navigation?: any; // Navigation object para controlar gestos del modal
 }
 
 /**
@@ -25,6 +26,7 @@ export const SignatureField: React.FC<SignatureFieldProps> = ({
   error,
   rules,
   onScrollEnable,
+  navigation,
 }) => {
   return (
     <View style={entregaFormStyles.signatureFieldContainer}>
@@ -47,6 +49,7 @@ export const SignatureField: React.FC<SignatureFieldProps> = ({
               onChange('');
             }}
             onScrollEnable={onScrollEnable}
+            navigation={navigation}
             width={325}
             height={160}
           />

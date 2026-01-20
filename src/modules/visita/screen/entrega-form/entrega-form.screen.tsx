@@ -168,6 +168,7 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
               error={viewModel.errors.firma}
               required={false}
               onScrollEnable={setScrollEnabled}
+              navigation={navigation}
             />
           </View>
         </ScrollView>

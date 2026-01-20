@@ -8,6 +8,7 @@ interface SignatureCaptureProps {
   onSignatureCapture: (signature: string) => void;
   onSignatureClear?: () => void;
   onScrollEnable?: (enabled: boolean) => void;
+  navigation?: any; // Navigation object para controlar gestos del modal
   width?: number;
   height?: number;
   penColor?: string;
@@ -22,6 +23,7 @@ export const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   onSignatureCapture,
   onSignatureClear,
   onScrollEnable,
+  navigation,
   width = 300,
   height = 200,
   penColor = '#000000',
@@ -52,14 +54,24 @@ export const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   };
 
   const handleBegin = () => {
-    // Usuario comenzó a firmar - deshabilitar scroll
+    // Usuario comenzó a firmar - deshabilitar scroll Y gesto del modal
     onScrollEnable?.(false);
+
+    // Deshabilitar el gesto de cerrar modal en React Navigation
+    if (navigation) {
+      navigation.setOptions({ gestureEnabled: false });
+    }
   };
 
   const handleEnd = () => {
     // Usuario terminó de firmar - habilitar scroll y capturar firma automáticamente
     setHasSignature(true);
     onScrollEnable?.(true);
+
+    // Rehabilitar el gesto de cerrar modal en React Navigation
+    if (navigation) {
+      navigation.setOptions({ gestureEnabled: true });
+    }
   };
 
   // Configuración del canvas de firma
