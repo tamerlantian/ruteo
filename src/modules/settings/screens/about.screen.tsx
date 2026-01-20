@@ -6,6 +6,7 @@ import { aboutStyles } from '../styles/about.style';
 
 export const AboutScreen = () => {
   const appVersion = AppInfoService.getVersion();
+  const currentYear = new Date().getFullYear();
 
   return (
     <SafeAreaView style={aboutStyles.container}>
@@ -35,7 +36,7 @@ export const AboutScreen = () => {
             
             <View style={aboutStyles.infoItem}>
               <Text style={aboutStyles.infoLabel}>Año</Text>
-              <Text style={aboutStyles.infoValue}>2025</Text>
+              <Text style={aboutStyles.infoValue}>{currentYear}</Text>
             </View>
           </View>
         </View>
@@ -43,7 +44,7 @@ export const AboutScreen = () => {
         {/* Copyright */}
         <View style={aboutStyles.copyrightContainer}>
           <Text style={aboutStyles.copyrightText}>
-            © 2025 Semántica. Todos los derechos reservados.
+            © {currentYear} Semántica. Todos los derechos reservados.
           </Text>
         </View>
       </ScrollView>
