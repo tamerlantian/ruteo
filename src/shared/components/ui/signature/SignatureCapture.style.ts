@@ -122,13 +122,14 @@ export const signatureCaptureStyles = StyleSheet.create({
     color: '#ff3b30',
   },
   disabledOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e1e5e9',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+    zIndex: 2,
+    pointerEvents: 'auto', // Captura los toques para bloquear la interacción
   },
   disabledText: {
     fontSize: 16,

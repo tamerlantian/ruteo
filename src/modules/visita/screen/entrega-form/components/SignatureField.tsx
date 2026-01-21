@@ -65,7 +65,7 @@ export const SignatureField: React.FC<SignatureFieldProps> = ({
 
       {/* Helper text */}
       <Text style={entregaFormStyles.signatureHelper}>
-        Use su dedo para firmar en el recuadro. La firma será guardada automáticamente.
+        Firme con su dedo en el recuadro. Al terminar, la firma se guardará automáticamente.
       </Text>
     </View>
   );

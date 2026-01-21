@@ -17,7 +17,7 @@ interface SignatureCaptureProps {
 
 /**
  * Componente de captura de firmas digitales
- * Captura automática al terminar de firmar con opción manual
+ * Captura automática de la firma cuando el usuario termina de firmar
  */
 export const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   onSignatureCapture,
@@ -51,15 +51,26 @@ export const SignatureCapture: React.FC<SignatureCaptureProps> = ({
     setHasSignature(false);
     setCompleted(false);
     onSignatureClear?.();
+
+    // Asegurar que los gestos del modal estén habilitados al limpiar
+    if (navigation) {
+      navigation.setOptions({
+        gestureEnabled: true,
+        gestureResponseDistance: undefined,
+      });
+    }
   };
 
   const handleBegin = () => {
     // Usuario comenzó a firmar - deshabilitar scroll Y gesto del modal
     onScrollEnable?.(false);
 
-    // Deshabilitar el gesto de cerrar modal en React Navigation
+    // Deshabilitar completamente los gestos del modal para evitar movimientos visuales
     if (navigation) {
-      navigation.setOptions({ gestureEnabled: false });
+      navigation.setOptions({
+        gestureEnabled: false,
+        gestureResponseDistance: 0, // Elimina completamente la respuesta al gesto
+      });
     }
   };
 
@@ -68,9 +79,17 @@ export const SignatureCapture: React.FC<SignatureCaptureProps> = ({
     setHasSignature(true);
     onScrollEnable?.(true);
 
-    // Rehabilitar el gesto de cerrar modal en React Navigation
+    // Rehabilitar completamente los gestos del modal
     if (navigation) {
-      navigation.setOptions({ gestureEnabled: true });
+      navigation.setOptions({
+        gestureEnabled: true,
+        gestureResponseDistance: undefined, // Restaurar valor por defecto
+      });
+    }
+
+    // Capturar firma automáticamente al terminar de firmar
+    if (signatureRef.current) {
+      signatureRef.current.readSignature();
     }
   };
 
@@ -139,6 +158,11 @@ export const SignatureCapture: React.FC<SignatureCaptureProps> = ({
             </Text>
           </View>
         )}
+
+        {/* Overlay para bloquear interacción cuando la firma está completada */}
+        {completed && (
+          <View style={signatureCaptureStyles.disabledOverlay} />
+        )}
       </View>
 
       {/* Controles */}
@@ -153,23 +177,6 @@ export const SignatureCapture: React.FC<SignatureCaptureProps> = ({
           <Ionicons name="refresh-outline" size={20} color="#ff3b30" />
           <Text style={signatureCaptureStyles.clearButtonText}>Limpiar</Text>
         </TouchableOpacity>
-
-        {hasSignature && !completed && (
-          <TouchableOpacity
-            style={[
-              signatureCaptureStyles.controlButton,
-              signatureCaptureStyles.saveButton,
-            ]}
-            onPress={() => {
-              if (signatureRef.current) {
-                signatureRef.current.readSignature();
-              }
-            }}
-          >
-            <Ionicons name="checkmark-outline" size={20} color="#fff" />
-            <Text style={signatureCaptureStyles.saveButtonText}>Confirmar</Text>
-          </TouchableOpacity>
-        )}
       </View>
     </View>
   );
