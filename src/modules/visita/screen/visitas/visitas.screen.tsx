@@ -126,7 +126,7 @@ export const VisitasScreen = () => {
       <CustomBottomSheet
         ref={bottomSheetRef}
         enableDynamicSizing={false}
-        initialSnapPoints={['30%']}
+        initialSnapPoints={['35%']}
         onDismiss={handleCargarOrdenDismiss}
       >
         <CargarOrdenComponent />

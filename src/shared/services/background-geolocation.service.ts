@@ -1,5 +1,6 @@
 import BackgroundGeolocation, {
   Location,
+  Subscription,
 } from 'react-native-background-geolocation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert, Linking, Platform, PermissionsAndroid } from 'react-native';
@@ -27,6 +28,7 @@ export class BackgroundGeolocationService {
     errorCount: 0,
   };
   private isReady: boolean = false;
+  private subscriptions: Subscription[] = [];
 
   private constructor() {
     // NO inicializar eventos aquí - se hace en ready()
@@ -60,27 +62,42 @@ export class BackgroundGeolocationService {
       startOnBoot: true, // Reiniciar después de reboot del dispositivo
       enableHeadless: true, // CRÍTICO: Habilitar HeadlessTask
 
+      // 🔴 iOS: stopTimeout para asegurar creación de geofence estacionaria
+      // Da tiempo a iOS para crear la geofence antes de terminar completamente
+      stopTimeout: 5, // 5 minutos de timeout antes de detener completamente
+
       // ========================
       // 🧠 Android Foreground Service
       // ========================
       foregroundService: true,
 
-      // 🔴 CRÍTICO EN iOS - Solicitar permisos Always desde inicialización
-      locationAuthorizationRequest: 'Always' as any,
+      // 🔴 CRÍTICO: Configuración de permisos específica por plataforma
+      // iOS: Patrón de upgrade progresivo (WhenInUse → Always)
+      // Android: Always desde el inicio (requerido para background)
+      locationAuthorizationRequest: Platform.OS === 'ios' ? 'WhenInUse' : 'Always',
+
+      // 🔴 iOS - Alert customizado para permisos de ubicación
       locationAuthorizationAlert: {
         titleWhenNotEnabled: 'Permisos de Ubicación Requeridos',
         titleWhenOff: 'Ubicación Desactivada',
-        instructions: 'Ruteo necesita acceso a tu ubicación "Siempre" para registrar entregas correctamente, incluso cuando la app esté cerrada.\n\nEsto es necesario para el funcionamiento de la aplicación.',
+        instructions: 'Ruteo necesita acceso a tu ubicación para funcionar correctamente.',
         cancelButton: 'Cancelar',
         settingsButton: 'Ir a Configuración'
       },
 
-      // 🔴 CRÍTICO EN ANDROID - Justificación específica para permisos de ubicación en segundo plano
+      // 🔴 CRÍTICO ANDROID 11+ - Justificación para redirect a Configuración
+      // Android 11+ NO muestra "Allow all the time" automáticamente
+      // Este diálogo redirige al usuario a Settings para seleccionar manualmente
       backgroundPermissionRationale: {
-        title: "Permisos de Ubicación en Segundo Plano",
-        message: "Ruteo necesita acceso a tu ubicación en segundo plano para registrar entregas y optimizar rutas de manera precisa, incluso cuando la aplicación esté cerrada o minimizada. Esto es esencial para el seguimiento de entregas y la gestión eficiente de rutas.",
-        positiveAction: 'Permitir',
-        negativeAction: 'Denegar'
+        title: "Permitir Ubicación Todo el Tiempo",
+        message: "Para registrar entregas automáticamente incluso con la app cerrada, " +
+                 "necesitamos que selecciones 'Permitir todo el tiempo' en Configuración.\n\n" +
+                 "Esto es esencial para:\n" +
+                 "• Registrar ubicaciones durante entregas\n" +
+                 "• Optimizar tus rutas automáticamente\n" +
+                 "• Ver tu progreso en tiempo real",
+        positiveAction: 'Cambiar a Permitido Todo el Tiempo',  // Android 11+ redirige a Settings
+        negativeAction: 'Ahora no'
       },
 
       notification: {
@@ -94,9 +111,20 @@ export class BackgroundGeolocationService {
       autoSync: true,
       batchSync: false,
 
+      activityType: BackgroundGeolocation.ACTIVITY_TYPE_AUTOMOTIVE_NAVIGATION, // Para delivery/ruteo
+
+      // 🔴 CRÍTICO PARA iOS - Prevenir pausa automática
+      pausesLocationUpdatesAutomatically: false, // Mantener ubicación activa
+      
+      // 🔴 iOS - Control manual de alertas de permisos
+      disableLocationAuthorizationAlert: false, // Mantener alertas automáticas
+      
+      // 🔴 iOS - Configuración de heartbeat para casos estacionarios
+      heartbeatInterval: 60, // Ping cada 60 segundos cuando estacionario
+
       // Configuración de persistencia y sincronización
       // autoSync: true, // Sincronizar automáticamente con el servidor
-      // maxDaysToPersist: 1, // Mantener ubicaciones por 1 día
+      maxDaysToPersist: 1, // Mantener ubicaciones por 1 día
 
       // Configuración de debugging (desactivar en producción)
       debug: __DEV__, // Solo en desarrollo
@@ -170,13 +198,27 @@ export class BackgroundGeolocationService {
 
       // Llamar ready() UNA SOLA VEZ
       await BackgroundGeolocation.ready(config);
-      const status = await BackgroundGeolocation.requestPermission();
-
-      console.log('[BGG] Permission status:', status);
+      // NO solicitar permisos aquí - se solicitarán en startTracking() cuando sea necesario
 
       this.isReady = true;
       this.state.isEnabled = true;
       this.state.hasPermission = true;
+
+      if (Platform.OS === 'android') {
+        // Verificar permisos actuales en Android
+        const fineLocation = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+        );
+        const backgroundLocation = Platform.Version >= 29
+          ? await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION)
+          : true;
+
+        console.log('📍 [Android] Estado de permisos:', {
+          ACCESS_FINE_LOCATION: fineLocation,
+          ACCESS_BACKGROUND_LOCATION: backgroundLocation,
+          'Android Version': Platform.Version,
+        });
+      }
 
       console.log('📍 [BackgroundGeolocation] Ready completado correctamente');
     } catch (error) {
@@ -189,40 +231,92 @@ export class BackgroundGeolocationService {
   }
 
   /**
-   * Configura los event listeners (solo después de ready())
-   * Previene duplicación de listeners en re-vinculaciones
+   * Configura los event listeners usando patrón Subscription (mejores prácticas)
+   * Previene duplicación de listeners y permite cleanup adecuado
    */
   private setupEventListeners(): void {
     console.log('📍 [BackgroundGeolocation] Configurando event listeners...');
 
-    // IMPORTANTE: No remover listeners existentes aquí para evitar problemas
-    // Los listeners se configuran una vez y se mantienen activos
-    // Solo se reconfiguran si es necesario
+    // Limpiar subscriptions anteriores para evitar duplicados
+    this.removeEventListeners();
 
     try {
       // Event listener para nuevas ubicaciones
-      BackgroundGeolocation.onLocation(this.onLocation.bind(this));
-      console.log(
-        '📍 [BackgroundGeolocation] Listener de ubicación configurado',
+      this.subscriptions.push(
+        BackgroundGeolocation.onLocation(this.onLocation.bind(this))
       );
+      console.log('📍 [BackgroundGeolocation] Listener de ubicación configurado');
 
       // Event listener para cambios de proveedor
-      BackgroundGeolocation.onProviderChange(event => {
-        console.log('📍 [BackgroundGeolocation] Provider change:', event);
-        this.state.hasPermission = event.gps && event.network && event.enabled;
-      });
+      this.subscriptions.push(
+        BackgroundGeolocation.onProviderChange(event => {
+          console.log('📍 [BackgroundGeolocation] Provider change:', event);
+          this.state.hasPermission = event.gps && event.network && event.enabled;
+        })
+      );
 
-      BackgroundGeolocation.onAuthorization((status: any) => {
-        console.log('📍 Authorization status change:', status);
+      // Event listener para cambios de autorización
+      this.subscriptions.push(
+        BackgroundGeolocation.onAuthorization((status: any) => {
+          console.log('📍 Authorization status change:', status);
+          if (status === BackgroundGeolocation.AUTHORIZATION_STATUS_DENIED) {
+            console.warn('🚫 Ubicación denegada por iOS');
+            this.showLocationPermissionAlert();
+          }
+        })
+      );
 
-        if (status === BackgroundGeolocation.AUTHORIZATION_STATUS_DENIED) {
-          console.warn('🚫 Ubicación denegada por iOS');
-          this.showLocationPermissionAlert();
-        }
-      });
+      // 🔴 NUEVO: Event listener para heartbeat (casos estacionarios)
+      this.subscriptions.push(
+        BackgroundGeolocation.onHeartbeat((event) => {
+          console.log('📍 [BackgroundGeolocation] Heartbeat:', event);
+
+          // Opcional: solicitar ubicación actual en heartbeat para casos estacionarios
+          if (this.hasValidTrackingConfig()) {
+            BackgroundGeolocation.getCurrentPosition({
+              samples: 1,
+              persist: true,
+              timeout: 30
+            }).then(location => {
+              console.log('📍 [BackgroundGeolocation] Heartbeat location:', location);
+              this.onLocation(location);
+            }).catch(error => {
+              console.warn('📍 [BackgroundGeolocation] Error en heartbeat location:', error);
+            });
+          }
+        })
+      );
+
+      // 🔴 iOS CRÍTICO: Event listener para geofences (supervivencia cuando app está terminada)
+      // Este evento confirma que iOS creó el geofence estacionario y reactiva la app
+      this.subscriptions.push(
+        BackgroundGeolocation.onGeofence((event) => {
+          console.log('📍 [BackgroundGeolocation] 🎯 Geofence event (iOS app reactivation):', event);
+          console.log('📍 [BackgroundGeolocation] 🎯 Geofence action:', event.action); // ENTER o EXIT
+          console.log('📍 [BackgroundGeolocation] 🎯 Geofence identifier:', event.identifier);
+
+          // Si es EXIT del geofence estacionario, iOS acaba de reactivar la app
+          if (event.action === 'EXIT' && event.identifier === 'TSLocationManager') {
+            console.log('✅ [BackgroundGeolocation] iOS reactivó la app desde estado terminado');
+            console.log('✅ [BackgroundGeolocation] Geofence estacionaria funcionando correctamente');
+          }
+        })
+      );
+
+      // 🔴 iOS: Event listener para cambios de estado del plugin
+      // Permite monitorear cuando iOS crea/destruye el geofence estacionario
+      this.subscriptions.push(
+        BackgroundGeolocation.onEnabledChange((isEnabled) => {
+          console.log('📍 [BackgroundGeolocation] Estado enabled cambió:', isEnabled);
+          if (!isEnabled && Platform.OS === 'ios') {
+            console.log('⚠️ [BackgroundGeolocation] iOS detuvo tracking - verificando geofence estacionaria...');
+            // El plugin debería haber creado el geofence estacionario antes de desactivarse
+          }
+        })
+      );
 
       console.log(
-        '📍 [BackgroundGeolocation] Listener de proveedor configurado',
+        `📍 [BackgroundGeolocation] ${this.subscriptions.length} listeners configurados correctamente`
       );
     } catch (error) {
       console.warn(
@@ -234,47 +328,80 @@ export class BackgroundGeolocationService {
   }
 
   /**
-   * Maneja nuevas ubicaciones recibidas
+   * Remueve todos los event listeners usando patrón Subscription
+   */
+  private removeEventListeners(): void {
+    console.log(`📍 [BackgroundGeolocation] Removiendo ${this.subscriptions.length} listeners...`);
+    this.subscriptions.forEach(subscription => subscription.remove());
+    this.subscriptions = [];
+  }
+
+  /**
+   * Validación mejorada de coordenadas
+   */
+  private isValidLocation(location: Location): boolean {
+    if (!location?.coords) return false;
+    
+    const { latitude, longitude, accuracy } = location.coords;
+    
+    // Validaciones básicas
+    if (typeof latitude !== 'number' || typeof longitude !== 'number') return false;
+    if (isNaN(latitude) || isNaN(longitude)) return false;
+    if (latitude === 0 && longitude === 0) return false;
+    
+    // Validaciones de rango
+    if (latitude < -90 || latitude > 90) return false;
+    if (longitude < -180 || longitude > 180) return false;
+    
+    // Validación de precisión (opcional)
+    if (accuracy && accuracy > 1000) {
+      console.warn('📍 [BackgroundGeolocation] Baja precisión:', accuracy, 'm');
+      // Aceptar con warning, no rechazar
+    }
+    
+    return true;
+  }
+
+  /**
+   * Maneja nuevas ubicaciones recibidas con validación mejorada
    */
   private async onLocation(location: Location): Promise<void> {
-    console.log('📍 [BackgroundGeolocation] Nueva ubicación:', location);
+    console.log('📍 [BGS] Nueva ubicación recibida:', {
+      lat: location.coords?.latitude,
+      lng: location.coords?.longitude,
+      accuracy: location.coords?.accuracy,
+    });
 
-    // Validar que la ubicación tenga coordenadas válidas
-    if (!location || !location.coords) {
-      console.warn(
-        '📍 [BackgroundGeolocation] Ubicación sin coordenadas, ignorando...',
-      );
-      return;
-    }
-
-    // Validar que las coordenadas sean válidas
-    if (
-      typeof location.coords.latitude !== 'number' ||
-      typeof location.coords.longitude !== 'number' ||
-      isNaN(location.coords.latitude) ||
-      isNaN(location.coords.longitude)
-    ) {
-      console.warn(
-        '📍 [BackgroundGeolocation] Coordenadas inválidas, ignorando...',
-        location.coords,
-      );
+    // Usar validación mejorada
+    if (!this.isValidLocation(location)) {
+      console.warn('📍 [BGS] Ubicación inválida, ignorando...', location);
       return;
     }
 
     this.state.lastLocation = location;
 
-    // Solo enviar si tenemos configuración de tracking
-    if (this.state.schemaName && this.state.despacho && this.state.usuarioId) {
-      try {
-        await this.sendLocationToServer(location);
-        this.state.errorCount = 0; // Reset error count on success
-      } catch (error) {
-        console.error(
-          '📍 [BackgroundGeolocation] Error enviando ubicación:',
-          error,
-        );
-        this.state.errorCount++;
-      }
+    // MEJORAR: Validación con logging detallado
+    if (!this.state.schemaName || !this.state.despacho || !this.state.usuarioId) {
+      console.warn('❌ [BGS] Config de tracking INCOMPLETA, descartando ubicación');
+      console.warn('❌ Estado actual:', {
+        schemaName: this.state.schemaName || 'FALTA',
+        despacho: this.state.despacho || 'FALTA',
+        usuarioId: this.state.usuarioId || 'FALTA',
+        isTracking: this.state.isTracking,
+      });
+      console.warn('⚠️ PROBABLE CAUSA: App se reinició y no se restauró tracking');
+      console.warn('⚠️ SOLUCIÓN: Verificar que useRestoreTracking() se ejecutó correctamente');
+      return;
+    }
+
+    try {
+      console.log('📍 [BGS] Enviando ubicación al servidor...');
+      await this.sendLocationToServer(location);
+      this.state.errorCount = 0;
+      console.log('✅ [BGS] Ubicación enviada exitosamente');
+    } catch (error) {
+      console.error('📍 [BGS] Error enviando ubicación:', error);
+      this.state.errorCount++;
     }
   }
 
@@ -334,6 +461,10 @@ export class BackgroundGeolocationService {
   /**
    * Inicia el tracking para una orden específica
    * PREREQUISITO: ready() debe haber sido llamado previamente
+   *
+   * Implementa patrón de upgrade progresivo:
+   * - Primera vez: solicita upgrade de WhenInUse a Always (iOS)
+   * - Subsecuentes: verifica y recuerda si es necesario
    */
   public async startTracking(config: TrackingConfig): Promise<void> {
     if (!this.isReady) {
@@ -342,23 +473,61 @@ export class BackgroundGeolocationService {
       );
     }
 
+    if (this.state.isTracking) {
+      console.log('📍 [BackgroundGeolocation] Ya está tracking, omitiendo...');
+      return;
+    }
+
     try {
       console.log(
         '📍 [BackgroundGeolocation] Iniciando tracking para:',
         config,
       );
 
+      // 🔴 Solicitar permisos según plataforma antes de iniciar tracking
+      if (Platform.OS === 'ios') {
+        console.log('📍 [iOS] Verificando permisos antes de iniciar tracking...');
+        const hasAlways = await this.requestAlwaysUpgrade();
+
+        if (hasAlways) {
+          console.log('✅ [iOS] Permisos Always confirmados - tracking completo disponible');
+        } else {
+          console.log('⚠️ [iOS] Solo WhenInUse - tracking limitado a app abierta');
+          // Continuar de todas formas, tracking funcionará con app abierta
+        }
+      } else if (Platform.OS === 'android') {
+        console.log('📍 [Android] Verificando permisos antes de iniciar tracking...');
+        const hasBackgroundLocation = await this.requestBackgroundLocationAndroid();
+
+        if (hasBackgroundLocation) {
+          console.log('✅ [Android] Permisos de ubicación en segundo plano confirmados');
+        } else {
+          console.log('⚠️ [Android] Sin permisos de background - tracking limitado');
+          console.log('⚠️ [Android] Usuario puede habilitar "Allow all the time" en Configuración');
+          // Continuar de todas formas - el usuario puede cambiar permisos después
+        }
+      }
+
+      // Verificar estado actual del plugin
+      const currentState = await BackgroundGeolocation.getState();
+      console.log('📍 [BackgroundGeolocation] Estado actual del plugin:', currentState);
+
       // Guardar configuración de tracking en estado interno
       this.state.schemaName = config.schemaName;
       this.state.despacho = config.despacho;
       this.state.usuarioId = config.usuarioId;
 
-      // CRÍTICO: Guardar usuario ID en AsyncStorage para Headl
-      await AsyncStorage.setItem('usuario_id', config.usuarioId.toString());
-      console.log(
-        '📍 [BackgroundGeolocation] Usuario ID guardado para HeadlessTask:',
-        config.usuarioId,
-      );
+      // CRÍTICO: Guardar config completa en AsyncStorage para HeadlessTask y restauración
+      await AsyncStorage.multiSet([
+        ['usuario_id', config.usuarioId.toString()],
+        ['tracking_schema', config.schemaName],
+        ['tracking_despacho', config.despacho.toString()],
+      ]);
+      console.log('📍 [BGS] Config completa guardada:', {
+        usuarioId: config.usuarioId,
+        schemaName: config.schemaName,
+        despacho: config.despacho
+      });
 
       // Configurar event listeners
       this.setupEventListeners();
@@ -380,15 +549,100 @@ export class BackgroundGeolocationService {
   }
 
   /**
+   * Restaura el tracking desde AsyncStorage si hay configuración válida
+   * Se llama al reabrir la app para recuperar tracking de orden activa
+   */
+  public async restoreTrackingIfNeeded(): Promise<boolean> {
+    if (!this.isReady) {
+      console.warn('📍 [BGS] No está ready, no se puede restaurar tracking');
+      return false;
+    }
+
+    if (this.state.isTracking) {
+      console.log('📍 [BGS] Ya está tracking, omitiendo restauración');
+      return true;
+    }
+
+    try {
+      console.log('📍 [BGS] Intentando restaurar tracking...');
+
+      // Leer config de AsyncStorage
+      const values = await AsyncStorage.multiGet([
+        'tracking_schema',
+        'tracking_despacho',
+        'usuario_id'
+      ]);
+
+      const schemaName = values[0][1];
+      const despachoStr = values[1][1];
+      const usuarioIdStr = values[2][1];
+
+      console.log('📍 [BGS] Config leída:', {
+        schemaName,
+        despacho: despachoStr,
+        usuarioId: usuarioIdStr,
+      });
+
+      // Validar que tenemos todos los datos
+      if (!schemaName || !despachoStr || !usuarioIdStr) {
+        console.log('📍 [BGS] No hay config completa, no restaurando tracking');
+        return false;
+      }
+
+      const despacho = parseInt(despachoStr, 10);
+      const usuarioId = parseInt(usuarioIdStr, 10);
+
+      if (isNaN(despacho) || isNaN(usuarioId)) {
+        console.warn('📍 [BGS] Config inválida en AsyncStorage');
+        return false;
+      }
+
+      // Restaurar tracking
+      const trackingConfig: TrackingConfig = {
+        schemaName,
+        despacho,
+        usuarioId,
+      };
+
+      console.log('📍 [BGS] Restaurando tracking con config:', trackingConfig);
+      await this.startTracking(trackingConfig);
+
+      console.log('✅ [BGS] Tracking restaurado exitosamente');
+      return true;
+
+    } catch (error) {
+      console.error('📍 [BGS] Error restaurando tracking:', error);
+      return false;
+    }
+  }
+
+  /**
    * Detiene el tracking
    */
   public async stopTracking(): Promise<void> {
     try {
       console.log('📍 [BackgroundGeolocation] Deteniendo tracking...');
 
+      // 🔴 iOS: Verificar estado antes de detener para confirmar geofence estacionaria
+      if (Platform.OS === 'ios') {
+        const state = await BackgroundGeolocation.getState();
+        console.log('📍 [BackgroundGeolocation] 🍎 Estado iOS antes de detener:', {
+          enabled: state.enabled,
+          isMoving: state.isMoving,
+          trackingMode: state.trackingMode,
+        });
+        console.log('📍 [BackgroundGeolocation] 🍎 iOS creará geofence estacionaria automáticamente');
+      }
+
       await BackgroundGeolocation.stop();
 
       this.state.isTracking = false;
+
+      // 🔴 iOS: Confirmar que geofence estacionaria se creó
+      if (Platform.OS === 'ios') {
+        console.log('✅ [BackgroundGeolocation] 🍎 iOS debería haber creado geofence estacionaria');
+        console.log('✅ [BackgroundGeolocation] 🍎 App se reactivará cuando usuario se mueva ~200m');
+      }
 
       console.log('📍 [BackgroundGeolocation] Tracking detenido correctamente');
     } catch (error) {
@@ -414,10 +668,8 @@ export class BackgroundGeolocationService {
       }
 
       // Limpiar datos de AsyncStorage para HeadlessTask
-      await AsyncStorage.removeItem('usuario_id');
-      console.log(
-        '📍 [BackgroundGeolocation] Usuario ID removido de AsyncStorage',
-      );
+      await AsyncStorage.multiRemove(['usuario_id', 'tracking_schema', 'tracking_despacho']);
+      console.log('📍 [BGS] Config de tracking removida de AsyncStorage');
 
       // Limpiar solo datos de tracking, NO el estado ready NI los listeners
       this.state.schemaName = undefined;
@@ -452,22 +704,16 @@ export class BackgroundGeolocationService {
         await this.stopTracking();
       }
 
+      // Remover listeners usando patrón Subscription
+      this.removeEventListeners();
+
       // Limpiar datos de AsyncStorage para HeadlessTask
-      await AsyncStorage.removeItem('usuario_id');
-      console.log(
-        '📍 [BackgroundGeolocation] Usuario ID removido de AsyncStorage',
-      );
+      await AsyncStorage.multiRemove(['usuario_id', 'tracking_schema', 'tracking_despacho']);
+      console.log('📍 [BGS] Config de tracking removida de AsyncStorage');
 
-      // Limpiar todos los datos de tracking
-      this.state.schemaName = undefined;
-      this.state.despacho = undefined;
-      this.state.usuarioId = undefined;
-      this.state.lastLocation = undefined;
-      this.state.errorCount = 0;
-      // NO tocar isReady - permanece true hasta el próximo launch
+      // Resetear estado completo
+      this.resetState();
 
-      // SOLO en logout: remover listeners completamente
-      BackgroundGeolocation.removeListeners();
       console.log(
         '📍 [BackgroundGeolocation] Limpieza completa realizada (listeners removidos)',
       );
@@ -481,63 +727,221 @@ export class BackgroundGeolocationService {
   }
 
   /**
-   * Solicita permisos "Always" específicamente antes de iniciar tracking
+   * Resetea el estado interno del servicio
    */
-  private async requestAlwaysLocationPermission(): Promise<void> {
-    console.log('📍 [BackgroundGeolocation] Solicitando permisos Always...');
-
-    return new Promise((resolve, reject) => {
-      Alert.alert(
-        'Permisos de Ubicación Requeridos',
-        'Para registrar entregas correctamente, Ruteo necesita acceso a tu ubicación "Siempre", incluso cuando la app esté cerrada.\n\n¿Deseas continuar?',
-        [
-          {
-            text: 'Cancelar',
-            style: 'cancel',
-            onPress: () => {
-              console.log('📍 Usuario canceló solicitud de permisos Always');
-              reject(new Error('Usuario canceló solicitud de permisos Always'));
-            },
-          },
-          {
-            text: 'Continuar',
-            onPress: async () => {
-              try {
-                // Solicitar permisos Always usando BackgroundGeolocation
-                const status = await BackgroundGeolocation.requestPermission();
-                console.log('📍 Status de permisos después de solicitud:', status);
-                
-                if (status === BackgroundGeolocation.AUTHORIZATION_STATUS_ALWAYS) {
-                  console.log('✅ Permisos Always otorgados');
-                  resolve();
-                } else if (status === BackgroundGeolocation.AUTHORIZATION_STATUS_WHEN_IN_USE) {
-                  console.log('⚠️ Solo permisos WhenInUse otorgados, solicitando Always...');
-                  // Mostrar alerta para ir a configuración y cambiar a Always
-                  this.showLocationPermissionAlert();
-                  resolve(); // Continuar aunque sea WhenInUse por ahora
-                } else {
-                  console.warn('🚫 Permisos denegados:', status);
-                  reject(new Error('Permisos de ubicación denegados'));
-                }
-              } catch (error) {
-                console.error('📍 Error solicitando permisos:', error);
-                reject(error);
-              }
-            },
-          },
-        ],
-        { cancelable: false }
-      );
-    });
+  private resetState(): void {
+    this.state = {
+      isEnabled: false,
+      isTracking: false,
+      hasPermission: false,
+      errorCount: 0,
+    };
   }
 
   /**
-   * Muestra alerta para solicitar permisos de ubicación y abre configuración
+   * Android: Solicita permisos de ubicación en segundo plano (API 29+)
+   *
+   * Flujo para Android 10+:
+   * 1. Solicitar ACCESS_FINE_LOCATION (foreground)
+   * 2. Solicitar ACCESS_BACKGROUND_LOCATION (background)
+   * 3. En Android 11+, si el usuario selecciona "While using", mostrar
+   *    backgroundPermissionRationale que redirige a Configuración
+   *
+   * @returns true si tiene permisos de background location
+   */
+  private async requestBackgroundLocationAndroid(): Promise<boolean> {
+    if (Platform.OS !== 'android') {
+      return true; // Solo para Android
+    }
+
+    try {
+      console.log('📍 [Android] Verificando permisos de ubicación...');
+
+      // Paso 1: Solicitar permisos de foreground (FINE + COARSE)
+      const fineLocationGranted = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+      );
+
+      if (!fineLocationGranted) {
+        console.log('📍 [Android] Solicitando permiso ACCESS_FINE_LOCATION...');
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Permiso de Ubicación',
+            message: 'Ruteo necesita acceso a tu ubicación para registrar entregas.',
+            buttonPositive: 'Permitir',
+            buttonNegative: 'Denegar',
+          }
+        );
+
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          console.warn('📍 [Android] Permiso de ubicación denegado');
+          return false;
+        }
+      }
+
+      // Paso 2: Android 10+ (API 29+) - Solicitar ACCESS_BACKGROUND_LOCATION
+      if (Platform.Version >= 29) {
+        console.log('📍 [Android 10+] Verificando ACCESS_BACKGROUND_LOCATION...');
+
+        const backgroundGranted = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION
+        );
+
+        if (backgroundGranted) {
+          console.log('✅ [Android] Ya tiene permisos de ubicación en segundo plano');
+          return true;
+        }
+
+        // Mostrar alert explicativo ANTES de solicitar (similar a iOS)
+        return new Promise((resolve) => {
+          Alert.alert(
+            'Ubicación en Segundo Plano',
+            Platform.Version >= 30
+              ? // Android 11+ (API 30+) - Mensaje específico para redirect a Settings
+                'Para registrar entregas automáticamente con la app cerrada, ' +
+                'el sistema te llevará a Configuración.\n\n' +
+                'Por favor selecciona "Permitir todo el tiempo" en la página de permisos.'
+              : // Android 10 (API 29) - Diálogo estándar
+                'Para registrar entregas incluso cuando la app esté cerrada, ' +
+                'necesitamos permiso de ubicación en segundo plano.',
+            [
+              {
+                text: 'Cancelar',
+                style: 'cancel',
+                onPress: () => {
+                  console.log('⚠️ [Android] Usuario canceló permisos de background');
+                  resolve(false);
+                },
+              },
+              {
+                text: 'Continuar',
+                onPress: async () => {
+                  console.log('📍 [Android] Solicitando ACCESS_BACKGROUND_LOCATION...');
+
+                  const granted = await PermissionsAndroid.request(
+                    PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
+                    {
+                      title: 'Ubicación Todo el Tiempo',
+                      message: 'Selecciona "Permitir todo el tiempo" para el mejor funcionamiento.',
+                      buttonPositive: 'Permitir',
+                      buttonNegative: 'Denegar',
+                    }
+                  );
+
+                  const hasPermission = granted === PermissionsAndroid.RESULTS.GRANTED;
+
+                  if (hasPermission) {
+                    console.log('✅ [Android] Permisos de ubicación en segundo plano concedidos');
+                  } else {
+                    console.warn('⚠️ [Android] Permisos de background location denegados o parciales');
+                    console.warn('⚠️ [Android] Usuario puede cambiar a "Allow all the time" en Settings');
+                  }
+
+                  resolve(hasPermission);
+                },
+              },
+            ],
+            { cancelable: false }
+          );
+        });
+      }
+
+      // Android < 10 - No requiere ACCESS_BACKGROUND_LOCATION separado
+      console.log('✅ [Android < 10] Permisos de ubicación OK');
+      return true;
+
+    } catch (error) {
+      console.error('📍 [Android] Error solicitando permisos:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Patrón de upgrade progresivo: Solicita upgrade de WhenInUse a Always
+   * Sigue las mejores prácticas de Apple para permisos de ubicación
+   *
+   * Solo se llama cuando el usuario realmente va a iniciar tracking de una orden
+   */
+  private async requestAlwaysUpgrade(): Promise<boolean> {
+    if (Platform.OS !== 'ios') {
+      return true;
+    }
+
+    try {
+      const authorizationStatus = await BackgroundGeolocation.requestPermission();
+
+      if (authorizationStatus === BackgroundGeolocation.AUTHORIZATION_STATUS_ALWAYS) {
+        console.log('✅ [iOS Upgrade] Ya tenemos permisos Always');
+        return true;
+      }
+
+      if (authorizationStatus === BackgroundGeolocation.AUTHORIZATION_STATUS_WHEN_IN_USE) {
+        console.log('📍 [iOS Upgrade] Solicitando upgrade de WhenInUse → Always');
+
+        // Mostrar UN SOLO alert informativo ANTES de iOS
+        return new Promise((resolve) => {
+          Alert.alert(
+            'Permisos de Ubicación',
+            'Para registrar entregas automáticamente, incluso con la app cerrada, ' +
+            'el sistema te pedirá permisos adicionales:\n\n' +
+            '1. Ubicación "Siempre"\n' +
+            '2. Actividad física (para detectar movimiento)\n\n' +
+            'Esto es necesario para el funcionamiento correcto del seguimiento.',
+            [
+              {
+                text: 'Cancelar',
+                style: 'cancel',
+                onPress: () => {
+                  console.log('⚠️ Usuario canceló permisos');
+                  resolve(false);
+                },
+              },
+              {
+                text: 'Continuar',
+                onPress: async () => {
+                  // Cambiar a Always y solicitar
+                  await BackgroundGeolocation.setConfig({
+                    locationAuthorizationRequest: 'Always' as any
+                  });
+
+                  // iOS mostrará sus propios diálogos (ubicación + motion)
+                  const status = await BackgroundGeolocation.requestPermission();
+
+                  // NO mostrar más alertas después de iOS
+                  const hasAlways = status === BackgroundGeolocation.AUTHORIZATION_STATUS_ALWAYS;
+                  console.log(hasAlways ? '✅ Permisos Always otorgados' : '⚠️ Permisos parciales');
+                  resolve(hasAlways);
+                },
+              },
+            ],
+            { cancelable: false }
+          );
+        });
+      }
+
+      console.warn('🚫 Sin permisos de ubicación');
+      return false;
+
+    } catch (error) {
+      console.error('Error en upgrade:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Muestra alerta para solicitar permisos de ubicación cuando están denegados
+   * Explica claramente por qué se necesita el permiso Always
    */
   private showLocationPermissionAlert(): void {
     Alert.alert(
-      'Permisos de Ubicación Requeridos',
-      'Ruteo necesita acceso a tu ubicación "Siempre" para registrar entregas incluso cuando la app esté cerrada.\n\nPor favor, ve a Configuración y selecciona "Siempre" en los permisos de ubicación.',
+      'Permisos de Ubicación Necesarios',
+      'Ruteo necesita acceso a tu ubicación para registrar entregas.\n\n' +
+      'Sin estos permisos no podrás:\n' +
+      '• Registrar ubicaciones durante entregas\n' +
+      '• Optimizar tus rutas automáticamente\n' +
+      '• Ver tu progreso en el mapa\n\n' +
+      'Para el mejor funcionamiento, selecciona "Siempre" en Configuración.',
       [
         {
           text: 'Cancelar',

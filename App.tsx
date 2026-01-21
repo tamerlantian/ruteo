@@ -18,6 +18,7 @@ import { store } from './src/store';
 import { initializeServices } from './src/core/services/init-services';
 import Toast from 'react-native-toast-message';
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { useRestoreTracking } from './src/shared/hooks';
 
 
 const queryClient = new QueryClient({
@@ -66,6 +67,9 @@ function App() {
 }
 
 function AppContent() {
+  // Hook para restaurar tracking automáticamente después de REHYDRATE
+  useRestoreTracking();
+
   return (
     <View style={styles.container}>
       <AppNavigator />

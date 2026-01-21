@@ -36,7 +36,7 @@ export class AuthRepository extends HttpBaseRepository implements IAuthService {
   }
 
   /**
-   * Realiza el login del usuario
+ * Realiza el login del usuario
    * @param credentials Credenciales de login (email y password)
    * @returns Promise con la respuesta del login
    */

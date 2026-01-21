@@ -92,20 +92,32 @@ export const DashboardScreen = () => {
     };
   }, [visitasPendientes.length, isLocationTracking, ordenEntrega, subdominio, despacho, user?.id]);
 
-  // Verificar estado del tracking al cargar el componente
-  // useEffect(() => {
-  //   const checkTrackingStatus = () => {
-  //     const isTracking = backgroundGeolocationService.isTrackingActive();
-  //     setIsLocationTracking(isTracking);
-  //   };
+  // Verificar y sincronizar estado del tracking al cargar componente
+  useEffect(() => {
+    const checkAndSyncTrackingStatus = () => {
+      const isTracking = backgroundGeolocationService.isTrackingActive();
+      const hasValidConfig = backgroundGeolocationService.hasValidTrackingConfig();
 
-  //   checkTrackingStatus();
-    
-  //   // Verificar cada 5 segundos para mantener el estado actualizado
-  //   const interval = setInterval(checkTrackingStatus, 3000);
-    
-  //   return () => clearInterval(interval);
-  // }, []);
+      console.log('📱 [Dashboard] Estado tracking:', {
+        isTracking,
+        hasValidConfig,
+        localState: isLocationTracking
+      });
+
+      // Sincronizar UI con estado real del servicio
+      if (isTracking !== isLocationTracking) {
+        console.log('📱 [Dashboard] Sincronizando UI con estado real:', isTracking);
+        setIsLocationTracking(isTracking);
+      }
+    };
+
+    checkAndSyncTrackingStatus();
+
+    // Verificar cada 5 segundos
+    const interval = setInterval(checkAndSyncTrackingStatus, 5000);
+
+    return () => clearInterval(interval);
+  }, [isLocationTracking]);
 
   // Función para toggle del tracking de ubicación
   const handleToggleLocationTracking = async () => {
