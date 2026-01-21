@@ -118,7 +118,7 @@ export const NovedadCardComponent: React.FC<NovedadCardProps> = ({
         {/* Descripción de la novedad */}
         <View style={styles.novedadContainer}>
           <Ionicons name="document-text-outline" size={14} color="#ff6b35" />
-          <Text style={styles.description}>{novedad.descripcion}</Text>
+          <Text style={styles.description}>{ novedad.descripcion ? novedad.descripcion : 'Descripción no especificada'}</Text>
         </View>
 
         {/* Información adicional y teléfono */}
