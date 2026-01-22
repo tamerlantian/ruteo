@@ -80,6 +80,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
             device={device}
             isActive={visible}
             photo={true}
+            outputOrientation="device"
           />
         ) : (
           <View style={styles.loadingContainer}>

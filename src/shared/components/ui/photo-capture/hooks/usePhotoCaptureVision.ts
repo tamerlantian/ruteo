@@ -3,6 +3,7 @@ import { Alert } from 'react-native';
 import { Camera, PhotoFile } from 'react-native-vision-camera';
 import { PhotoData } from '../PhotoCapture.types';
 import { useCameraPermissionsService } from '../../../../services/camera-permissions.service';
+import { imageRotationUtil } from '../../../../utils/image-rotation.util';
 
 /**
  * Hook para manejar la lógica de captura de fotos con Vision Camera
@@ -48,7 +49,7 @@ export const usePhotoCaptureVision = (maxPhotos: number = 5) => {
 
     try {
       setIsLoading(true);
-      
+
       const photo: PhotoFile = await cameraRef.current.takePhoto({
         flash: 'off',
         enableShutterSound: true,
@@ -65,8 +66,14 @@ export const usePhotoCaptureVision = (maxPhotos: number = 5) => {
         timestamp: Date.now(),
       };
 
+      console.log('📸 [PhotoCapture] Photo captured, rotating to correct orientation...');
+
+      // Rotar la imagen físicamente para corregir orientación
+      // Esto asegura que las fotos se vean correctamente en la web
+      const rotatedPhotoData = await imageRotationUtil.rotateImageToCorrectOrientation(photoData);
+
       setShowCamera(false);
-      return photoData;
+      return rotatedPhotoData;
     } catch (err) {
       console.error('Error taking photo:', err);
       setError('Error al tomar la foto');
