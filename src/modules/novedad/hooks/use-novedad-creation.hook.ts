@@ -50,6 +50,7 @@ export const useNovedadCreation = () => {
             })),
             estado: 'error',
             estado_solucion: 'pending',
+            movil_token: result.datosFormulario.movil_token,
           };
 
           if (!result.success) {

@@ -13,6 +13,7 @@ export interface Novedad {
   id_real?: string;
   estado: NovedadEstado;
   estado_solucion: NovedadEstadoSolucion;
+  movil_token: string
 }
 
 export interface NovedadCreada {
@@ -29,4 +30,5 @@ export interface NovedadFormData {
   tipo: string;
   descripcion: string | null;
   foto: PhotoData[];
+  movil_token: string;
 }

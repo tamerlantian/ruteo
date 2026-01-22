@@ -12,6 +12,7 @@ import { useNovedadCreation } from '../../hooks/use-novedad-creation.hook';
 import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../../shared/styles/global.style';
 import { generateTempId } from '../../../../shared/utils/id-generator.util';
+import { generateMovilToken } from '../../utils/novedad-form-data-builder.util';
 
 type NavigationProp = NativeStackNavigationProp<
   MainStackParamList,
@@ -76,6 +77,7 @@ export const useNovedadFormViewModel = (
             tipo: data.tipo,
             descripcion: data.descripcion?.trim() === '' ? null : data.descripcion,
             foto: data.foto,
+            movil_token: generateMovilToken(),
           };
         });
 

@@ -3,6 +3,29 @@ import { PhotoData } from '../../visita/interfaces/visita.interface';
 import { dateUtil } from '../../../shared/utils/date.util';
 
 /**
+ * Generates a unique mobile token in format: YYYYMMDDHHMMSSXXXX
+ * Where XXXX are 4 random digits
+ * @returns Mobile token string (18 digits total)
+ */
+function generateMovilToken(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+
+  const timestampPart = `${year}${month}${day}${hours}${minutes}${seconds}`; // YYYYMMDDHHMMSS
+
+  const randomDigits = Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, '0'); // 0000-9999
+
+  return `${timestampPart}${randomDigits}`;
+}
+
+/**
  * Utility class for building FormData objects for novedad submissions
  */
 export class NovedadFormDataBuilder {
@@ -19,6 +42,7 @@ export class NovedadFormDataBuilder {
     formData.append('novedad_tipo_id', data.tipo);
     formData.append('fecha', dateUtil.getCurrentForAPI());
     formData.append('descripcion', data.descripcion);
+    formData.append('movil_token', data.movil_token);
 
     // Add photos as files
     if (data.foto && data.foto.length > 0) {
@@ -91,3 +115,5 @@ export class NovedadFormDataBuilder {
     }
   }
 }
+
+export { generateMovilToken };
