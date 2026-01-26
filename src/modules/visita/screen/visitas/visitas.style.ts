@@ -232,4 +232,15 @@ export const visitasStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  // Button styles for floating actions
+  flexButton: {
+    flex: 1,
+  },
+  flexButtonWithMargin: {
+    flex: 1,
+    marginRight: 8,
+  },
+  flexButtonSmall: {
+    flex: 0.6,
+  },
 });

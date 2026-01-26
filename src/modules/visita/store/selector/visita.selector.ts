@@ -227,3 +227,38 @@ export const selectVisitaIdsConErrorRetryables = createSelector(
   [selectVisitasConErrorRetryables],
   visitasRetryables => visitasRetryables.map(visita => visita.id),
 );
+
+/**
+ * Selector para obtener visitas con error que NO son retryables
+ * Filtra solo visitas donde es_error_retryable === false
+ */
+export const selectVisitasConErrorNoRetryables = createSelector(
+  [selectVisitasConError],
+  visitasConError =>
+    visitasConError.filter(
+      visita => visita.es_error_retryable === false, // Solo errores explícitamente no-retryables
+    ),
+);
+
+/**
+ * Selector para obtener visitas seleccionadas que NO son retryables
+ * Útil para mostrar botón "Anular" cuando hay visitas no-retryables seleccionadas
+ */
+export const selectVisitasSeleccionadasNoRetryables = createSelector(
+  [selectVisitas, selectVisitasSeleccionadas],
+  (visitas, seleccionadas) =>
+    visitas
+      .filter(visita => seleccionadas.includes(visita.id))
+      .filter(visita => 
+        visita.estado === 'error' && visita.es_error_retryable === false
+      ),
+);
+
+/**
+ * Selector para verificar si hay visitas seleccionadas que son no-retryables
+ * Útil para mostrar/ocultar botón "Anular"
+ */
+export const selectHayVisitasSeleccionadasNoRetryables = createSelector(
+  [selectVisitasSeleccionadasNoRetryables],
+  visitasNoRetryables => visitasNoRetryables.length > 0,
+);

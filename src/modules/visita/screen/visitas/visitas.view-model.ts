@@ -15,6 +15,8 @@ import {
   selectVisitasConError,
   selectVisitasEntregadas,
   selectVisitasConNovedades,
+  selectVisitasSeleccionadasNoRetryables,
+  selectHayVisitasSeleccionadasNoRetryables,
 } from '../../store/selector/visita.selector';
 import {
   removerVisitas,
@@ -58,6 +60,8 @@ export const useVisitasViewModel = () => {
   );
   const visitasPendientes = useAppSelector(selectVisitasPendientes);
   const visitasEntregadas = useAppSelector(selectVisitasEntregadas);
+  const visitasSeleccionadasNoRetryables = useAppSelector(selectVisitasSeleccionadasNoRetryables);
+  const hayVisitasSeleccionadasNoRetryables = useAppSelector(selectHayVisitasSeleccionadasNoRetryables);
 
   // Estados locales
   const [refreshing, setRefreshing] = useState(false);
@@ -202,6 +206,27 @@ export const useVisitasViewModel = () => {
       console.error('Error al reintentar visitas:', error);
     }
   }, [visitasSeleccionadasConDatosGuardados, reintentarVisitasConError]);
+
+  const anularSelectedVisitas = useCallback(() => {
+    if (visitasSeleccionadasNoRetryables.length === 0) {
+      console.warn('No hay visitas no-retryables seleccionadas para anular');
+      return;
+    }
+
+    // TODO: Implementar lógica de anulación
+    // Por ahora, solo limpiar la selección y mostrar mensaje
+    console.log('Anulando visitas no-retryables:', visitasSeleccionadasNoRetryables.map(v => v.id));
+    
+    // Limpiar selección después de anular
+    dispatch(limpiarSeleccionVisitas());
+    
+    // TODO: Agregar toast de confirmación
+    // Toast.show({
+    //   type: 'success',
+    //   text1: 'Visitas anuladas',
+    //   text2: `Se anularon ${visitasSeleccionadasNoRetryables.length} visita(s)`,
+    // });
+  }, [visitasSeleccionadasNoRetryables, dispatch]);
 
   // === ACCIONES DE LISTA ===
   const onRefresh = useCallback(() => {
@@ -365,6 +390,11 @@ export const useVisitasViewModel = () => {
     deliverSelectedVisitas,
     retrySelectedVisitas,
     reportNovedadSelectedVisitas,
+    anularSelectedVisitas,
+
+    // Estados de visitas no-retryables
+    hasNonRetryableSelected: hayVisitasSeleccionadasNoRetryables,
+    totalNonRetryableSelected: visitasSeleccionadasNoRetryables.length,
 
     // Acciones de Lista
     onRefresh,

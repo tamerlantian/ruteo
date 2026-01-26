@@ -9,10 +9,13 @@ interface VisitasFloatingActionsProps {
   totalConError?: number;
   activeFilter: FilterType;
   isRetryLoading?: boolean;
+  hasNonRetryableSelected?: boolean;
+  totalNonRetryableSelected?: number;
   onClearSelection: () => void;
   onDeliverVisitas: () => void;
   onRetryVisitas?: () => void;
   onNovedadVisitas?: () => void;
+  onAnularVisitas?: () => void;
   onSelectAllErrors?: () => void;
   totalErrorsInFilter?: number;
 }
@@ -22,10 +25,13 @@ export const VisitasFloatingActions: React.FC<VisitasFloatingActionsProps> = ({
   totalConError = 0,
   activeFilter,
   isRetryLoading = false,
+  hasNonRetryableSelected = false,
+  totalNonRetryableSelected = 0,
   onClearSelection,
   onDeliverVisitas,
   onRetryVisitas,
   onNovedadVisitas,
+  onAnularVisitas,
   onSelectAllErrors,
   totalErrorsInFilter = 0,
 }) => {
@@ -61,27 +67,38 @@ export const VisitasFloatingActions: React.FC<VisitasFloatingActionsProps> = ({
       
       <View style={visitasStyles.actionButtonsContainer}>
         {/* Mostrar botón según el filtro activo y disponibilidad de datos */}
-        {activeFilter === 'error' && totalConError > 0 && onRetryVisitas ? (
+        {hasNonRetryableSelected && onAnularVisitas ? (
+          // Cuando hay visitas no-retryables seleccionadas, mostrar solo botón Anular
+          <FormButton
+            title={`Anular (${totalNonRetryableSelected})`}
+            onPress={onAnularVisitas}
+            style={visitasStyles.flexButton}
+            isLoading={isRetryLoading}
+            variant='danger'
+          />
+        ) : activeFilter === 'error' && totalConError > 0 && onRetryVisitas ? (
+          // Filtro error con visitas retryables
           <FormButton
             title={`Reintentar (${totalConError})`}
             onPress={onRetryVisitas}
-            style={{ flex: 1 }}
+            style={visitasStyles.flexButton}
             isLoading={isRetryLoading}
             variant='success'
           />
         ) : (
+          // Caso normal: entregar y novedad
           <>
             <FormButton 
               title={`Entregar (${totalSeleccionadas})`}
               onPress={onDeliverVisitas}
-              style={{ flex: 1, marginRight: 8 }}
+              style={visitasStyles.flexButtonWithMargin}
               variant='success'
             />
             {onNovedadVisitas && (
               <FormButton 
                 title="Novedad"
                 onPress={onNovedadVisitas}
-                style={{ flex: 0.6 }}
+                style={visitasStyles.flexButtonSmall}
                 variant='secondary'
               />
             )}
