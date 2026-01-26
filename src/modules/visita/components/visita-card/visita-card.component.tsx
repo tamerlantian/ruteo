@@ -49,18 +49,21 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
     : '';
 
   // Verificar si tiene coordenadas válidas
-  const hasValidCoordinates = visita.latitud && visita.longitud && 
+  const hasValidCoordinates = visita.latitud && visita.longitud &&
     visita.latitud !== 0 && visita.longitud !== 0;
 
-  // Verificar si la visita tiene error
+  // Clasificar tipo de error
   const hasError = visita.estado === 'error';
+  const isNonRetryableError = hasError && visita.es_error_retryable === false;
+  const isRetryableError = hasError && visita.es_error_retryable !== false;
 
   return (
     <TouchableOpacity
       style={[
         visitaCardStyle.container,
         isSelected && visitaCardStyle.containerSelected,
-        hasError && visitaCardStyle.containerError
+        isNonRetryableError && visitaCardStyle.containerError,
+        isRetryableError && visitaCardStyle.containerWarning
       ]}
       onPress={handlePress}
       activeOpacity={0.7}
@@ -73,10 +76,16 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
           </View>
           <View style={visitaCardStyle.headerRight}>
             <Text style={visitaCardStyle.document}>DOC: {visita.documento}</Text>
-            {hasError && (
+            {isNonRetryableError && (
               <View style={visitaCardStyle.errorBadge}>
                 <Ionicons name="alert-circle" size={12} color="#ffffff" />
                 <Text style={visitaCardStyle.errorBadgeText}>Error</Text>
+              </View>
+            )}
+            {isRetryableError && (
+              <View style={visitaCardStyle.warningBadge}>
+                <Ionicons name="sync" size={12} color="#ffffff" />
+                <Text style={visitaCardStyle.errorBadgeText}>Pendiente</Text>
               </View>
             )}
           </View>
@@ -98,12 +107,22 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
           </View>
         )}
 
-        {/* Banner de error */}
-        {hasError && (
+        {/* Banner de error no-retryable */}
+        {isNonRetryableError && (
           <View style={visitaCardStyle.errorBanner}>
             <Ionicons name="alert-circle" size={16} color="#ff3b30" />
             <Text style={visitaCardStyle.errorText}>
               {visita.error_mensaje || 'Error al procesar la entrega'}
+            </Text>
+          </View>
+        )}
+
+        {/* Banner de error retryable */}
+        {isRetryableError && (
+          <View style={visitaCardStyle.warningBanner}>
+            <Ionicons name="sync" size={16} color="#ff9500" />
+            <Text style={visitaCardStyle.warningText}>
+              {visita.error_mensaje || 'Pendiente de reintento'}
             </Text>
           </View>
         )}

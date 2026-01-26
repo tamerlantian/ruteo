@@ -2,6 +2,41 @@ import { AxiosError } from 'axios';
 import { ApiErrorResponse } from '../interfaces/api.interface';
 
 /**
+ * Determina si un error HTTP es retryable basándose en el código de estado y tipo de error
+ */
+const determineIfRetryable = (error: AxiosError<ApiErrorResponse>): boolean => {
+  const statusCode = error.response?.status;
+
+  // Network errors (sin respuesta del servidor)
+  if (!error.response && error.request) {
+    return true; // Sin conexión, timeout, DNS failure
+  }
+
+  // No request/response at all
+  if (!error.request && !error.response) {
+    return false; // Configuración o setup error
+  }
+
+  // Status code based classification
+  if (!statusCode) {
+    return true; // Sin status code = problema de red
+  }
+
+  // Retryable status codes
+  if ([408, 429, 500, 502, 503, 504].includes(statusCode)) {
+    return true;
+  }
+
+  // Non-retryable status codes (client errors)
+  if (statusCode >= 400 && statusCode < 500) {
+    return false; // 4xx except 408 and 429
+  }
+
+  // Unknown status codes - default to retryable
+  return true;
+};
+
+/**
  * Maneja los errores de respuesta HTTP y devuelve un objeto de error estandarizado
  */
 export const handleErrorResponse = (error: AxiosError<ApiErrorResponse>): ApiErrorResponse => {
@@ -22,10 +57,14 @@ export const handleErrorResponse = (error: AxiosError<ApiErrorResponse>): ApiErr
   if (handler) {
     return handler(error);
   } else {
+    // Si no hay handler específico, determinar retryable
+    const isRetryable = determineIfRetryable(error);
+
     return {
       titulo: 'Error',
       mensaje: 'Error al procesar la solicitud',
       codigo: statusCode,
+      isRetryable,
     };
   }
 };
@@ -37,6 +76,7 @@ const error400 = (error: AxiosError<ApiErrorResponse>): ApiErrorResponse => {
     titulo: 'Error',
     mensaje,
     codigo: 400,
+    isRetryable: false, // No retryable - error de validación
   };
 };
 
@@ -46,6 +86,7 @@ const error401 = (error: AxiosError): ApiErrorResponse => {
     titulo: 'Error',
     mensaje: 'Token inválido o expirado, por favor intente de nuevo',
     codigo: 401,
+    isRetryable: false, // No retryable - se maneja automáticamente con token refresh
   };
 };
 
@@ -56,6 +97,7 @@ const error404 = (error: AxiosError): ApiErrorResponse => {
     titulo: 'Error',
     mensaje,
     codigo: 404,
+    isRetryable: false, // No retryable - recurso no encontrado
   };
 };
 
@@ -65,6 +107,7 @@ const error405 = (error: AxiosError): ApiErrorResponse => {
     titulo: 'Error',
     mensaje: 'Servidor fuera de línea, intente más tarde',
     codigo: 405,
+    isRetryable: false, // No retryable - método no permitido
   };
 };
 
@@ -74,6 +117,7 @@ const error500 = (error: AxiosError): ApiErrorResponse => {
     titulo: 'Error',
     mensaje: 'Servidor fuera de línea, intente más tarde',
     codigo: 500,
+    isRetryable: true, // Retryable - problema del servidor
   };
 };
 

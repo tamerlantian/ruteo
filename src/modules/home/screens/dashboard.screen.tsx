@@ -15,6 +15,7 @@ import {
   selectVisitaIdsConErrorCompleto,
   selectVisitasConErrorCompleto,
   selectVisitasConError,
+  selectVisitasConErrorRetryables,
 } from '../../visita/store/selector/visita.selector';
 import { selectOrdenEntrega, selectSubdominio, selectDespacho } from '../../settings';
 import { useRetryNovedades } from '../../novedad/hooks';
@@ -50,6 +51,7 @@ export const DashboardScreen = () => {
   const visitasEntregadas = useAppSelector(selectVisitasEntregadas);
   const visitasConErrorCompleto = useAppSelector(selectVisitasConErrorCompleto);
   const visitaIdsConError = useAppSelector(selectVisitaIdsConErrorCompleto);
+  const visitasConErrorRetryables = useAppSelector(selectVisitasConErrorRetryables);
 
   // Automatic location stop when no pending deliveries
   useEffect(() => {
@@ -287,8 +289,8 @@ export const DashboardScreen = () => {
           </View>
         )}
 
-        {/* Botón de retry para visitas con error */}
-        {ordenEntrega && visitasConErrorCompleto.length > 0 && (
+        {/* Botón de retry para visitas con error retryables */}
+        {ordenEntrega && visitasConErrorRetryables.length > 0 && (
           <TouchableOpacity
             style={[
               styles.retryButton,
@@ -300,8 +302,8 @@ export const DashboardScreen = () => {
             <Text style={styles.retryButtonText}>
               {isRetrying
                 ? 'Reintentando...'
-                : `Sincronizar ${visitasConErrorCompleto.length} pendiente${
-                    visitasConErrorCompleto.length > 1 ? 's' : ''
+                : `Sincronizar ${visitasConErrorRetryables.length} pendiente${
+                    visitasConErrorRetryables.length > 1 ? 's' : ''
                   }`}
             </Text>
           </TouchableOpacity>

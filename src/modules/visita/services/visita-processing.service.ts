@@ -1,6 +1,7 @@
 import { visitaRepository } from '../repositories/visita.repository';
 import { FormDataBuilder } from '../utils/form-data-builder.util';
 import { VisitaResponse, EntregaFormData } from '../interfaces/visita.interface';
+import { ApiErrorResponse } from '../../../core/interfaces/api.interface';
 
 /**
  * Configuración para el procesamiento de visitas
@@ -21,6 +22,7 @@ export interface VisitaProcessingResult {
   success: boolean;
   visitaId: number;
   error?: any;
+  apiError?: ApiErrorResponse;
 }
 
 /**
@@ -91,11 +93,19 @@ export class VisitaProcessingService {
 
       // Enviar usando método multipart
       await visitaRepository.entregaVisitaMultipart(subdominio, formData);
-      
+
       return { success: true, visitaId };
     } catch (error) {
-      console.error(`Error al procesar la visita ${visitaId}:`, error);
-      return { success: false, visitaId, error };
+      const apiError = error as ApiErrorResponse;
+      console.error(`Error al procesar la visita ${visitaId}:`, apiError);
+
+      // Incluir el ApiErrorResponse completo con clasificación
+      return {
+        success: false,
+        visitaId,
+        error: apiError.mensaje || 'Error desconocido',
+        apiError, // Incluir error completo
+      };
     }
   }
 

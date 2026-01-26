@@ -113,6 +113,7 @@ export const selectVisitaPorId = (visitaId: number) =>
   );
 
 // Selector para verificar si las visitas seleccionadas tienen datos guardados para reintento
+// Solo incluye visitas que son retryables (es_error_retryable !== false)
 export const selectVisitasSeleccionadasConDatosGuardados = createSelector(
   [selectVisitasConError, selectVisitasSeleccionadas],
   (visitas, seleccionadas) =>
@@ -120,7 +121,9 @@ export const selectVisitasSeleccionadasConDatosGuardados = createSelector(
       .filter(visita => seleccionadas.includes(visita.id))
       .filter(
         visita =>
-          visita.estado === 'error' && visita.datos_formulario_guardados,
+          visita.estado === 'error' &&
+          visita.datos_formulario_guardados &&
+          visita.es_error_retryable !== false, // Solo retryables
       ),
 );
 
@@ -191,16 +194,36 @@ export const selectConteoVisitasQueImpidenDesvinculacion = createSelector(
   (visitasQueImpiden, novedades) => {
     // Contar visitas con error directo
     const visitasConErrorDirecto = visitasQueImpiden.filter(v => v.estado === 'error').length;
-    
+
     // Contar novedades con error (estado o estado_solucion)
-    const novedadesConError = novedades.filter(novedad => 
+    const novedadesConError = novedades.filter(novedad =>
       novedad.estado === 'error' || novedad.estado_solucion === 'error'
     ).length;
-    
+
     return {
       total: visitasQueImpiden.length,
       visitasConError: visitasConErrorDirecto,
       novedadesConError: novedadesConError,
     };
   },
+);
+
+/**
+ * Selector para obtener visitas con error que son retryables
+ * Filtra solo visitas donde es_error_retryable !== false
+ */
+export const selectVisitasConErrorRetryables = createSelector(
+  [selectVisitasConErrorCompleto],
+  visitasConError =>
+    visitasConError.filter(
+      visita => visita.es_error_retryable !== false, // Incluir undefined para retrocompatibilidad
+    ),
+);
+
+/**
+ * Selector para obtener IDs de visitas con error retryables
+ */
+export const selectVisitaIdsConErrorRetryables = createSelector(
+  [selectVisitasConErrorRetryables],
+  visitasRetryables => visitasRetryables.map(visita => visita.id),
 );

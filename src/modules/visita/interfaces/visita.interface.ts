@@ -38,6 +38,9 @@ export interface VisitaResponse {
 
   // Mensaje de error cuando estado === 'error'
   error_mensaje?: string;
+
+  // Clasificación de error: true si es retryable, false si no lo es
+  es_error_retryable?: boolean;
 }
 
 export type VisitaEstado = 'sync' | 'pending' | 'error';

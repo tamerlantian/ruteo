@@ -67,6 +67,8 @@ export const useVisitaProcessing = () => {
         if (config.markErrorOnFailure) {
           // Extraer mensaje de error como string
           let errorMensaje = 'Error desconocido al procesar la entrega';
+          let esErrorRetryable = true; // Default a retryable por seguridad
+
           if (result.error) {
             if (typeof result.error === 'string') {
               errorMensaje = result.error;
@@ -80,11 +82,17 @@ export const useVisitaProcessing = () => {
             }
           }
 
+          // Extraer clasificación del apiError si existe
+          if (result.apiError) {
+            esErrorRetryable = result.apiError.isRetryable ?? true;
+          }
+
           dispatch(
             cambiarEstadoVisita({
               visitaId,
               estado: 'error',
               errorMensaje,
+              esErrorRetryable,
             }),
           );
         }
@@ -141,13 +149,16 @@ export const useVisitaProcessing = () => {
         );
 
         // Actualizar Redux para cada resultado
-        batchResult.results.forEach(({ visitaId, success, error }) => {
+        batchResult.results.forEach(result => {
+          const { visitaId, success, error, apiError } = result;
           if (success) {
             dispatch(marcarVisitaComoEntregada(visitaId));
             dispatch(limpiarDatosFormularioDeVisita(visitaId));
           } else if (config.markErrorOnFailure) {
             // Extraer mensaje de error como string
             let errorMensaje = 'Error desconocido al procesar la entrega';
+            let esErrorRetryable = true; // Default a retryable por seguridad
+
             if (error) {
               if (typeof error === 'string') {
                 errorMensaje = error;
@@ -161,11 +172,17 @@ export const useVisitaProcessing = () => {
               }
             }
 
+            // Extraer clasificación del apiError si existe
+            if (apiError) {
+              esErrorRetryable = apiError.isRetryable ?? true;
+            }
+
             dispatch(
               cambiarEstadoVisita({
                 visitaId,
                 estado: 'error',
                 errorMensaje,
+                esErrorRetryable,
               }),
             );
           }

@@ -79,14 +79,18 @@ const visitaSlice = createSlice({
         visitaId: number;
         estado: VisitaEstado;
         errorMensaje?: string;
+        esErrorRetryable?: boolean;
       }>,
     ) => {
-      const { visitaId, estado, errorMensaje } = action.payload;
+      const { visitaId, estado, errorMensaje, esErrorRetryable } = action.payload;
       const index = state.visitas.findIndex(visita => visita.id === visitaId);
       if (index > -1) {
         state.visitas[index].estado = estado;
         if (errorMensaje !== undefined) {
           state.visitas[index].error_mensaje = errorMensaje;
+        }
+        if (esErrorRetryable !== undefined) {
+          state.visitas[index].es_error_retryable = esErrorRetryable;
         }
       }
     },
