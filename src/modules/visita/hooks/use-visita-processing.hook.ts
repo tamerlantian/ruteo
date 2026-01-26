@@ -65,7 +65,28 @@ export const useVisitaProcessing = () => {
       } else {
         // Marcar con error si está configurado
         if (config.markErrorOnFailure) {
-          dispatch(cambiarEstadoVisita({ visitaId, estado: 'error' }));
+          // Extraer mensaje de error como string
+          let errorMensaje = 'Error desconocido al procesar la entrega';
+          if (result.error) {
+            if (typeof result.error === 'string') {
+              errorMensaje = result.error;
+            } else if (typeof result.error === 'object') {
+              // Si el error es un objeto, intentar extraer el mensaje
+              errorMensaje =
+                result.error.mensaje ||
+                result.error.message ||
+                result.error.titulo ||
+                JSON.stringify(result.error);
+            }
+          }
+
+          dispatch(
+            cambiarEstadoVisita({
+              visitaId,
+              estado: 'error',
+              errorMensaje,
+            }),
+          );
         }
 
         // Mostrar toast de error
@@ -120,12 +141,33 @@ export const useVisitaProcessing = () => {
         );
 
         // Actualizar Redux para cada resultado
-        batchResult.results.forEach(({ visitaId, success }) => {
+        batchResult.results.forEach(({ visitaId, success, error }) => {
           if (success) {
             dispatch(marcarVisitaComoEntregada(visitaId));
             dispatch(limpiarDatosFormularioDeVisita(visitaId));
           } else if (config.markErrorOnFailure) {
-            dispatch(cambiarEstadoVisita({ visitaId, estado: 'error' }));
+            // Extraer mensaje de error como string
+            let errorMensaje = 'Error desconocido al procesar la entrega';
+            if (error) {
+              if (typeof error === 'string') {
+                errorMensaje = error;
+              } else if (typeof error === 'object') {
+                // Si el error es un objeto, intentar extraer el mensaje
+                errorMensaje =
+                  error.mensaje ||
+                  error.message ||
+                  error.titulo ||
+                  JSON.stringify(error);
+              }
+            }
+
+            dispatch(
+              cambiarEstadoVisita({
+                visitaId,
+                estado: 'error',
+                errorMensaje,
+              }),
+            );
           }
         });
 

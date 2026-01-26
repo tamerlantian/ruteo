@@ -115,10 +115,10 @@ const handleLocationInHeadlessMode = async (location) => {
 
     // Enviar usando fetch nativo (no podemos usar el repository en headless mode)
     // IMPORTANTE: Usar el mismo patrón que locationTrackingRepository
-    // Construir URL como: https://schema.reddocapi.online/ruteo/ubicacion/
+    // Construir URL como: https://schema.ruteoapi.online/ruteo/ubicacion/
     const isDeveloperMode = await AsyncStorage.getItem('@dev_mode_enabled');
     const isDevMode = isDeveloperMode ? JSON.parse(isDeveloperMode) : false;
-    const baseDomain = isDevMode ? 'reddocapi.online' : 'reddocapi.co';
+    const baseDomain = isDevMode ? 'ruteoapi.online' : 'reddocapi.co';
     const protocol = isDevMode ? 'http' : 'https';
     const url = `${protocol}://${schemaName}.${baseDomain}/ruteo/ubicacion/`;
     

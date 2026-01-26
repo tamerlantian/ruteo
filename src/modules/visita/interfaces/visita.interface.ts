@@ -35,6 +35,9 @@ export interface VisitaResponse {
 
   // Datos del formulario guardados para reintento
   datos_formulario_guardados?: EntregaFormData;
+
+  // Mensaje de error cuando estado === 'error'
+  error_mensaje?: string;
 }
 
 export type VisitaEstado = 'sync' | 'pending' | 'error';

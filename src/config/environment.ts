@@ -5,7 +5,7 @@
 // Estas son las URLs base para los diferentes entornos
 export const API_URLS = {
   PRODUCTION: 'https://reddocapi.co',
-  DEVELOPMENT: 'http://reddocapi.online',
+  DEVELOPMENT: 'http://ruteoapi.online',
 };
 
 // La configuración del entorno con opciones para cambiar dinámicamente

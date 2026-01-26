@@ -52,23 +52,34 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
   const hasValidCoordinates = visita.latitud && visita.longitud && 
     visita.latitud !== 0 && visita.longitud !== 0;
 
+  // Verificar si la visita tiene error
+  const hasError = visita.estado === 'error';
+
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={[
         visitaCardStyle.container,
-        isSelected && visitaCardStyle.containerSelected
-      ]} 
+        isSelected && visitaCardStyle.containerSelected,
+        hasError && visitaCardStyle.containerError
+      ]}
       onPress={handlePress}
       activeOpacity={0.7}
     >
       <View style={visitaCardStyle.content}>
         {/* Header con número y documento */}
         <View style={visitaCardStyle.header}>
-
           <View style={visitaCardStyle.numberBadge}>
             <Text style={visitaCardStyle.numberText}>{visita.id} #{visita.numero}</Text>
           </View>
-          <Text style={visitaCardStyle.document}>DOC: {visita.documento}</Text>
+          <View style={visitaCardStyle.headerRight}>
+            <Text style={visitaCardStyle.document}>DOC: {visita.documento}</Text>
+            {hasError && (
+              <View style={visitaCardStyle.errorBadge}>
+                <Ionicons name="alert-circle" size={12} color="#ffffff" />
+                <Text style={visitaCardStyle.errorBadgeText}>Error</Text>
+              </View>
+            )}
+          </View>
         </View>
 
         {/* Destinatario */}
@@ -84,6 +95,16 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
           <View style={visitaCardStyle.addressContainer}>
             <Ionicons name="location-outline" size={14} color="#007aff" />
             <Text style={visitaCardStyle.address}>{visita.destinatario_direccion}</Text>
+          </View>
+        )}
+
+        {/* Banner de error */}
+        {hasError && (
+          <View style={visitaCardStyle.errorBanner}>
+            <Ionicons name="alert-circle" size={16} color="#ff3b30" />
+            <Text style={visitaCardStyle.errorText}>
+              {visita.error_mensaje || 'Error al procesar la entrega'}
+            </Text>
           </View>
         )}
 

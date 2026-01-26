@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Configuración de endpoints base
 export const BASE_ENDPOINTS = {
   PRODUCTION: 'reddocapi.co',
-  DEVELOPMENT: 'reddocapi.online',
+  DEVELOPMENT: 'ruteoapi.online',
 } as const;
 
 const DEV_MODE_STORAGE_KEY = '@dev_mode_enabled';

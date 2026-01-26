@@ -75,12 +75,19 @@ const visitaSlice = createSlice({
     },
     cambiarEstadoVisita: (
       state,
-      action: PayloadAction<{ visitaId: number; estado: VisitaEstado }>,
+      action: PayloadAction<{
+        visitaId: number;
+        estado: VisitaEstado;
+        errorMensaje?: string;
+      }>,
     ) => {
-      const { visitaId, estado } = action.payload;
+      const { visitaId, estado, errorMensaje } = action.payload;
       const index = state.visitas.findIndex(visita => visita.id === visitaId);
       if (index > -1) {
         state.visitas[index].estado = estado;
+        if (errorMensaje !== undefined) {
+          state.visitas[index].error_mensaje = errorMensaje;
+        }
       }
     },
     guardarDatosFormularioEnVisita: (
@@ -110,6 +117,7 @@ const visitaSlice = createSlice({
       if (index > -1) {
         state.visitas[index].datos_formulario_guardados = undefined;
         state.visitas[index].estado = 'sync';
+        state.visitas[index].error_mensaje = undefined;
       }
     },
   },

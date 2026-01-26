@@ -5,7 +5,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 // URLs de los endpoints
 export const ENDPOINTS = {
   PRODUCTION: 'https://reddocapi.co/',
-  DEVELOPMENT: 'http://reddocapi.online/',
+  DEVELOPMENT: 'http://ruteoapi.online/',
 };
 
 const DEV_MODE_STORAGE_KEY = '@dev_mode_enabled';

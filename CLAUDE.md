@@ -158,7 +158,7 @@ Service location: `src/shared/services/background-geolocation.service.ts`
 
 Dynamic API base URL switching:
 - `environment.apiBase` can be switched at runtime via `updateApiBaseUrl(isDeveloperMode)`
-- Dev URL: `http://reddocapi.online`
+- Dev URL: `http://ruteoapi.online`
 - Prod URL: `https://reddocapi.co`
 - HttpBaseRepository reads `environment.apiBase` dynamically on each request
 
