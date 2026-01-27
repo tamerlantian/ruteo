@@ -70,30 +70,30 @@ export const VisitasScreen = () => {
 
   return (
     <SafeAreaView style={visitasStyles.container}>
+      {/* Header fijo - no se mueve con el scroll */}
+      <VisitasHeader
+        hasVisitas={hasVisitas}
+        hasOrdenCargada={hasOrdenCargada}
+        onOpenDevModeSheet={openDevModeSheet}
+        onOpenOptionsSheet={openOptionsSheet}
+        activeFilter={activeFilter}
+        onFilterChange={onFilterChange}
+        pendingCount={pendingCount}
+        errorCount={errorCount}
+        erroresCount={erroresCount}
+        novedadesCount={novedadesCount}
+        deliveredCount={deliveredCount}
+        totalCount={totalCount}
+        searchValue={searchValue}
+        onSearchChange={onSearchChange}
+        onScanResult={onScanResult}
+        onClearFilters={onClearFilters}
+      />
+      {/* Lista de visitas - solo las cards hacen scroll */}
       <FlatList
         data={visitas}
         renderItem={renderVisitaItem}
         keyExtractor={keyExtractor}
-        ListHeaderComponent={
-          <VisitasHeader
-            hasVisitas={hasVisitas}
-            hasOrdenCargada={hasOrdenCargada}
-            onOpenDevModeSheet={openDevModeSheet}
-            onOpenOptionsSheet={openOptionsSheet}
-            activeFilter={activeFilter}
-            onFilterChange={onFilterChange}
-            pendingCount={pendingCount}
-            errorCount={errorCount}
-            erroresCount={erroresCount}
-            novedadesCount={novedadesCount}
-            deliveredCount={deliveredCount}
-            totalCount={totalCount}
-            searchValue={searchValue}
-            onSearchChange={onSearchChange}
-            onScanResult={onScanResult}
-            onClearFilters={onClearFilters}
-          />
-        }
         ListFooterComponent={<VisitasLoadingFooter isLoading={isLoading} />}
         // Optimizaciones de rendimiento críticas
         removeClippedSubviews={true}

@@ -40,23 +40,23 @@ export const NovedadesScreen = () => {
 
   return (
     <SafeAreaView style={visitasStyles.container}>
+      {/* Header fijo - no se mueve con el scroll */}
+      <NovedadesHeader
+        hasNovedades={hasNovedades}
+        activeFilter={activeFilter}
+        onFilterChange={onFilterChange}
+        errorCount={errorCount}
+        allCount={allCount}
+        searchValue={searchValue}
+        onSearchChange={onSearchChange}
+        onScanResult={handleScanResult}
+        onClearFilters={onClearFilters}
+      />
+      {/* Lista de novedades - solo las cards hacen scroll */}
       <FlatList
         data={novedades}
         renderItem={renderNovedadItem}
         keyExtractor={keyExtractor}
-        ListHeaderComponent={
-          <NovedadesHeader
-            hasNovedades={hasNovedades}
-            activeFilter={activeFilter}
-            onFilterChange={onFilterChange}
-            errorCount={errorCount}
-            allCount={allCount}
-            searchValue={searchValue}
-            onSearchChange={onSearchChange}
-            onScanResult={handleScanResult}
-            onClearFilters={onClearFilters}
-          />
-        }
         // Optimizaciones de rendimiento críticas
         removeClippedSubviews={true}
         maxToRenderPerBatch={listConfig.MAX_TO_RENDER_PER_BATCH}
@@ -73,7 +73,7 @@ export const NovedadesScreen = () => {
         // Optimización adicional para listas grandes
         legacyImplementation={false}
       />
-      
+
       {/* Floating Actions */}
       <NovedadFloatingActions
         totalSeleccionadas={totalSeleccionadas}
