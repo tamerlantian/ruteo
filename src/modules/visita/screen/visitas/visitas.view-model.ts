@@ -2,6 +2,7 @@ import { useCallback, useState, useRef, useMemo } from 'react';
 import { Keyboard } from 'react-native';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import Toast from 'react-native-toast-message';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppSelector, useAppDispatch } from '../../../../store/hooks';
 import {
@@ -22,6 +23,7 @@ import {
   removerVisitas,
   limpiarSeleccionVisitas,
   seleccionarMultiplesVisitas,
+  anularVisitasNoRetryables,
 } from '../../store/slice/visita.slice';
 import { VisitaResponse } from '../../interfaces/visita.interface';
 import { MainStackParamList } from '../../../../navigation/types';
@@ -213,19 +215,20 @@ export const useVisitasViewModel = () => {
       return;
     }
 
-    // TODO: Implementar lógica de anulación
-    // Por ahora, solo limpiar la selección y mostrar mensaje
-    console.log('Anulando visitas no-retryables:', visitasSeleccionadasNoRetryables.map(v => v.id));
+    const visitaIds = visitasSeleccionadasNoRetryables.map(visita => visita.id);
+    console.log(`🔄 Anulando ${visitaIds.length} visita(s) no-retryables:`, visitaIds);
     
-    // Limpiar selección después de anular
-    dispatch(limpiarSeleccionVisitas());
+    // Dispatch de la acción para resetear las visitas a estado pending
+    dispatch(anularVisitasNoRetryables(visitaIds));
     
-    // TODO: Agregar toast de confirmación
-    // Toast.show({
-    //   type: 'success',
-    //   text1: 'Visitas anuladas',
-    //   text2: `Se anularon ${visitasSeleccionadasNoRetryables.length} visita(s)`,
-    // });
+    console.log(`✅ ${visitaIds.length} visita(s) anulada(s) y reseteada(s) a estado pending`);
+    
+    // Mostrar toast de confirmación
+    Toast.show({
+      type: 'success',
+      text1: 'Visitas anuladas',
+      text2: `Se anularon ${visitaIds.length} visita(s) y volvieron a pendientes`,
+    });
   }, [visitasSeleccionadasNoRetryables, dispatch]);
 
   // === ACCIONES DE LISTA ===

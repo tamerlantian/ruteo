@@ -124,6 +124,28 @@ const visitaSlice = createSlice({
         state.visitas[index].error_mensaje = undefined;
       }
     },
+    anularVisitasNoRetryables: (state, action: PayloadAction<number[]>) => {
+      const visitaIds = action.payload;
+      visitaIds.forEach(visitaId => {
+        const index = state.visitas.findIndex(visita => visita.id === visitaId);
+        if (index > -1) {
+          const visita = state.visitas[index];
+          // Solo anular si es un error no-retryable
+          if (visita.estado === 'error' && visita.es_error_retryable === false) {
+            // Resetear la visita a estado pending
+            state.visitas[index].estado = 'pending';
+            state.visitas[index].error_mensaje = undefined;
+            state.visitas[index].es_error_retryable = undefined;
+            state.visitas[index].datos_formulario_guardados = undefined;
+            state.visitas[index].estado_entregado = false;
+            state.visitas[index].estado_novedad = false;
+            console.log(`🔄 Visita ${visitaId} anulada y reseteada a pending`);
+          }
+        }
+      });
+      // Limpiar selección después de anular
+      state.seleccionadas = [];
+    },
   },
   extraReducers(builder) {
     builder.addCase(cargarVisitasThunk.pending, state => {
@@ -156,5 +178,6 @@ export const {
   cambiarEstadoVisita,
   guardarDatosFormularioEnVisita,
   limpiarDatosFormularioDeVisita,
+  anularVisitasNoRetryables,
 } = visitaSlice.actions;
 export default visitaSlice.reducer;
