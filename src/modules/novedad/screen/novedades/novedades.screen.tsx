@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { FlatList, ListRenderItem } from 'react-native';
 import { visitasStyles } from '../../../visita/screen/visitas/visitas.style';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -38,6 +38,12 @@ export const NovedadesScreen = () => {
     [],
   );
 
+  // Padding dinámico para evitar que el floating action bar tape la última card
+  const contentContainerStyle = useMemo(() => ({
+    flexGrow: 1,
+    paddingBottom: totalSeleccionadas > 0 ? 120 : 0,
+  }), [totalSeleccionadas]);
+
   return (
     <SafeAreaView style={visitasStyles.container}>
       {/* Header fijo - no se mueve con el scroll */}
@@ -68,7 +74,7 @@ export const NovedadesScreen = () => {
         onRefresh={onRefresh}
         // Estilos
         style={visitasStyles.flatList}
-        contentContainerStyle={visitasStyles.contentContainer}
+        contentContainerStyle={contentContainerStyle}
         showsVerticalScrollIndicator={false}
         // Optimización adicional para listas grandes
         legacyImplementation={false}
