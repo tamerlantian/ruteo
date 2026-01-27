@@ -39,7 +39,7 @@
 		<true/>
 		<key>NSExceptionDomains</key>
 		<dict>
-			<key>reddocapi.online</key>
+			<key>ruteoapi.online</key>
 			<dict>
 				<key>NSIncludesSubdomains</key>
 				<true/>

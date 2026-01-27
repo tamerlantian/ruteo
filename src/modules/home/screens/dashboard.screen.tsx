@@ -16,6 +16,7 @@ import {
   selectVisitasConErrorCompleto,
   selectVisitasConError,
   selectVisitasConErrorRetryables,
+  selectVisitasConErrorNoRetryables,
 } from '../../visita/store/selector/visita.selector';
 import { selectOrdenEntrega, selectSubdominio, selectDespacho } from '../../settings';
 import { useRetryNovedades } from '../../novedad/hooks';
@@ -52,6 +53,7 @@ export const DashboardScreen = () => {
   const visitasConErrorCompleto = useAppSelector(selectVisitasConErrorCompleto);
   const visitaIdsConError = useAppSelector(selectVisitaIdsConErrorCompleto);
   const visitasConErrorRetryables = useAppSelector(selectVisitasConErrorRetryables);
+  const visitasConErrorNoRetryables = useAppSelector(selectVisitasConErrorNoRetryables);
 
   // Automatic location stop when no pending deliveries
   useEffect(() => {
@@ -281,11 +283,29 @@ export const DashboardScreen = () => {
 
               <View style={styles.statCard}>
                 <Text style={[styles.statNumber, styles.errorNumber]}>
-                  {visitasConErrorCompleto.length}
+                  {visitasConErrorRetryables.length}
                 </Text>
                 <Text style={styles.statLabel}>Sincronizar</Text>
               </View>
             </View>
+            
+            {/* Nueva fila para errores no-retryables */}
+            {visitasConErrorNoRetryables.length > 0 && (
+              <View style={[styles.statsContainer, { marginTop: 8 }]}>
+                <View style={styles.statCard}>
+                  <Text style={[styles.statNumber, styles.erroresNumber]}>
+                    {visitasConErrorNoRetryables.length}
+                  </Text>
+                  <Text style={styles.statLabel}>Errores</Text>
+                </View>
+                
+                {/* Placeholder para mantener simetría */}
+                <View style={[styles.statCard, { opacity: 0 }]}>
+                  <Text style={styles.statNumber}>0</Text>
+                  <Text style={styles.statLabel}>-</Text>
+                </View>
+              </View>
+            )}
           </View>
         )}
 
@@ -428,7 +448,10 @@ const styles = StyleSheet.create({
     color: '#5856d6', // Púrpura para novedades
   },
   errorNumber: {
-    color: '#ff3b30', // Rojo para errores
+    color: '#ff3b30', // Rojo para errores retryables
+  },
+  erroresNumber: {
+    color: '#dc143c', // Rojo más oscuro para errores no-retryables
   },
   statLabel: {
     fontSize: 12,

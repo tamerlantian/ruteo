@@ -216,7 +216,7 @@ export const selectVisitasConErrorRetryables = createSelector(
   [selectVisitasConErrorCompleto],
   visitasConError =>
     visitasConError.filter(
-      visita => visita.es_error_retryable !== false, // Incluir undefined para retrocompatibilidad
+      visita => visita.es_error_retryable !== false && visita.estado === 'error', // Incluir undefined para retrocompatibilidad
     ),
 );
 
