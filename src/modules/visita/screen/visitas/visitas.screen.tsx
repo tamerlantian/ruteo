@@ -32,6 +32,7 @@ export const VisitasScreen = () => {
     activeFilter,
     pendingCount,
     errorCount,
+    erroresCount,
     novedadesCount,
     deliveredCount,
     totalCount,
@@ -57,8 +58,6 @@ export const VisitasScreen = () => {
     selectAllErrors,
     handleCargarOrdenDismiss,
     anularSelectedVisitas,
-    hasNonRetryableSelected,
-    totalNonRetryableSelected,
   } = useVisitasViewModel();
   const puedeDesvincular = useAppSelector(selectPuedeDesvincular);
   const conteoVisitas = useAppSelector(selectConteoVisitasQueImpidenDesvinculacion);
@@ -85,6 +84,7 @@ export const VisitasScreen = () => {
             onFilterChange={onFilterChange}
             pendingCount={pendingCount}
             errorCount={errorCount}
+            erroresCount={erroresCount}
             novedadesCount={novedadesCount}
             deliveredCount={deliveredCount}
             totalCount={totalCount}
@@ -118,8 +118,6 @@ export const VisitasScreen = () => {
           totalConError={totalConErrorSeleccionadas}
           activeFilter={activeFilter}
           isRetryLoading={isRetryLoading}
-          hasNonRetryableSelected={hasNonRetryableSelected}
-          totalNonRetryableSelected={totalNonRetryableSelected}
           onClearSelection={clearSelection}
           onDeliverVisitas={deliverSelectedVisitas}
           onRetryVisitas={retrySelectedVisitas}

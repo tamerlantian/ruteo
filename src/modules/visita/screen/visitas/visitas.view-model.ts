@@ -18,6 +18,8 @@ import {
   selectVisitasConNovedades,
   selectVisitasSeleccionadasNoRetryables,
   selectHayVisitasSeleccionadasNoRetryables,
+  selectVisitasConErrorRetryables,
+  selectVisitasConErrorNoRetryables,
 } from '../../store/selector/visita.selector';
 import {
   removerVisitas,
@@ -64,6 +66,10 @@ export const useVisitasViewModel = () => {
   const visitasEntregadas = useAppSelector(selectVisitasEntregadas);
   const visitasSeleccionadasNoRetryables = useAppSelector(selectVisitasSeleccionadasNoRetryables);
   const hayVisitasSeleccionadasNoRetryables = useAppSelector(selectHayVisitasSeleccionadasNoRetryables);
+  
+  // Nuevos selectores para separar errores retryables de no-retryables
+  const visitasConErrorRetryables = useAppSelector(selectVisitasConErrorRetryables);
+  const visitasConErrorNoRetryables = useAppSelector(selectVisitasConErrorNoRetryables);
 
   // Estados locales
   const [refreshing, setRefreshing] = useState(false);
@@ -277,7 +283,12 @@ export const useVisitasViewModel = () => {
         filteredByCategory = visitasPendientes;
         break;
       case 'error':
-        filteredByCategory = visitasConError;
+        // Filtro "Sincronizar" - solo errores retryables
+        filteredByCategory = visitasConErrorRetryables;
+        break;
+      case 'errores':
+        // Nuevo filtro "Errores" - solo errores no-retryables
+        filteredByCategory = visitasConErrorNoRetryables;
         break;
       case 'novedades':
         filteredByCategory = visitasConNovedades;
@@ -305,7 +316,8 @@ export const useVisitasViewModel = () => {
   }, [
     activeFilter,
     visitasPendientes,
-    visitasConError,
+    visitasConErrorRetryables,
+    visitasConErrorNoRetryables,
     visitasConNovedades,
     searchValue,
   ]);
@@ -355,7 +367,8 @@ export const useVisitasViewModel = () => {
     // Filter states
     activeFilter,
     pendingCount: visitasPendientes.length,
-    errorCount: visitasConError.length,
+    errorCount: visitasConErrorRetryables.length,
+    erroresCount: visitasConErrorNoRetryables.length,
     novedadesCount: visitasConNovedades.length,
     deliveredCount: visitasEntregadas.length,
     totalCount: visitas.length,

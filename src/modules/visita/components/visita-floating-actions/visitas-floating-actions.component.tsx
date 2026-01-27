@@ -9,8 +9,6 @@ interface VisitasFloatingActionsProps {
   totalConError?: number;
   activeFilter: FilterType;
   isRetryLoading?: boolean;
-  hasNonRetryableSelected?: boolean;
-  totalNonRetryableSelected?: number;
   onClearSelection: () => void;
   onDeliverVisitas: () => void;
   onRetryVisitas?: () => void;
@@ -25,8 +23,6 @@ export const VisitasFloatingActions: React.FC<VisitasFloatingActionsProps> = ({
   totalConError = 0,
   activeFilter,
   isRetryLoading = false,
-  hasNonRetryableSelected = false,
-  totalNonRetryableSelected = 0,
   onClearSelection,
   onDeliverVisitas,
   onRetryVisitas,
@@ -67,17 +63,17 @@ export const VisitasFloatingActions: React.FC<VisitasFloatingActionsProps> = ({
       
       <View style={visitasStyles.actionButtonsContainer}>
         {/* Mostrar botón según el filtro activo y disponibilidad de datos */}
-        {hasNonRetryableSelected && onAnularVisitas ? (
-          // Cuando hay visitas no-retryables seleccionadas, mostrar solo botón Anular
+        {activeFilter === 'errores' && totalSeleccionadas > 0 && onAnularVisitas ? (
+          // Filtro "Errores" - mostrar solo botón Anular
           <FormButton
-            title={`Anular (${totalNonRetryableSelected})`}
+            title={`Anular (${totalSeleccionadas})`}
             onPress={onAnularVisitas}
             style={visitasStyles.flexButton}
             isLoading={isRetryLoading}
             variant='danger'
           />
         ) : activeFilter === 'error' && totalConError > 0 && onRetryVisitas ? (
-          // Filtro error con visitas retryables
+          // Filtro "Sincronizar" - mostrar botón Reintentar para errores retryables
           <FormButton
             title={`Reintentar (${totalConError})`}
             onPress={onRetryVisitas}
