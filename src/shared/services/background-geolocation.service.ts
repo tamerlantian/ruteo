@@ -54,7 +54,7 @@ export class BackgroundGeolocationService {
     return {
       // Configuración básica de ubicación
       desiredAccuracy: BackgroundGeolocation.DESIRED_ACCURACY_HIGH,
-      distanceFilter: 35, // Enviar cada 50 metros de movimiento
+      distanceFilter: 35, // Enviar cada 35 metros de movimiento
       stationaryRadius: 25, // Radio de detección de parada
 
       // CRÍTICO: Configuración para supervivencia de la app
@@ -66,21 +66,24 @@ export class BackgroundGeolocationService {
       // Da tiempo a iOS para crear la geofence antes de terminar completamente
       stopTimeout: 5, // 5 minutos de timeout antes de detener completamente
 
+      // 🔴 iOS: Deshabilitar detección automática de paradas (mejor para delivery)
+      // Previene que el plugin detenga tracking cuando el vehículo está brevemente parado
+      disableStopDetection: true,
+
       // ========================
       // 🧠 Android Foreground Service
       // ========================
       foregroundService: true,
 
-      // 🔴 CRÍTICO: Configuración de permisos específica por plataforma
-      // iOS: Patrón de upgrade progresivo (WhenInUse → Always)
+      // 🔴 iOS: Para apps de delivery, solicitar Always desde el inicio
       // Android: Always desde el inicio (requerido para background)
-      locationAuthorizationRequest: Platform.OS === 'ios' ? 'WhenInUse' : 'Always',
+      locationAuthorizationRequest: 'Always',
 
-      // 🔴 iOS - Alert customizado para permisos de ubicación
+      // 🔴 iOS - Alert customizado para permisos de ubicación "Always"
       locationAuthorizationAlert: {
         titleWhenNotEnabled: 'Permisos de Ubicación Requeridos',
         titleWhenOff: 'Ubicación Desactivada',
-        instructions: 'Ruteo necesita acceso a tu ubicación para funcionar correctamente.',
+        instructions: 'Ruteo necesita acceso "Siempre" a tu ubicación para registrar entregas automáticamente.',
         cancelButton: 'Cancelar',
         settingsButton: 'Ir a Configuración'
       },
@@ -113,14 +116,25 @@ export class BackgroundGeolocationService {
 
       activityType: BackgroundGeolocation.ACTIVITY_TYPE_AUTOMOTIVE_NAVIGATION, // Para delivery/ruteo
 
-      // 🔴 CRÍTICO PARA iOS - Prevenir pausa automática
+      // 🔴 CRÍTICO iOS - Prevenir suspensión automática de la app
+      // ADVERTENCIA: Aumenta consumo de batería (~10-20%), pero es necesario para delivery
+      // Permite detectar movimiento rápidamente (pocos metros) en lugar de requerir ~200m
+      preventSuspend: Platform.OS === 'ios', // Solo en iOS
       pausesLocationUpdatesAutomatically: false, // Mantener ubicación activa
-      
+
+      // 🔴 iOS 13+ - Mostrar indicador de ubicación en background (transparencia)
+      showsBackgroundLocationIndicator: true,
+
       // 🔴 iOS - Control manual de alertas de permisos
       disableLocationAuthorizationAlert: false, // Mantener alertas automáticas
-      
+
       // 🔴 iOS - Configuración de heartbeat para casos estacionarios
+      // Trabaja en conjunto con preventSuspend para mantener tracking activo
       heartbeatInterval: 60, // Ping cada 60 segundos cuando estacionario
+
+      // 🔴 Habilitar explícitamente motion activity updates
+      // Importante para optimizar tracking y batería en apps de delivery
+      disableMotionActivityUpdates: false,
 
       // Configuración de persistencia y sincronización
       // autoSync: true, // Sincronizar automáticamente con el servidor
@@ -487,14 +501,18 @@ export class BackgroundGeolocationService {
       // 🔴 Solicitar permisos según plataforma antes de iniciar tracking
       if (Platform.OS === 'ios') {
         console.log('📍 [iOS] Verificando permisos antes de iniciar tracking...');
-        const hasAlways = await this.requestAlwaysUpgrade();
+        // Como ya solicitamos "Always" desde ready(), solo verificamos el estado
+        const authorizationStatus = await BackgroundGeolocation.requestPermission();
 
-        if (hasAlways) {
+        if (authorizationStatus === BackgroundGeolocation.AUTHORIZATION_STATUS_ALWAYS) {
           console.log('✅ [iOS] Permisos Always confirmados - tracking completo disponible');
+        } else if (authorizationStatus === BackgroundGeolocation.AUTHORIZATION_STATUS_WHEN_IN_USE) {
+          console.log('⚠️ [iOS] Solo WhenInUse - tracking limitado a app en uso');
+          console.log('💡 [iOS] Usuario puede cambiar a "Siempre" en Configuración > Ruteo > Ubicación');
         } else {
-          console.log('⚠️ [iOS] Solo WhenInUse - tracking limitado a app abierta');
-          // Continuar de todas formas, tracking funcionará con app abierta
+          console.warn('🚫 [iOS] Sin permisos de ubicación');
         }
+        // Continuar de todas formas, tracking funcionará según permisos disponibles
       } else if (Platform.OS === 'android') {
         console.log('📍 [Android] Verificando permisos antes de iniciar tracking...');
         const hasBackgroundLocation = await this.requestBackgroundLocationAndroid();
@@ -853,78 +871,6 @@ export class BackgroundGeolocationService {
 
     } catch (error) {
       console.error('📍 [Android] Error solicitando permisos:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Patrón de upgrade progresivo: Solicita upgrade de WhenInUse a Always
-   * Sigue las mejores prácticas de Apple para permisos de ubicación
-   *
-   * Solo se llama cuando el usuario realmente va a iniciar tracking de una orden
-   */
-  private async requestAlwaysUpgrade(): Promise<boolean> {
-    if (Platform.OS !== 'ios') {
-      return true;
-    }
-
-    try {
-      const authorizationStatus = await BackgroundGeolocation.requestPermission();
-
-      if (authorizationStatus === BackgroundGeolocation.AUTHORIZATION_STATUS_ALWAYS) {
-        console.log('✅ [iOS Upgrade] Ya tenemos permisos Always');
-        return true;
-      }
-
-      if (authorizationStatus === BackgroundGeolocation.AUTHORIZATION_STATUS_WHEN_IN_USE) {
-        console.log('📍 [iOS Upgrade] Solicitando upgrade de WhenInUse → Always');
-
-        // Mostrar UN SOLO alert informativo ANTES de iOS
-        return new Promise((resolve) => {
-          Alert.alert(
-            'Permisos de Ubicación',
-            'Para registrar entregas automáticamente, incluso con la app cerrada, ' +
-            'el sistema te pedirá permisos adicionales:\n\n' +
-            '1. Ubicación "Siempre"\n' +
-            '2. Actividad física (para detectar movimiento)\n\n' +
-            'Esto es necesario para el funcionamiento correcto del seguimiento.',
-            [
-              {
-                text: 'Cancelar',
-                style: 'cancel',
-                onPress: () => {
-                  console.log('⚠️ Usuario canceló permisos');
-                  resolve(false);
-                },
-              },
-              {
-                text: 'Continuar',
-                onPress: async () => {
-                  // Cambiar a Always y solicitar
-                  await BackgroundGeolocation.setConfig({
-                    locationAuthorizationRequest: 'Always' as any
-                  });
-
-                  // iOS mostrará sus propios diálogos (ubicación + motion)
-                  const status = await BackgroundGeolocation.requestPermission();
-
-                  // NO mostrar más alertas después de iOS
-                  const hasAlways = status === BackgroundGeolocation.AUTHORIZATION_STATUS_ALWAYS;
-                  console.log(hasAlways ? '✅ Permisos Always otorgados' : '⚠️ Permisos parciales');
-                  resolve(hasAlways);
-                },
-              },
-            ],
-            { cancelable: false }
-          );
-        });
-      }
-
-      console.warn('🚫 Sin permisos de ubicación');
-      return false;
-
-    } catch (error) {
-      console.error('Error en upgrade:', error);
       return false;
     }
   }
