@@ -24,7 +24,6 @@ export const visitasStyles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: '#1c1c1e',
-    marginBottom:4,
   },
   emptyState: {
     alignItems: 'center',

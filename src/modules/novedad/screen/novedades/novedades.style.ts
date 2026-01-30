@@ -19,7 +19,12 @@ export const novedadesStyles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: '#1c1c1e',
-    marginBottom: 20,
+    marginBottom: 8,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   emptyState: {
     alignItems: 'center',
