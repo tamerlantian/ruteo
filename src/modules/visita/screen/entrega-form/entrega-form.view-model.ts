@@ -13,6 +13,9 @@ import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import {
   limpiarSeleccionVisitas,
   guardarDatosFormularioEnVisita,
+  marcarVisitaComoEntregada,
+  revertirEntregaOptimista,
+  limpiarDatosFormularioDeVisita,
 } from '../../store/slice/visita.slice';
 import { useVisitaProcessing } from '../../hooks/use-visita-processing.hook';
 import Toast from 'react-native-toast-message';
@@ -101,14 +104,6 @@ export const useEntregaFormViewModel = (
     [procesarVisitasEnLote],
   );
 
-  /**
-   * Finaliza el proceso de entrega limpiando selecciones y navegando
-   */
-  const finalizarProceso = useCallback(() => {
-    dispatch(limpiarSeleccionVisitas());
-    navigation.goBack();
-  }, [dispatch, navigation]);
-
   // === ACCIONES DEL FORMULARIO ===
 
   const onSubmit = useCallback(
@@ -118,48 +113,89 @@ export const useEntregaFormViewModel = (
         return;
       }
 
-      try {
-        // Procesar todas las visitas usando el hook compartido (pasando datos directamente)
-        setIsSubmitting(true);
-        const visitaIds = visitasSeleccionadas.map(id => parseInt(id, 10));
+      setIsSubmitting(true);
+      const visitaIds = visitasSeleccionadas.map(id => parseInt(id, 10));
 
-        // Guardar datos en Redux para posibles reintentos futuros
-        visitaIds.forEach(visitaId => {
-          dispatch(
-            guardarDatosFormularioEnVisita({ visitaId, datosFormulario: data }),
-          );
-        });
-
-        await procesarVisitasEnLote(
-          visitaIds,
-          {
-            markErrorOnFailure: true,
-            logPrefix: 'Entrega',
-            messagePrefix: 'entrega',
-            clearSelectionsOnSuccess: true,
-          },
-          data,
+      // 1. Guardar datos del formulario en Redux (backup para rollback si falla)
+      visitaIds.forEach(visitaId => {
+        dispatch(
+          guardarDatosFormularioEnVisita({ visitaId, datosFormulario: data }),
         );
+      });
 
-        // Finalizar proceso
-        finalizarProceso();
-      } catch (error) {
-        console.error('Error general al procesar las entregas:', error);
+      // 2. OPTIMISTIC UPDATE: Marcar como entregada INMEDIATAMENTE
+      visitaIds.forEach(visitaId => {
+        dispatch(marcarVisitaComoEntregada(visitaId));
+      });
+
+      // 3. Limpiar selecciones y navegar atrás INMEDIATAMENTE
+      dispatch(limpiarSeleccionVisitas());
+      navigation.goBack();
+
+      // 4. Procesar en background (la petición continúa después de navegar)
+      const batchResult = await procesarVisitasEnLote(
+        visitaIds,
+        {
+          markErrorOnFailure: false, // No usamos esto, manejamos errores manualmente
+          logPrefix: 'Entrega',
+          messagePrefix: 'entrega',
+          clearSelectionsOnSuccess: false, // Ya limpiamos arriba
+        },
+        data,
+      );
+
+      // 5. Procesar resultados individuales
+      batchResult.results.forEach(result => {
+        if (result.success) {
+          // Success: Ya está marcada como entregada, solo limpiar datos guardados
+          dispatch(limpiarDatosFormularioDeVisita(result.visitaId));
+        } else {
+          // ROLLBACK: Revertir optimistic update
+          // ✅ Extraer isRetryable del apiError (viene del error interceptor)
+          const esErrorRetryable = result.apiError?.isRetryable ?? true; // Default a true por seguridad
+
+          dispatch(
+            revertirEntregaOptimista({
+              visitaId: result.visitaId,
+              datosFormulario: data, // Preservar datos para retry SI es retryable
+              error: result.error || 'Error al procesar entrega',
+              esErrorRetryable, // ✅ Usar el valor del error interceptor
+            }),
+          );
+        }
+      });
+
+      // 6. Mostrar mensajes según resultados
+      if (batchResult.successCount > 0 && batchResult.errorCount === 0) {
         Toast.show({
-          type: 'error',
-          text1: 'Error al procesar las entregas',
+          type: 'success',
+          text1: `${batchResult.successCount} entrega(s) exitosa(s)`,
           text1Style: toastTextOneStyle,
         });
-      } finally {
-        setIsSubmitting(false);
+      } else if (batchResult.errorCount > 0 && batchResult.successCount === 0) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error en la entrega',
+          text2: 'La orden volverá a la lista. Puede reintentar.',
+          text1Style: toastTextOneStyle,
+        });
+      } else if (batchResult.errorCount > 0 && batchResult.successCount > 0) {
+        Toast.show({
+          type: 'info',
+          text1: `${batchResult.successCount} exitosa(s), ${batchResult.errorCount} fallida(s)`,
+          text2: 'Las órdenes con error volverán a la lista.',
+          text1Style: toastTextOneStyle,
+        });
       }
+
+      setIsSubmitting(false);
     },
     [
       validateInitialConditions,
       visitasSeleccionadas,
       dispatch,
       procesarVisitasEnLote,
-      finalizarProceso,
+      navigation,
     ],
   );
 

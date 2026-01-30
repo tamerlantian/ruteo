@@ -32,6 +32,7 @@ export const useRetryNovedades = () => {
             novedadesAReintentar.push({
               id: novedad.id_real || novedad.id,
               visitaId: novedad.visita_id,
+              movil_token: novedad.movil_token,
               tipo: novedad.novedad_tipo_id.toString(),
               descripcion: novedad.descripcion,
               foto: novedad.imagenes.map(img => ({

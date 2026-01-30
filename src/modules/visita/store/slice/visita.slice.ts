@@ -57,6 +57,37 @@ const visitaSlice = createSlice({
       const index = state.visitas.findIndex(visita => visita.id === visitaId);
       if (index > -1) {
         state.visitas[index].estado_entregado = true;
+        state.visitas[index].estado = 'sync';
+      }
+    },
+    revertirEntregaOptimista: (
+      state,
+      action: PayloadAction<{
+        visitaId: number;
+        datosFormulario: EntregaFormData;
+        error: string;
+        esErrorRetryable: boolean; // ✅ Ahora recibimos el valor real del error interceptor
+      }>,
+    ) => {
+      const { visitaId, datosFormulario, error, esErrorRetryable } = action.payload;
+      const visita = state.visitas.find(v => v.id === visitaId);
+
+      if (visita) {
+        // Revertir el optimistic update
+        visita.estado_entregado = false;
+        visita.estado = 'error';
+        visita.error_mensaje = error;
+
+        // Restaurar datos del formulario para retry SOLO si es retryable
+        if (esErrorRetryable) {
+          visita.datos_formulario_guardados = datosFormulario;
+        } else {
+          // Si no es retryable, limpiar datos guardados
+          visita.datos_formulario_guardados = undefined;
+        }
+
+        // Usar el valor real del error interceptor
+        visita.es_error_retryable = esErrorRetryable;
       }
     },
     marcarVisitaConNovedad: (state, action: PayloadAction<number>) => {
@@ -174,6 +205,7 @@ export const {
   limpiarSeleccionVisitas,
   seleccionarMultiplesVisitas,
   marcarVisitaComoEntregada,
+  revertirEntregaOptimista,
   marcarVisitaConNovedad,
   cambiarEstadoVisita,
   guardarDatosFormularioEnVisita,

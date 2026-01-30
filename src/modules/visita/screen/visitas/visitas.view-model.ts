@@ -297,6 +297,8 @@ export const useVisitasViewModel = () => {
         filteredByCategory = visitasPendientes;
     }
 
+    console.log('Visitas filtradas:', filteredByCategory);
+
     // Luego aplicar búsqueda por número si hay texto de búsqueda
     if (searchValue.trim()) {
       const searchQuery = searchValue.toLowerCase().trim();
@@ -427,3 +429,4 @@ export const useVisitasViewModel = () => {
 };
 
 export type VisitasViewModel = ReturnType<typeof useVisitasViewModel>;
+

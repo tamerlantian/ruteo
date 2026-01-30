@@ -13,7 +13,13 @@ export interface Novedad {
   id_real?: string;
   estado: NovedadEstado;
   estado_solucion: NovedadEstadoSolucion;
-  movil_token: string
+  movil_token: string;
+  // Datos del formulario guardados para reintento
+  datos_formulario_guardados?: NovedadFormData;
+  // Mensaje de error cuando estado === 'error'
+  error_mensaje?: string;
+  // Clasificación de error: true si es retryable, false si no lo es
+  es_error_retryable?: boolean;
 }
 
 export interface NovedadCreada {

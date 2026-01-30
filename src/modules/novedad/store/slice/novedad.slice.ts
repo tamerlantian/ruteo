@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Novedad, NovedadEstado, NovedadEstadoSolucion } from '../../interfaces/novedad.interface';
+import { Novedad, NovedadEstado, NovedadEstadoSolucion, NovedadFormData } from '../../interfaces/novedad.interface';
 
 interface NovedadState {
   novedades: Novedad[];
@@ -84,13 +84,54 @@ const novedadSlice = createSlice({
       const idsToAdd = action.payload.filter(id => !state.seleccionadas.includes(id));
       state.seleccionadas.push(...idsToAdd);
     },
+    guardarDatosFormularioEnNovedad: (
+      state,
+      action: PayloadAction<{
+        novedadId: string;
+        datosFormulario: NovedadFormData;
+      }>,
+    ) => {
+      const { novedadId, datosFormulario } = action.payload;
+      const novedad = state.novedades.find(n => n.id === novedadId);
+      if (novedad) {
+        // Guardar datos del formulario en la novedad para posibles reintentos
+        (novedad as any).datos_formulario_guardados = datosFormulario;
+      }
+    },
+    revertirNovedadOptimista: (
+      state,
+      action: PayloadAction<{
+        novedadId: string;
+        datosFormulario: NovedadFormData;
+        error: string;
+        esErrorRetryable: boolean; // ✅ Ahora recibimos el valor real del error interceptor
+      }>,
+    ) => {
+      const { novedadId, datosFormulario, error, esErrorRetryable } = action.payload;
+      const novedad = state.novedades.find(n => n.id === novedadId);
+
+      if (novedad) {
+        // Revertir el optimistic update
+        novedad.estado = 'error';
+        (novedad as any).error_mensaje = error;
+        (novedad as any).es_error_retryable = esErrorRetryable;
+
+        // Restaurar datos del formulario para retry SOLO si es retryable
+        if (esErrorRetryable) {
+          (novedad as any).datos_formulario_guardados = datosFormulario;
+        } else {
+          // Si no es retryable, limpiar datos guardados
+          (novedad as any).datos_formulario_guardados = undefined;
+        }
+      }
+    },
   },
   extraReducers() {
   },
 });
 
-export const { 
-  guardarNovedad, 
+export const {
+  guardarNovedad,
   toggleNovedadSeleccion,
   seleccionarTodasNovedades,
   limpiarSeleccionNovedades,
@@ -101,5 +142,7 @@ export const {
   actualizarIdNovedad,
   cambiarEstadoSolucionNovedad,
   guardarSolucionNovedad,
+  guardarDatosFormularioEnNovedad,
+  revertirNovedadOptimista,
 } = novedadSlice.actions;
 export default novedadSlice.reducer;
