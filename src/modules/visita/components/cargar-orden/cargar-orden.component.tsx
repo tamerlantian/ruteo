@@ -68,12 +68,13 @@ const CargarOrdenComponent = () => {
             ordenEntrega: data.codigo,
           }),
         );
-        await dispatch(
+
+        const visitas = await dispatch(
           cargarVisitasThunk({
             schemaName: schema_name,
             despachoId: despacho_id,
           }),
-        );
+        ).unwrap();
 
         try {
           await refetchNovedadTipos();
@@ -101,11 +102,20 @@ const CargarOrdenComponent = () => {
           // No mostrar error al usuario, el tracking es opcional
         }
 
-        Toast.show({
-          type: 'success',
-          text1: 'Orden cargada correctamente',
-          text1Style: toastTextOneStyle,
-        });
+        if(visitas.length > 0) {
+          Toast.show({
+            type: 'success',
+            text1: 'Orden cargada correctamente',
+            text1Style: toastTextOneStyle,
+          });
+        } else {
+          Toast.show({
+            type: 'success',
+            text1: 'La orden está completada',
+            text1Style: toastTextOneStyle,
+          });
+        }
+
         reset();
         // Cerrar teclado después de cargar exitosamente
         Keyboard.dismiss();
