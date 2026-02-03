@@ -150,7 +150,8 @@ export const VisitasScreen = () => {
       </CustomBottomSheet>
       <CustomBottomSheet
         ref={confirmacionBottomSheetRef}
-        maxDynamicContentSize={500}
+        enableDynamicSizing={true}
+        initialSnapPoints={['40%']}
       >
         <ConfirmacionDesvincularComponent
           onConfirmar={confirmarDesvinculacion}

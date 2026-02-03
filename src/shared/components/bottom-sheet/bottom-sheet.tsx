@@ -15,7 +15,7 @@ interface CustomBottomSheetProps extends Partial<BottomSheetProps> {
   onDismiss?: () => void;
   /** Maximum height for dynamic sizing. Defaults to 90% of screen height */
   maxDynamicContentSize?: number;
-  /** Whether to enable dynamic sizing. When true, snapPoints are optional */
+/** Whether to enable dynamic sizing. When true, snapPoints are optional */
   enableDynamicSizing?: boolean;
   /**
    * Determines when keyboard should stay visible when tapping.
@@ -35,7 +35,7 @@ const CustomBottomSheet = forwardRef<BottomSheet, CustomBottomSheetProps>(
       useScrollView = true,
       onDismiss,
       maxDynamicContentSize,
-      enableDynamicSizing: enableDynamicSizingProp = true,
+      enableDynamicSizing: enableDynamicSizingProp = false,
       keyboardShouldPersistTaps = 'handled',
       ...rest
     },
