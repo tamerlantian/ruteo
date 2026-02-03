@@ -52,6 +52,7 @@ export const SimpleSearchWithScanner: React.FC<SimpleSearchWithScannerProps> = (
           returnKeyType="search"
           autoCorrect={false}
           autoCapitalize="none"
+          multiline={false}
         />
         {searchValue.length > 0 && (
           <TouchableOpacity 

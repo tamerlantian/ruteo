@@ -110,7 +110,7 @@ export const NovedadesHeader: React.FC<NovedadesHeaderProps> = ({
           <SimpleSearchWithScanner
             searchValue={searchValue}
             onSearchChange={onSearchChange}
-            placeholder="Buscar por número o documento..."
+            placeholder="Buscar # o documento"
             onClear={handleClear}
             onScanResult={onScanResult}
           />

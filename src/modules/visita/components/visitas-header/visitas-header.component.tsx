@@ -100,7 +100,7 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
           <SimpleSearchWithScanner
             searchValue={searchValue}
             onSearchChange={onSearchChange}
-            placeholder="Buscar por número o documento..."
+            placeholder="Buscar # o documento"
             onClear={handleClear}
             onScanResult={onScanResult}
           />
