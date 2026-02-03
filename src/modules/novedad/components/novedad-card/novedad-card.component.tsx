@@ -17,6 +17,7 @@ import { toggleNovedadSeleccion } from '../../store/slice/novedad.slice';
 import { getFirstPhoneNumber } from '../../../../shared/utils/phone.util';
 import { useNovedadTipos } from '../../view-models/novedad.view-model';
 import { selectSubdominio } from '../../../settings';
+import { useMaps } from '../../../../shared/hooks/use-maps.hook';
 
 interface NovedadCardProps {
   novedad: Novedad;
@@ -29,6 +30,7 @@ export const NovedadCardComponent: React.FC<NovedadCardProps> = ({
   const isSelected = useAppSelector(selectIsNovedadSeleccionada(novedad.id_real || novedad.id));
   const novedadConVisita = useAppSelector(selectNovedadConVisita(novedad.id_real || novedad.id));
   const subdominio = useAppSelector(selectSubdominio);
+  const { openLocationInMaps } = useMaps();
   const {
       data: novedadTiposResponse,
     } = useNovedadTipos(subdominio || '', !!subdominio);
@@ -60,10 +62,25 @@ export const NovedadCardComponent: React.FC<NovedadCardProps> = ({
     }
   };
 
+  const handleLocationPress = (event: any) => {
+    event.stopPropagation();
+    if (visita?.latitud && visita?.longitud) {
+      openLocationInMaps({
+        latitude: visita.latitud,
+        longitude: visita.longitud,
+        address: visita.destinatario_direccion
+      });
+    }
+  };
+
   const visita = novedadConVisita?.visita;
   const displayPhone = visita?.destinatario_telefono
     ? getFirstPhoneNumber(visita.destinatario_telefono)
     : '';
+
+  // Verificar si tiene coordenadas válidas
+  const hasValidCoordinates = visita?.latitud && visita?.longitud &&
+    visita.latitud !== 0 && visita.longitud !== 0;
 
   return (
     <TouchableOpacity
@@ -146,6 +163,17 @@ export const NovedadCardComponent: React.FC<NovedadCardProps> = ({
               >
                 <Ionicons name="call" size={16} color="#007aff" />
                 <Text style={styles.phoneText}>{displayPhone}</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Botón de ubicación */}
+            {hasValidCoordinates && (
+              <TouchableOpacity
+                style={styles.locationButton}
+                onPress={handleLocationPress}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="location" size={16} color="#007aff" />
               </TouchableOpacity>
             )}
           </View>
@@ -359,5 +387,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#ffffff',
     fontWeight: '600',
+  },
+  locationButton: {
+    backgroundColor: '#f8f9fa',
+    width: 28,
+    height: 28,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

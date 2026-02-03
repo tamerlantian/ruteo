@@ -35,7 +35,9 @@ export class NovedadRepository extends HttpBaseRepository {
    */
   async getNovedadTipo(schemaName: string): Promise<ApiResponse<NovedadTipo>> {
     const url = await buildUrlWithSubdomain(schemaName, 'ruteo/novedad_tipo/');
-    return this.get<ApiResponse<NovedadTipo>>(url);
+    const response = await this.get<ApiResponse<NovedadTipo>>(url, { ordering: 'nombre' });
+    console.log('RESPONSE>>>', response);
+    return response;
   }
 
   /**
