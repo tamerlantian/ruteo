@@ -18,13 +18,14 @@ import { entregaFormStyles } from './entrega-form.style';
 import { useEntregaFormViewModel } from './entrega-form.view-model';
 import { FormSelectorController } from '../../../../shared/components/ui/form/form-selector/FormSelectorController';
 import { FormButton } from '../../../../shared/components/ui/button/FormButton';
+import { ErrorBoundary } from '../../../../shared/components/error-boundary';
 
 type EntregaFormScreenProps = NativeStackScreenProps<
   MainStackParamList,
   'EntregaForm'
 >;
 
-export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
+const EntregaFormContent: React.FC<EntregaFormScreenProps> = ({
   navigation,
   route,
 }) => {
@@ -189,5 +190,20 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = ({
         />
       </View>
     </SafeAreaView>
+  );
+};
+
+// Wrap the form with error boundary
+export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = (props) => {
+  const handleFormError = (error: Error, errorInfo: React.ErrorInfo) => {
+    console.error('🚨 [Form Error Boundary] Entrega form error:', error);
+    console.error('Component stack:', errorInfo.componentStack);
+    // TODO: Log to Sentry when integrated
+  };
+
+  return (
+    <ErrorBoundary level="form" onError={handleFormError}>
+      <EntregaFormContent {...props} />
+    </ErrorBoundary>
   );
 };

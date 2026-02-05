@@ -5,6 +5,7 @@ import { AuthNavigator } from './AuthNavigator';
 import { MainNavigator } from './MainNavigator';
 import { RootStackParamList } from '../types';
 import { SplashScreen } from '../../components/SplashScreen';
+import { ErrorBoundary } from '../../shared/components/error-boundary';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 
@@ -26,30 +27,38 @@ export const RootNavigator: React.FC = () => {
 
   console.log('🔍 RootNavigator: isAuthenticated:', isAuthenticated);
 
+  const handleNavigationError = (error: Error, errorInfo: React.ErrorInfo) => {
+    console.error('🚨 [Navigation Error Boundary] Navigation error:', error);
+    console.error('Component stack:', errorInfo.componentStack);
+    // TODO: Log to Sentry when integrated
+  };
+
   return (
-    <RootStack.Navigator 
-      screenOptions={{ 
-        headerShown: false,
-        animation: 'fade',
-      }}
-    >
-      {isAuthenticated ? (
-        <RootStack.Screen 
-          name="Main" 
-          component={MainNavigator}
-          options={{
-            title: 'Aplicación Principal',
-          }}
-        />
-      ) : (
-        <RootStack.Screen 
-          name="Auth" 
-          component={AuthNavigator}
-          options={{
-            title: 'Autenticación',
-          }}
-        />
-      )}
-    </RootStack.Navigator>
+    <ErrorBoundary level="navigation" onError={handleNavigationError}>
+      <RootStack.Navigator
+        screenOptions={{
+          headerShown: false,
+          animation: 'fade',
+        }}
+      >
+        {isAuthenticated ? (
+          <RootStack.Screen
+            name="Main"
+            component={MainNavigator}
+            options={{
+              title: 'Aplicación Principal',
+            }}
+          />
+        ) : (
+          <RootStack.Screen
+            name="Auth"
+            component={AuthNavigator}
+            options={{
+              title: 'Autenticación',
+            }}
+          />
+        )}
+      </RootStack.Navigator>
+    </ErrorBoundary>
   );
 };

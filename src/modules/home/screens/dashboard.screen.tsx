@@ -13,7 +13,6 @@ import {
   selectVisitasPendientes,
   selectVisitasEntregadas,
   selectVisitaIdsConErrorCompleto,
-  selectVisitasConErrorCompleto,
   selectVisitasConError,
   selectVisitasConErrorRetryables,
   selectVisitasConErrorNoRetryables,
@@ -30,6 +29,7 @@ import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../shared/styles/global.style';
 import { networkService } from '../../../shared/services/network.service';
 import { backgroundGeolocationService } from '../../../shared/services/background-geolocation.service';
+import { ErrorBoundaryTester } from '../../../shared/components/error-boundary/ErrorBoundaryTester';
 
 export const DashboardScreen = () => {
   const { user } = useAuth();
@@ -50,7 +50,6 @@ export const DashboardScreen = () => {
   const novedades = useAppSelector(selectNovedadesPendientesPorSolventar);
   const visitasPendientes = useAppSelector(selectVisitasPendientes);
   const visitasEntregadas = useAppSelector(selectVisitasEntregadas);
-  const visitasConErrorCompleto = useAppSelector(selectVisitasConErrorCompleto);
   const visitaIdsConError = useAppSelector(selectVisitaIdsConErrorCompleto);
   const visitasConErrorRetryables = useAppSelector(selectVisitasConErrorRetryables);
   const visitasConErrorNoRetryables = useAppSelector(selectVisitasConErrorNoRetryables);
@@ -238,7 +237,7 @@ export const DashboardScreen = () => {
       />
       <View style={styles.content}>
         <Text style={styles.title}>Dashboard</Text>
-
+        <ErrorBoundaryTester />
         {user && (
           <View style={styles.welcomeContainer}>
             <Text style={styles.welcomeText}>

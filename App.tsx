@@ -19,6 +19,7 @@ import { initializeServices } from './src/core/services/init-services';
 import Toast from 'react-native-toast-message';
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { useRestoreTracking } from './src/shared/hooks';
+import { ErrorBoundary } from './src/shared/components/error-boundary';
 
 
 const queryClient = new QueryClient({
@@ -34,35 +35,47 @@ const queryClient = new QueryClient({
 // IMPORTANTE: Incluye inicialización de BackgroundGeolocation
 initializeServices().catch(error => {
   console.error('🚀 [App] Error inicializando servicios:', error);
+  // TODO: Log to crash reporting service (Sentry)
+  // This error should be reported but shouldn't crash the app
+  // Some services may still work even if initialization partially fails
 });
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
 
+  const handleRootError = (error: Error, errorInfo: React.ErrorInfo) => {
+    console.error('🚨 [Root Error Boundary] Critical error:', error);
+    console.error('Component stack:', errorInfo.componentStack);
+    // TODO: Log to Sentry when integrated
+    // Sentry.captureException(error, { contexts: { react: errorInfo } });
+  };
+
   return (
-    <Provider store={store}>
-      <GestureHandlerRootView style={styles.gestureHandler}>
-        <QueryClientProvider client={queryClient}>
-          <KeyboardProvider>
-          <BottomSheetModalProvider>
-            <ToastProvider>
-              <DevModeProvider>
-                <AuthProvider>
-                  <SafeAreaProvider>
-                    <StatusBar
-                      barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-                    />
-                    <AppContent />
-                  </SafeAreaProvider>
-                </AuthProvider>
-              </DevModeProvider>
-            </ToastProvider>
-          </BottomSheetModalProvider>
-          </KeyboardProvider>
-        </QueryClientProvider>
-      </GestureHandlerRootView>
-      <Toast visibilityTime={2000} />
-    </Provider>
+    <ErrorBoundary level="root" onError={handleRootError}>
+      <Provider store={store}>
+        <GestureHandlerRootView style={styles.gestureHandler}>
+          <QueryClientProvider client={queryClient}>
+            <KeyboardProvider>
+            <BottomSheetModalProvider>
+              <ToastProvider>
+                <DevModeProvider>
+                  <AuthProvider>
+                    <SafeAreaProvider>
+                      <StatusBar
+                        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+                      />
+                      <AppContent />
+                    </SafeAreaProvider>
+                  </AuthProvider>
+                </DevModeProvider>
+              </ToastProvider>
+            </BottomSheetModalProvider>
+            </KeyboardProvider>
+          </QueryClientProvider>
+        </GestureHandlerRootView>
+        <Toast visibilityTime={2000} />
+      </Provider>
+    </ErrorBoundary>
   );
 }
 

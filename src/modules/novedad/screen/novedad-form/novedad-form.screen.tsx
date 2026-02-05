@@ -22,13 +22,14 @@ import { FormSelectorController } from '../../../../shared/components/ui/form/fo
 import { PhotoField } from '../../../visita/screen/entrega-form/components/PhotoField';
 import { useGradualAnimation } from '../../../../shared/hooks/use-gradual-animation.hook';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { ErrorBoundary } from '../../../../shared/components/error-boundary';
 
 type NovedadFormScreenProps = NativeStackScreenProps<
   MainStackParamList,
   'NovedadForm'
 >;
 
-export const NovedadFormScreen: React.FC<NovedadFormScreenProps> = ({
+const NovedadFormContent: React.FC<NovedadFormScreenProps> = ({
   navigation,
   route,
 }) => {
@@ -171,5 +172,20 @@ export const NovedadFormScreen: React.FC<NovedadFormScreenProps> = ({
         <Animated.View style={keyboardPadding} />
       </View>
     </SafeAreaView>
+  );
+};
+
+// Wrap the form with error boundary
+export const NovedadFormScreen: React.FC<NovedadFormScreenProps> = (props) => {
+  const handleFormError = (error: Error, errorInfo: React.ErrorInfo) => {
+    console.error('🚨 [Form Error Boundary] Novedad form error:', error);
+    console.error('Component stack:', errorInfo.componentStack);
+    // TODO: Log to Sentry when integrated
+  };
+
+  return (
+    <ErrorBoundary level="form" onError={handleFormError}>
+      <NovedadFormContent {...props} />
+    </ErrorBoundary>
   );
 };
