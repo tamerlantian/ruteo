@@ -3,6 +3,7 @@ import { useAppSelector } from '../../store/hooks';
 import { selectOrdenEntrega, selectSubdominio, selectDespacho } from '../../modules/settings';
 import { backgroundGeolocationService } from '../services/background-geolocation.service';
 import { useAuth } from '../../modules/auth/context/auth.context';
+import { reportLocationTrackingError } from '../utils/sentry-helpers';
 
 /**
  * Hook para restaurar tracking automáticamente después de Redux REHYDRATE
@@ -75,6 +76,16 @@ export const useRestoreTracking = () => {
         hasAttemptedRestore.current = true;
       } catch (error) {
         console.error('❌ [RestoreTracking] Error restaurando tracking:', error);
+
+        // Report restoration errors
+        reportLocationTrackingError('restoration', error, {
+          hasOrdenEntrega: !!ordenEntrega,
+          hasSubdominio: !!subdominio,
+          hasDespacho: !!despacho,
+          hasUserId: !!user?.id,
+          serviceIsEnabled: serviceState.isEnabled,
+        });
+
         hasAttemptedRestore.current = true;
       }
     };

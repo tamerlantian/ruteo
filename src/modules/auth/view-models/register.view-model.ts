@@ -7,6 +7,7 @@ import { toastTextOneStyle } from '../../../shared/styles/global.style';
 import { AuthErrorMapperService } from '../services/auth-error-mapper.service';
 import { useAuthNavigation } from '../../../navigation/hooks/useTypedNavigation';
 import { networkService } from '../../../shared/services/network.service';
+import { reportMutationError } from '../../../shared/utils/sentry-helpers';
 
 // Hook para manejar el registro
 export const useRegister = () => {
@@ -39,8 +40,8 @@ export const useRegister = () => {
       // Redirigir a la pantalla de login
       navigation.navigate('Login');
     },
-    onError: (error: any) => {
-      // Manejar error específico de conectividad
+    onError: (error: any, variables: RegisterCredentials) => {
+      // Manejar error específico de conectividad (NO reportar a Sentry)
       if (error.message === 'NO_INTERNET_CONNECTION') {
         Toast.show({
           type: 'error',
@@ -50,10 +51,18 @@ export const useRegister = () => {
         });
         return;
       }
-      
+
+      // Report to Sentry BEFORE showing toast
+      reportMutationError('register', error, {
+        module: 'auth',
+        operation: 'register',
+        location: 'register-view-model',
+        email: variables.username, // Safe to include email (no password!)
+      });
+
       // Manejar otros errores usando el mapper existente
       const mappedError = AuthErrorMapperService.mapError(error, 'register');
-      
+
       Toast.show({
         type: 'error',
         text1: mappedError.title,

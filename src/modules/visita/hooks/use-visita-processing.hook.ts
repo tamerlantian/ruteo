@@ -16,6 +16,7 @@ import {
 } from '../services/visita-processing.service';
 import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../shared/styles/global.style';
+import { reportBatchProcessingError } from '../../../shared/utils/sentry-helpers';
 
 /**
  * Configuración para el hook de procesamiento de visitas
@@ -230,6 +231,15 @@ export const useVisitaProcessing = () => {
         return batchResult;
       } catch (error) {
         console.error('Error general al procesar las visitas:', error);
+
+        // Report catastrophic batch processing errors (not individual item failures)
+        reportBatchProcessingError('entrega', error, {
+          totalCount: visitaIds.length,
+          visitaIds: visitaIds.join(','),
+          hasSubdominio: !!subdominio,
+          messagePrefix: config.messagePrefix || 'operación',
+        });
+
         Toast.show({
           type: 'error',
           text1: 'Error al procesar las visitas',

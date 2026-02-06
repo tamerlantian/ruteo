@@ -6,6 +6,7 @@ import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../shared/styles/global.style';
 import { AuthErrorMapperService } from '../services/auth-error-mapper.service';
 import { networkService } from '../../../shared/services/network.service';
+import { reportMutationError } from '../../../shared/utils/sentry-helpers';
 
 // Hook para manejar el login
 export const useLogin = () => {
@@ -37,8 +38,8 @@ export const useLogin = () => {
         text1Style: toastTextOneStyle,
       });
     },
-    onError: (error: any) => {
-      // Manejar error específico de conectividad
+    onError: (error: any, variables: LoginCredentials) => {
+      // Manejar error específico de conectividad (NO reportar a Sentry)
       if (error.message === 'NO_INTERNET_CONNECTION') {
         Toast.show({
           type: 'error',
@@ -48,10 +49,18 @@ export const useLogin = () => {
         });
         return;
       }
-      
+
+      // Report to Sentry BEFORE showing toast
+      reportMutationError('login', error, {
+        module: 'auth',
+        operation: 'login',
+        location: 'login-view-model',
+        email: variables.username, // Safe to include email (no password!)
+      });
+
       // Manejar otros errores usando el mapper existente
       const mappedError = AuthErrorMapperService.mapError(error, 'login');
-      
+
       Toast.show({
         type: 'error',
         text1: mappedError.title,

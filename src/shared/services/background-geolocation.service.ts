@@ -10,6 +10,13 @@ import {
   TrackingConfig,
 } from '../interfaces/background-geolocation.interface';
 import { LocationTrackingData } from '../interfaces/location.interface';
+import {
+  reportLocationTrackingError,
+  reportAsyncStorageError,
+  withSentryErrorTracking,
+  isPermissionError,
+  addSentryBreadcrumb,
+} from '../utils/sentry-helpers';
 
 /**
  * Servicio para manejar background geolocation usando react-native-background-geolocation
@@ -178,6 +185,13 @@ export class BackgroundGeolocationService {
       return true;
     } catch (error) {
       console.warn('📱 [Notification Permission] Error:', error);
+      // Don't report permission errors to Sentry (user choice)
+      if (!isPermissionError(error)) {
+        reportLocationTrackingError('startup', error, {
+          phase: 'notification_permission',
+          platform: 'android',
+        });
+      }
       return false;
     }
   }
@@ -240,6 +254,15 @@ export class BackgroundGeolocationService {
       this.isReady = false;
       this.state.isEnabled = false;
       this.state.hasPermission = false;
+
+      // Report startup errors to Sentry (unless permission-related)
+      if (!isPermissionError(error)) {
+        reportLocationTrackingError('startup', error, {
+          phase: 'ready',
+          platform: Platform.OS,
+        });
+      }
+
       throw error;
     }
   }
@@ -255,78 +278,155 @@ export class BackgroundGeolocationService {
     this.removeEventListeners();
 
     try {
-      // Event listener para nuevas ubicaciones
+      // Event listener para nuevas ubicaciones (wrapped with Sentry tracking)
       this.subscriptions.push(
-        BackgroundGeolocation.onLocation(this.onLocation.bind(this))
+        BackgroundGeolocation.onLocation(
+          withSentryErrorTracking(
+            'onLocation',
+            this.onLocation.bind(this),
+            {
+              module: 'geolocation',
+              location: 'background-geolocation-service',
+            },
+            'error'
+          )
+        )
       );
       console.log('📍 [BackgroundGeolocation] Listener de ubicación configurado');
 
-      // Event listener para cambios de proveedor
+      // Event listener para cambios de proveedor (wrapped with Sentry tracking)
       this.subscriptions.push(
-        BackgroundGeolocation.onProviderChange(event => {
-          console.log('📍 [BackgroundGeolocation] Provider change:', event);
-          this.state.hasPermission = event.gps && event.network && event.enabled;
-        })
+        BackgroundGeolocation.onProviderChange(
+          withSentryErrorTracking(
+            'onProviderChange',
+            (event) => {
+              console.log('📍 [BackgroundGeolocation] Provider change:', event);
+              this.state.hasPermission = event.gps && event.network && event.enabled;
+            },
+            {
+              module: 'geolocation',
+              location: 'background-geolocation-service',
+            },
+            'warning'
+          )
+        )
       );
 
-      // Event listener para cambios de autorización
+      // Event listener para cambios de autorización (wrapped with Sentry tracking)
       this.subscriptions.push(
-        BackgroundGeolocation.onAuthorization((status: any) => {
-          console.log('📍 Authorization status change:', status);
-          if (status === BackgroundGeolocation.AUTHORIZATION_STATUS_DENIED) {
-            console.warn('🚫 Ubicación denegada por iOS');
-            this.showLocationPermissionAlert();
-          }
-        })
+        BackgroundGeolocation.onAuthorization(
+          withSentryErrorTracking(
+            'onAuthorization',
+            (status: any) => {
+              console.log('📍 Authorization status change:', status);
+              if (status === BackgroundGeolocation.AUTHORIZATION_STATUS_DENIED) {
+                console.warn('🚫 Ubicación denegada por iOS');
+                this.showLocationPermissionAlert();
+              }
+            },
+            {
+              module: 'geolocation',
+              location: 'background-geolocation-service',
+            },
+            'warning'
+          )
+        )
       );
 
-      // 🔴 NUEVO: Event listener para heartbeat (casos estacionarios)
+      // 🔴 NUEVO: Event listener para heartbeat (casos estacionarios, wrapped with Sentry)
       this.subscriptions.push(
-        BackgroundGeolocation.onHeartbeat((event) => {
-          console.log('📍 [BackgroundGeolocation] Heartbeat:', event);
+        BackgroundGeolocation.onHeartbeat(
+          withSentryErrorTracking(
+            'onHeartbeat',
+            (event) => {
+              console.log('📍 [BackgroundGeolocation] Heartbeat:', event);
 
-          // Opcional: solicitar ubicación actual en heartbeat para casos estacionarios
-          if (this.hasValidTrackingConfig()) {
-            BackgroundGeolocation.getCurrentPosition({
-              samples: 1,
-              persist: true,
-              timeout: 30
-            }).then(location => {
-              console.log('📍 [BackgroundGeolocation] Heartbeat location:', location);
-              this.onLocation(location);
-            }).catch(error => {
-              console.warn('📍 [BackgroundGeolocation] Error en heartbeat location:', error);
-            });
-          }
-        })
+              // Opcional: solicitar ubicación actual en heartbeat para casos estacionarios
+              if (this.hasValidTrackingConfig()) {
+                BackgroundGeolocation.getCurrentPosition({
+                  samples: 1,
+                  persist: true,
+                  timeout: 30
+                }).then(location => {
+                  console.log('📍 [BackgroundGeolocation] Heartbeat location:', location);
+                  this.onLocation(location);
+                }).catch(error => {
+                  console.warn('📍 [BackgroundGeolocation] Error en heartbeat location:', error);
+                  // Report heartbeat location errors as warnings
+                  reportLocationTrackingError('runtime', error, {
+                    phase: 'heartbeat_getCurrentPosition',
+                    hasValidConfig: this.hasValidTrackingConfig(),
+                  });
+                });
+              }
+            },
+            {
+              module: 'geolocation',
+              location: 'background-geolocation-service',
+            },
+            'warning'
+          )
+        )
       );
 
-      // 🔴 iOS CRÍTICO: Event listener para geofences (supervivencia cuando app está terminada)
+      // 🔴 iOS CRÍTICO: Event listener para geofences (wrapped with Sentry)
       // Este evento confirma que iOS creó el geofence estacionario y reactiva la app
       this.subscriptions.push(
-        BackgroundGeolocation.onGeofence((event) => {
-          console.log('📍 [BackgroundGeolocation] 🎯 Geofence event (iOS app reactivation):', event);
-          console.log('📍 [BackgroundGeolocation] 🎯 Geofence action:', event.action); // ENTER o EXIT
-          console.log('📍 [BackgroundGeolocation] 🎯 Geofence identifier:', event.identifier);
+        BackgroundGeolocation.onGeofence(
+          withSentryErrorTracking(
+            'onGeofence',
+            (event) => {
+              console.log('📍 [BackgroundGeolocation] 🎯 Geofence event (iOS app reactivation):', event);
+              console.log('📍 [BackgroundGeolocation] 🎯 Geofence action:', event.action); // ENTER o EXIT
+              console.log('📍 [BackgroundGeolocation] 🎯 Geofence identifier:', event.identifier);
 
-          // Si es EXIT del geofence estacionario, iOS acaba de reactivar la app
-          if (event.action === 'EXIT' && event.identifier === 'TSLocationManager') {
-            console.log('✅ [BackgroundGeolocation] iOS reactivó la app desde estado terminado');
-            console.log('✅ [BackgroundGeolocation] Geofence estacionaria funcionando correctamente');
-          }
-        })
+              // Si es EXIT del geofence estacionario, iOS acaba de reactivar la app
+              if (event.action === 'EXIT' && event.identifier === 'TSLocationManager') {
+                console.log('✅ [BackgroundGeolocation] iOS reactivó la app desde estado terminado');
+                console.log('✅ [BackgroundGeolocation] Geofence estacionaria funcionando correctamente');
+                addSentryBreadcrumb(
+                  'geolocation',
+                  'iOS app reactivated from geofence exit',
+                  { identifier: event.identifier },
+                  'info'
+                );
+              }
+            },
+            {
+              module: 'geolocation',
+              location: 'background-geolocation-service',
+            },
+            'warning'
+          )
+        )
       );
 
-      // 🔴 iOS: Event listener para cambios de estado del plugin
+      // 🔴 iOS: Event listener para cambios de estado del plugin (wrapped with Sentry)
       // Permite monitorear cuando iOS crea/destruye el geofence estacionario
       this.subscriptions.push(
-        BackgroundGeolocation.onEnabledChange((isEnabled) => {
-          console.log('📍 [BackgroundGeolocation] Estado enabled cambió:', isEnabled);
-          if (!isEnabled && Platform.OS === 'ios') {
-            console.log('⚠️ [BackgroundGeolocation] iOS detuvo tracking - verificando geofence estacionaria...');
-            // El plugin debería haber creado el geofence estacionario antes de desactivarse
-          }
-        })
+        BackgroundGeolocation.onEnabledChange(
+          withSentryErrorTracking(
+            'onEnabledChange',
+            (isEnabled) => {
+              console.log('📍 [BackgroundGeolocation] Estado enabled cambió:', isEnabled);
+              if (!isEnabled && Platform.OS === 'ios') {
+                console.log('⚠️ [BackgroundGeolocation] iOS detuvo tracking - verificando geofence estacionaria...');
+                // El plugin debería haber creado el geofence estacionario antes de desactivarse
+                addSentryBreadcrumb(
+                  'geolocation',
+                  'iOS tracking stopped - stationary geofence should be created',
+                  { isEnabled },
+                  'info'
+                );
+              }
+            },
+            {
+              module: 'geolocation',
+              location: 'background-geolocation-service',
+            },
+            'warning'
+          )
+        )
       );
 
       console.log(
@@ -416,6 +516,16 @@ export class BackgroundGeolocationService {
     } catch (error) {
       console.error('📍 [BGS] Error enviando ubicación:', error);
       this.state.errorCount++;
+
+      // Report submission errors only if errorCount crosses threshold (avoid spam)
+      if (this.state.errorCount >= 3) {
+        reportLocationTrackingError('submission', error, {
+          errorCount: this.state.errorCount,
+          hasValidConfig: this.hasValidTrackingConfig(),
+          schemaName: this.state.schemaName,
+          despacho: this.state.despacho,
+        });
+      }
     }
   }
 
@@ -536,16 +646,25 @@ export class BackgroundGeolocationService {
       this.state.usuarioId = config.usuarioId;
 
       // CRÍTICO: Guardar config completa en AsyncStorage para HeadlessTask y restauración
-      await AsyncStorage.multiSet([
-        ['usuario_id', config.usuarioId.toString()],
-        ['tracking_schema', config.schemaName],
-        ['tracking_despacho', config.despacho.toString()],
-      ]);
-      console.log('📍 [BGS] Config completa guardada:', {
-        usuarioId: config.usuarioId,
-        schemaName: config.schemaName,
-        despacho: config.despacho
-      });
+      try {
+        await AsyncStorage.multiSet([
+          ['usuario_id', config.usuarioId.toString()],
+          ['tracking_schema', config.schemaName],
+          ['tracking_despacho', config.despacho.toString()],
+        ]);
+        console.log('📍 [BGS] Config completa guardada:', {
+          usuarioId: config.usuarioId,
+          schemaName: config.schemaName,
+          despacho: config.despacho
+        });
+      } catch (storageError) {
+        console.error('📍 [BGS] Error guardando config en AsyncStorage:', storageError);
+        reportAsyncStorageError('multiSet', storageError, {
+          keys: ['usuario_id', 'tracking_schema', 'tracking_despacho'],
+          phase: 'startTracking',
+        });
+        // Don't throw - tracking can still work without persistence
+      }
 
       // Configurar event listeners
       this.setupEventListeners();
@@ -562,6 +681,17 @@ export class BackgroundGeolocationService {
         error,
       );
       this.state.isTracking = false;
+
+      // Report tracking startup errors (unless permission-related)
+      if (!isPermissionError(error)) {
+        reportLocationTrackingError('startup', error, {
+          phase: 'startTracking',
+          schemaName: config.schemaName,
+          despacho: config.despacho,
+          platform: Platform.OS,
+        });
+      }
+
       throw error;
     }
   }
@@ -630,6 +760,13 @@ export class BackgroundGeolocationService {
 
     } catch (error) {
       console.error('📍 [BGS] Error restaurando tracking:', error);
+
+      // Report restoration errors
+      reportLocationTrackingError('restoration', error, {
+        isReady: this.isReady,
+        isTracking: this.state.isTracking,
+      });
+
       return false;
     }
   }
@@ -686,8 +823,17 @@ export class BackgroundGeolocationService {
       }
 
       // Limpiar datos de AsyncStorage para HeadlessTask
-      await AsyncStorage.multiRemove(['usuario_id', 'tracking_schema', 'tracking_despacho']);
-      console.log('📍 [BGS] Config de tracking removida de AsyncStorage');
+      try {
+        await AsyncStorage.multiRemove(['usuario_id', 'tracking_schema', 'tracking_despacho']);
+        console.log('📍 [BGS] Config de tracking removida de AsyncStorage');
+      } catch (storageError) {
+        console.error('📍 [BGS] Error removiendo config de AsyncStorage:', storageError);
+        reportAsyncStorageError('multiRemove', storageError, {
+          keys: ['usuario_id', 'tracking_schema', 'tracking_despacho'],
+          phase: 'cleanup',
+        });
+        // Continue cleanup despite storage error
+      }
 
       // Limpiar solo datos de tracking, NO el estado ready NI los listeners
       this.state.schemaName = undefined;
@@ -703,6 +849,13 @@ export class BackgroundGeolocationService {
       );
     } catch (error) {
       console.error('📍 [BackgroundGeolocation] Error limpiando:', error);
+
+      // Report cleanup errors
+      reportLocationTrackingError('cleanup', error, {
+        phase: 'cleanup',
+        wasTracking: this.state.isTracking,
+      });
+
       throw error;
     }
   }
@@ -726,8 +879,17 @@ export class BackgroundGeolocationService {
       this.removeEventListeners();
 
       // Limpiar datos de AsyncStorage para HeadlessTask
-      await AsyncStorage.multiRemove(['usuario_id', 'tracking_schema', 'tracking_despacho']);
-      console.log('📍 [BGS] Config de tracking removida de AsyncStorage');
+      try {
+        await AsyncStorage.multiRemove(['usuario_id', 'tracking_schema', 'tracking_despacho']);
+        console.log('📍 [BGS] Config de tracking removida de AsyncStorage');
+      } catch (storageError) {
+        console.error('📍 [BGS] Error removiendo config de AsyncStorage:', storageError);
+        reportAsyncStorageError('multiRemove', storageError, {
+          keys: ['usuario_id', 'tracking_schema', 'tracking_despacho'],
+          phase: 'cleanup',
+        });
+        // Continue cleanup despite storage error
+      }
 
       // Resetear estado completo
       this.resetState();
@@ -740,6 +902,13 @@ export class BackgroundGeolocationService {
         '📍 [BackgroundGeolocation] Error en limpieza completa:',
         error,
       );
+
+      // Report full cleanup errors
+      reportLocationTrackingError('cleanup', error, {
+        phase: 'fullCleanup',
+        wasTracking: this.state.isTracking,
+      });
+
       throw error;
     }
   }

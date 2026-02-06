@@ -6,6 +6,7 @@ import { ApiErrorResponse } from '../../../core/interfaces/api.interface';
 import { useAuthNavigation } from '../../../navigation/hooks';
 import { toastTextOneStyle } from '../../../shared/styles/global.style';
 import { networkService } from '../../../shared/services/network.service';
+import { reportMutationError } from '../../../shared/utils/sentry-helpers';
 
 // Hook para manejar la recuperación de contraseña
 export const useForgotPassword = () => {
@@ -30,8 +31,8 @@ export const useForgotPassword = () => {
       });
       navigation.navigate('Login');
     },
-    onError: (error: any) => {
-      // Manejar error específico de conectividad
+    onError: (error: any, variables: ForgotPasswordFormValues) => {
+      // Manejar error específico de conectividad (NO reportar a Sentry)
       if (error.message === 'NO_INTERNET_CONNECTION') {
         Toast.show({
           type: 'error',
@@ -41,7 +42,15 @@ export const useForgotPassword = () => {
         });
         return;
       }
-      
+
+      // Report to Sentry BEFORE showing toast
+      reportMutationError('forgot_password', error, {
+        module: 'auth',
+        operation: 'forgot_password',
+        location: 'forgot-password-view-model',
+        email: variables.username, // Safe to include email
+      });
+
       // Manejar otros errores usando la lógica existente
       const errorData = error as ApiErrorResponse;
       Toast.show({

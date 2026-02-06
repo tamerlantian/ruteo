@@ -32,6 +32,7 @@ import { toastTextOneStyle } from '../../../shared/styles/global.style';
 import { networkService } from '../../../shared/services/network.service';
 import { backgroundGeolocationService } from '../../../shared/services/background-geolocation.service';
 import { ErrorBoundaryTester } from '../../../shared/components/error-boundary/ErrorBoundaryTester';
+import { reportLocationTrackingError } from '../../../shared/utils/sentry-helpers';
 
 export const DashboardScreen = () => {
   const { user } = useAuth();
@@ -84,6 +85,14 @@ export const DashboardScreen = () => {
           });
         } catch (error) {
           console.error('Error auto-stopping location tracking:', error);
+
+          // Report auto-stop errors as warnings (silent error, no user impact)
+          reportLocationTrackingError('runtime', error, {
+            phase: 'auto_stop',
+            pendingCount: visitasPendientes.length,
+            wasTracking: isLocationTracking,
+          });
+
           // Don't show error toast for automatic actions to avoid user confusion
         }
       }, 1000); // 3 second debounce to prevent rapid on/off cycles
@@ -100,19 +109,29 @@ export const DashboardScreen = () => {
   // Verificar y sincronizar estado del tracking al cargar componente
   useEffect(() => {
     const checkAndSyncTrackingStatus = () => {
-      const isTracking = backgroundGeolocationService.isTrackingActive();
-      const hasValidConfig = backgroundGeolocationService.hasValidTrackingConfig();
+      try {
+        const isTracking = backgroundGeolocationService.isTrackingActive();
+        const hasValidConfig = backgroundGeolocationService.hasValidTrackingConfig();
 
-      console.log('📱 [Dashboard] Estado tracking:', {
-        isTracking,
-        hasValidConfig,
-        localState: isLocationTracking
-      });
+        console.log('📱 [Dashboard] Estado tracking:', {
+          isTracking,
+          hasValidConfig,
+          localState: isLocationTracking
+        });
 
-      // Sincronizar UI con estado real del servicio
-      if (isTracking !== isLocationTracking) {
-        console.log('📱 [Dashboard] Sincronizando UI con estado real:', isTracking);
-        setIsLocationTracking(isTracking);
+        // Sincronizar UI con estado real del servicio
+        if (isTracking !== isLocationTracking) {
+          console.log('📱 [Dashboard] Sincronizando UI con estado real:', isTracking);
+          setIsLocationTracking(isTracking);
+        }
+      } catch (error) {
+        console.error('📱 [Dashboard] Error checking tracking status:', error);
+
+        // Report status sync errors as warnings
+        reportLocationTrackingError('runtime', error, {
+          phase: 'status_sync',
+          localState: isLocationTracking,
+        });
       }
     };
 
@@ -170,6 +189,14 @@ export const DashboardScreen = () => {
       }
     } catch (error) {
       console.error('Error toggling location tracking:', error);
+
+      // Report location toggle errors
+      reportLocationTrackingError('runtime', error, {
+        phase: 'toggle_tracking',
+        action: isLocationTracking ? 'stop' : 'start',
+        hasConfig: !!(ordenEntrega && subdominio && despacho && user?.id),
+      });
+
       Toast.show({
         type: 'error',
         text1: 'Error',

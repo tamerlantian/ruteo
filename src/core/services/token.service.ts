@@ -2,6 +2,10 @@ import { IAuthService } from '../interfaces/auth-service.interface';
 import storageService from '../../shared/services/storage.service';
 import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY } from '../../shared/constants/localstorage-keys';
 import { authEvents } from './auth-events.service';
+import {
+  reportTokenRefreshError,
+  isNetworkError,
+} from '../../shared/utils/sentry-helpers';
 
 /**
  * Servicio para gestionar tokens de autenticación
@@ -117,6 +121,15 @@ class TokenService {
         throw new Error('Error al renovar el token');
       }
     } catch (error) {
+      // Report token refresh failures (unless network error)
+      if (!isNetworkError(error)) {
+        reportTokenRefreshError('refresh_attempt', error, {
+          hasAuthService: !!this.authService,
+          queueLength: this.refreshSubscribers.length,
+          isRefreshing: this.isRefreshing,
+        });
+      }
+
       await this.handleAuthFailure();
       throw error;
     } finally {
@@ -136,6 +149,11 @@ class TokenService {
       authEvents.emitTokenExpired();
     } catch (error) {
       console.error('Error al manejar fallo de autenticación:', error);
+
+      // Report clearTokens errors
+      reportTokenRefreshError('clear_tokens', error, {
+        phase: 'handleAuthFailure',
+      });
     }
   }
 
@@ -144,8 +162,20 @@ class TokenService {
    * @param token Nuevo token JWT
    */
   private onRefreshed(token: string): void {
-    this.refreshSubscribers.forEach(callback => callback(token));
-    this.refreshSubscribers = [];
+    try {
+      this.refreshSubscribers.forEach(callback => callback(token));
+      this.refreshSubscribers = [];
+    } catch (error) {
+      console.error('Error notificando suscriptores de token refresh:', error);
+
+      // Report queue processing errors as warnings
+      reportTokenRefreshError('queue_processing', error, {
+        subscribersCount: this.refreshSubscribers.length,
+      });
+
+      // Clear queue to prevent future errors
+      this.refreshSubscribers = [];
+    }
   }
 
   /**
