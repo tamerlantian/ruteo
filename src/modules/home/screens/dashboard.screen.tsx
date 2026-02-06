@@ -31,7 +31,6 @@ import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../shared/styles/global.style';
 import { networkService } from '../../../shared/services/network.service';
 import { backgroundGeolocationService } from '../../../shared/services/background-geolocation.service';
-import { ErrorBoundaryTester } from '../../../shared/components/error-boundary/ErrorBoundaryTester';
 import { reportLocationTrackingError } from '../../../shared/utils/sentry-helpers';
 
 export const DashboardScreen = () => {
@@ -267,7 +266,6 @@ export const DashboardScreen = () => {
       <View style={styles.content}>
         <Text style={styles.title}>Dashboard</Text>
         <Button title='Try!' onPress={ () => { Sentry.captureException(new Error('First error')) }}/>
-        <ErrorBoundaryTester />
         {user && (
           <View style={styles.welcomeContainer}>
             <Text style={styles.welcomeText}>
