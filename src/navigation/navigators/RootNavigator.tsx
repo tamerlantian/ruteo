@@ -6,6 +6,7 @@ import { MainNavigator } from './MainNavigator';
 import { RootStackParamList } from '../types';
 import { SplashScreen } from '../../components/SplashScreen';
 import { ErrorBoundary } from '../../shared/components/error-boundary';
+import * as Sentry from '@sentry/react-native';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 
@@ -30,7 +31,23 @@ export const RootNavigator: React.FC = () => {
   const handleNavigationError = (error: Error, errorInfo: React.ErrorInfo) => {
     console.error('🚨 [Navigation Error Boundary] Navigation error:', error);
     console.error('Component stack:', errorInfo.componentStack);
-    // TODO: Log to Sentry when integrated
+
+    // Log to Sentry
+    Sentry.captureException(error, {
+      level: 'error',
+      tags: {
+        error_boundary: 'navigation',
+        location: 'root_navigator',
+      },
+      contexts: {
+        react: {
+          componentStack: errorInfo.componentStack,
+        },
+        navigation: {
+          authenticated: isAuthenticated,
+        },
+      },
+    });
   };
 
   return (

@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { FallbackErrorComponent } from './fallback-error.component';
+import * as Sentry from '@sentry/react-native';
 
 interface Props {
   children: ReactNode;
@@ -51,25 +52,43 @@ export class ErrorBoundary extends Component<Props, State> {
       errorInfo
     );
 
-    // Call custom error handler if provided
-    if (onError) {
-      onError(error, errorInfo);
-    }
-
     // Store error info in state
     this.setState({
       errorInfo,
     });
 
-    // TODO: Log to crash reporting service (Sentry)
-    // Sentry.captureException(error, {
-    //   contexts: {
-    //     react: {
-    //       componentStack: errorInfo.componentStack,
-    //       level,
-    //     },
-    //   },
-    // });
+    // Log to Sentry with level context
+    Sentry.captureException(error, {
+      level: level === 'root' ? 'fatal' : 'error',
+      tags: {
+        error_boundary_level: level,
+      },
+      contexts: {
+        react: {
+          componentStack: errorInfo.componentStack,
+        },
+        errorBoundary: {
+          level,
+          hasCustomHandler: !!onError,
+        },
+      },
+    });
+
+    // Call custom error handler if provided (after Sentry logging)
+    if (onError) {
+      try {
+        onError(error, errorInfo);
+      } catch (handlerError) {
+        // If the custom handler throws, log that too
+        console.error('Error in custom error handler:', handlerError);
+        Sentry.captureException(handlerError, {
+          level: 'error',
+          tags: {
+            error_type: 'error_handler_failure',
+          },
+        });
+      }
+    }
   }
 
   handleReset = (): void => {

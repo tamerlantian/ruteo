@@ -20,6 +20,53 @@ import Toast from 'react-native-toast-message';
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { useRestoreTracking } from './src/shared/hooks';
 import { ErrorBoundary } from './src/shared/components/error-boundary';
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: 'https://9f2a19bc164341a90ae4e9a62354c106@o4510835022757888.ingest.us.sentry.io/4510835089014784',
+
+  // Environment (development, staging, production)
+  environment: __DEV__ ? 'development' : 'production',
+
+  // Only enable in production (or enable in dev for testing)
+  enabled: !__DEV__, // Cambia a true si quieres probar en desarrollo
+
+  // Sample rate for performance monitoring (20% of transactions)
+  tracesSampleRate: 0.2,
+
+  // Attach stack traces to all messages
+  attachStacktrace: true,
+
+  // Normalize depth for better error context
+  normalizeDepth: 10,
+
+  // Enable automatic session tracking
+  enableAutoSessionTracking: true,
+
+  // Session tracking interval (30 seconds)
+  sessionTrackingIntervalMillis: 30000,
+
+  // Adds user context data (IP address, user agent, etc.)
+  sendDefaultPii: true,
+
+  // Enable native crash handling
+  enableNativeCrashHandling: true,
+
+  // Filter out sensitive data
+  beforeSend(event) {
+    // Don't send events with passwords or tokens in breadcrumbs
+    if (event.breadcrumbs) {
+      event.breadcrumbs = event.breadcrumbs.filter(breadcrumb => {
+        const data = JSON.stringify(breadcrumb.data || {}).toLowerCase();
+        return !data.includes('password') && !data.includes('token');
+      });
+    }
+    return event;
+  },
+
+  // uncomment the line below to enable Spotlight in development
+  // spotlight: __DEV__,
+});
 
 
 const queryClient = new QueryClient({
@@ -35,7 +82,22 @@ const queryClient = new QueryClient({
 // IMPORTANTE: Incluye inicialización de BackgroundGeolocation
 initializeServices().catch(error => {
   console.error('🚀 [App] Error inicializando servicios:', error);
-  // TODO: Log to crash reporting service (Sentry)
+
+  // Log to Sentry with context
+  Sentry.captureException(error, {
+    level: 'error',
+    tags: {
+      location: 'app_initialization',
+      service: 'init_services',
+    },
+    contexts: {
+      initialization: {
+        phase: 'service_initialization',
+        timestamp: new Date().toISOString(),
+      },
+    },
+  });
+
   // This error should be reported but shouldn't crash the app
   // Some services may still work even if initialization partially fails
 });
@@ -46,8 +108,20 @@ function App() {
   const handleRootError = (error: Error, errorInfo: React.ErrorInfo) => {
     console.error('🚨 [Root Error Boundary] Critical error:', error);
     console.error('Component stack:', errorInfo.componentStack);
-    // TODO: Log to Sentry when integrated
-    // Sentry.captureException(error, { contexts: { react: errorInfo } });
+
+    // Log to Sentry with full context
+    Sentry.captureException(error, {
+      level: 'fatal',
+      tags: {
+        error_boundary: 'root',
+        location: 'app_root',
+      },
+      contexts: {
+        react: {
+          componentStack: errorInfo.componentStack,
+        },
+      },
+    });
   };
 
   return (
@@ -99,4 +173,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default App;
+export default Sentry.wrap(App);

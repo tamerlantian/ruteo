@@ -5,10 +5,12 @@ import {
   StyleSheet,
   StatusBar,
   TouchableOpacity,
+  Button,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../auth/context/auth.context';
 import { useAppSelector } from '../../../store/hooks';
+import * as Sentry from '@sentry/react-native';
 import {
   selectVisitasPendientes,
   selectVisitasEntregadas,
@@ -237,6 +239,7 @@ export const DashboardScreen = () => {
       />
       <View style={styles.content}>
         <Text style={styles.title}>Dashboard</Text>
+        <Button title='Try!' onPress={ () => { Sentry.captureException(new Error('First error')) }}/>
         <ErrorBoundaryTester />
         {user && (
           <View style={styles.welcomeContainer}>

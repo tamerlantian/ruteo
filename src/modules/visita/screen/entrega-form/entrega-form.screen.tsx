@@ -19,6 +19,7 @@ import { useEntregaFormViewModel } from './entrega-form.view-model';
 import { FormSelectorController } from '../../../../shared/components/ui/form/form-selector/FormSelectorController';
 import { FormButton } from '../../../../shared/components/ui/button/FormButton';
 import { ErrorBoundary } from '../../../../shared/components/error-boundary';
+import * as Sentry from '@sentry/react-native';
 
 type EntregaFormScreenProps = NativeStackScreenProps<
   MainStackParamList,
@@ -198,7 +199,25 @@ export const EntregaFormScreen: React.FC<EntregaFormScreenProps> = (props) => {
   const handleFormError = (error: Error, errorInfo: React.ErrorInfo) => {
     console.error('🚨 [Form Error Boundary] Entrega form error:', error);
     console.error('Component stack:', errorInfo.componentStack);
-    // TODO: Log to Sentry when integrated
+
+    // Log to Sentry with context
+    Sentry.captureException(error, {
+      level: 'error',
+      tags: {
+        error_boundary: 'form',
+        form_type: 'entrega',
+        location: 'entrega_form_screen',
+      },
+      contexts: {
+        react: {
+          componentStack: errorInfo.componentStack,
+        },
+        form: {
+          visitas_count: props.route.params.visitasSeleccionadas.length,
+          visitas_ids: props.route.params.visitasSeleccionadas.join(','),
+        },
+      },
+    });
   };
 
   return (

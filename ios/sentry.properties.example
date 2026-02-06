@@ -1,0 +1,11 @@
+
+# Sentry Configuration Example
+# Copy this file to sentry.properties and fill in your actual auth token
+# Get your auth token from: https://sentry.io/settings/account/api/auth-tokens/
+
+auth.token=YOUR_SENTRY_AUTH_TOKEN_HERE
+
+defaults.org=semantica-3o
+defaults.project=react-native
+
+defaults.url=https://sentry.io/

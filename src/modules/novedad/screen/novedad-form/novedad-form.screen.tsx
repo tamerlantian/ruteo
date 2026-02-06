@@ -23,6 +23,7 @@ import { PhotoField } from '../../../visita/screen/entrega-form/components/Photo
 import { useGradualAnimation } from '../../../../shared/hooks/use-gradual-animation.hook';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { ErrorBoundary } from '../../../../shared/components/error-boundary';
+import * as Sentry from '@sentry/react-native';
 
 type NovedadFormScreenProps = NativeStackScreenProps<
   MainStackParamList,
@@ -180,7 +181,25 @@ export const NovedadFormScreen: React.FC<NovedadFormScreenProps> = (props) => {
   const handleFormError = (error: Error, errorInfo: React.ErrorInfo) => {
     console.error('🚨 [Form Error Boundary] Novedad form error:', error);
     console.error('Component stack:', errorInfo.componentStack);
-    // TODO: Log to Sentry when integrated
+
+    // Log to Sentry with context
+    Sentry.captureException(error, {
+      level: 'error',
+      tags: {
+        error_boundary: 'form',
+        form_type: 'novedad',
+        location: 'novedad_form_screen',
+      },
+      contexts: {
+        react: {
+          componentStack: errorInfo.componentStack,
+        },
+        form: {
+          visitas_count: props.route.params.visitasSeleccionadas.length,
+          visitas_ids: props.route.params.visitasSeleccionadas.join(','),
+        },
+      },
+    });
   };
 
   return (
