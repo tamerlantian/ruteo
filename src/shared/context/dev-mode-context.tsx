@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 
 // URLs de los endpoints
 export const ENDPOINTS = {
-  PRODUCTION: 'https://reddocapi.co/',
+  PRODUCTION: 'https://ruteoapi.co/',
   DEVELOPMENT: 'http://ruteoapi.online/',
 };
 

@@ -118,7 +118,7 @@ const handleLocationInHeadlessMode = async (location) => {
     // Construir URL como: https://schema.ruteoapi.online/ruteo/ubicacion/
     const isDeveloperMode = await AsyncStorage.getItem('@dev_mode_enabled');
     const isDevMode = isDeveloperMode ? JSON.parse(isDeveloperMode) : false;
-    const baseDomain = isDevMode ? 'ruteoapi.online' : 'reddocapi.co';
+    const baseDomain = isDevMode ? 'ruteoapi.online' : 'ruteoapi.co';
     const protocol = isDevMode ? 'http' : 'https';
     const url = `${protocol}://${schemaName}.${baseDomain}/ruteo/ubicacion/`;
     

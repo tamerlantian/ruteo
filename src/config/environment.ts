@@ -4,7 +4,7 @@
 
 // Estas son las URLs base para los diferentes entornos
 export const API_URLS = {
-  PRODUCTION: 'https://reddocapi.co',
+  PRODUCTION: 'https://ruteoapi.co',
   DEVELOPMENT: 'http://ruteoapi.online',
 };
 

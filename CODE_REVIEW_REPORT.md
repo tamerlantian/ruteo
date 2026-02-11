@@ -346,7 +346,7 @@ module.exports = {
 ### 🟠 P1: No SSL Certificate Pinning
 **Severity**: HIGH | **Risk**: MEDIUM | **Effort**: Medium (3-4 days)
 
-**Issue**: Production API (`reddocapi.co`) has no certificate pinning. Vulnerable to MITM attacks even with HTTPS.
+**Issue**: Production API (`ruteoapi.co`) has no certificate pinning. Vulnerable to MITM attacks even with HTTPS.
 
 **Solution**:
 ```bash
@@ -368,7 +368,7 @@ private async makeSecureRequest(config: AxiosRequestConfig) {
       headers: config.headers,
       body: config.data,
       sslPinning: {
-        certs: ['reddocapi'], // Certificate in assets
+        certs: ['ruteoapi'], // Certificate in assets
       },
     });
   }
@@ -567,7 +567,7 @@ const persistConfig = {
 **Current**: `src/config/environment.ts`
 ```typescript
 const API_URLS = {
-  PRODUCTION: 'https://reddocapi.co',
+  PRODUCTION: 'https://ruteoapi.co',
   DEVELOPMENT: 'http://ruteoapi.online', // ❌ Hardcoded
 };
 ```
@@ -580,7 +580,7 @@ npx pod-install # iOS
 
 # 2. Create environment files
 # .env.production
-API_BASE_URL=https://reddocapi.co
+API_BASE_URL=https://ruteoapi.co
 ENVIRONMENT=production
 SENTRY_DSN=https://...
 ENCRYPTION_KEY=your-secret-key-here
