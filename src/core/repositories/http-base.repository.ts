@@ -215,8 +215,6 @@ export class HttpBaseRepository {
       timeout: options.timeout,
     };
 
-    console.log(url);
-
     const response = await this.axiosInstance.post<T>(url, data, config);
     return response.data;
   }
