@@ -5,6 +5,17 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
+    <!-- CÁMARA: Requerido para react-native-vision-camera -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- CÁMARA (Android 13+): Permisos granulares de medios para guardar fotos -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- Features de hardware (opcional pero recomendado) -->
+    <!-- required="false" permite instalar la app en dispositivos sin cámara -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+
     <!-- GEOLOCALIZACIÓN EN SEGUNDO PLANO -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
