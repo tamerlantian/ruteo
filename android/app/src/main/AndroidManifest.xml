@@ -14,11 +14,6 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- CÁMARA: Remover permisos de medios agregados automáticamente por react-native-vision-camera -->
-    <!-- La app solo CAPTURA fotos nuevas, NO lee la galería existente del dispositivo -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" tools:node="remove" />
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" tools:node="remove" />
-
     <!-- PUBLICIDAD Y ANALÍTICA -->
     <uses-permission android:name="com.google.android.gms.permission.AD_ID"/> <!-- Acceso al identificador de anuncios de Google -->
 
