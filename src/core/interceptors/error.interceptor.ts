@@ -1,5 +1,6 @@
 import { AxiosError } from 'axios';
 import { ApiErrorResponse } from '../interfaces/api.interface';
+import { reportError } from '../../shared/utils/sentry-helpers';
 
 /**
  * Determina si un error HTTP es retryable basándose en el código de estado y tipo de error
@@ -45,7 +46,12 @@ export const handleErrorResponse = (error: AxiosError<ApiErrorResponse>): ApiErr
   _errores.set(401, error => error401(error));
   _errores.set(404, error => error404(error));
   _errores.set(405, error => error405(error));
+  _errores.set(408, error => error408(error));
+  _errores.set(413, error => error413(error));
   _errores.set(500, error => error500(error));
+  _errores.set(502, error => error502(error));
+  _errores.set(503, error => error503(error));
+  _errores.set(504, error => error504(error));
 
   // Obtener el código de error de la respuesta
   const statusCode = error.response?.status || 500;
@@ -60,9 +66,25 @@ export const handleErrorResponse = (error: AxiosError<ApiErrorResponse>): ApiErr
     // Si no hay handler específico, determinar retryable
     const isRetryable = determineIfRetryable(error);
 
+    // 🚨 SENTRY: Reportar errores HTTP no mapeados para descubrir códigos nuevos
+    reportError(
+      'http_unhandled_status_code',
+      error,
+      {
+        module: 'http',
+        location: 'error-interceptor',
+        statusCode,
+        url: error.config?.url,
+        method: error.config?.method?.toUpperCase(),
+        isRetryable,
+        responseData: error.response?.data,
+      },
+      'warning' // Use warning level - no es crítico pero queremos saberlo
+    );
+
     return {
       titulo: 'Error',
-      mensaje: 'Error al procesar la solicitud',
+      mensaje: `Error al procesar la solicitud (Código: ${statusCode})`, // Incluir código en mensaje
       codigo: statusCode,
       isRetryable,
     };
@@ -118,6 +140,56 @@ const error500 = (error: AxiosError): ApiErrorResponse => {
     mensaje: 'Servidor fuera de línea, intente más tarde',
     codigo: 500,
     isRetryable: true, // Retryable - problema del servidor
+  };
+};
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const error408 = (error: AxiosError): ApiErrorResponse => {
+  return {
+    titulo: 'Tiempo agotado',
+    mensaje: 'El servidor tardó mucho en responder. Por favor, intenta de nuevo.',
+    codigo: 408,
+    isRetryable: true,
+  };
+};
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const error413 = (error: AxiosError): ApiErrorResponse => {
+  return {
+    titulo: 'Archivos muy grandes',
+    mensaje: 'Las fotos son muy grandes. Intenta tomar fotos con menor calidad.',
+    codigo: 413,
+    isRetryable: false, // Usuario debe reducir tamaño
+  };
+};
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const error502 = (error: AxiosError): ApiErrorResponse => {
+  return {
+    titulo: 'Error del servidor',
+    mensaje: 'El servidor está experimentando problemas. Por favor, intenta más tarde.',
+    codigo: 502,
+    isRetryable: true,
+  };
+};
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const error503 = (error: AxiosError): ApiErrorResponse => {
+  return {
+    titulo: 'Servicio no disponible',
+    mensaje: 'El servidor está temporalmente fuera de servicio. Por favor, intenta más tarde.',
+    codigo: 503,
+    isRetryable: true,
+  };
+};
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const error504 = (error: AxiosError): ApiErrorResponse => {
+  return {
+    titulo: 'Tiempo de espera agotado',
+    mensaje: 'El servidor tardó demasiado en responder. Por favor, intenta de nuevo.',
+    codigo: 504,
+    isRetryable: true,
   };
 };
 
