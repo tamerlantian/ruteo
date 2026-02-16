@@ -73,9 +73,27 @@ export function reportError(
     return;
   }
 
-  const errorMessage = error?.message || String(error);
+  const errorMessage = error?.message || error?.mensaje || String(error);
 
-  Sentry.captureException(error, {
+  // Normalize error to Error instance for Sentry
+  // This handles custom error objects from API responses
+  let normalizedError: Error;
+
+  if (error instanceof Error) {
+    normalizedError = error;
+  } else if (typeof error === 'object' && error !== null) {
+    // Handle custom error objects (e.g., {codigo, mensaje, titulo})
+    const errorTitle = error.titulo || error.title || 'Error';
+    const errorMsg = error.mensaje || error.message || JSON.stringify(error);
+    normalizedError = new Error(`${errorTitle}: ${errorMsg}`);
+
+    // Preserve original error data in the error object
+    (normalizedError as any).originalError = error;
+  } else {
+    normalizedError = new Error(String(error));
+  }
+
+  Sentry.captureException(normalizedError, {
     level,
     tags: {
       operation,
@@ -86,6 +104,10 @@ export function reportError(
       operation_context: {
         operation,
         errorMessage,
+        // Include original error structure if it's a custom object
+        ...(error && typeof error === 'object' && !(error instanceof Error)
+          ? { originalError: error }
+          : {}),
         ...context,
       },
     },

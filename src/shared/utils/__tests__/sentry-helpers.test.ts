@@ -161,14 +161,14 @@ describe('sentry-helpers', () => {
       expect(Sentry.captureException).not.toHaveBeenCalled();
     });
 
-    it('should handle non-Error objects', () => {
+    it('should normalize string errors to Error instances', () => {
       reportError('test_operation', 'String error', {
         module: 'test',
         location: 'test-file',
       });
 
       expect(Sentry.captureException).toHaveBeenCalledWith(
-        'String error',
+        expect.any(Error),
         expect.objectContaining({
           contexts: {
             operation_context: expect.objectContaining({
@@ -177,6 +177,59 @@ describe('sentry-helpers', () => {
           },
         })
       );
+
+      const capturedError = (Sentry.captureException as jest.Mock).mock.calls[0][0];
+      expect(capturedError).toBeInstanceOf(Error);
+      expect(capturedError.message).toBe('String error');
+    });
+
+    it('should normalize custom error objects (backend errors)', () => {
+      const customError = {
+        codigo: 404,
+        mensaje: 'Usuario no encontrado',
+        titulo: 'Error de validación',
+        isRetryable: false,
+      };
+
+      reportError('test_operation', customError, {
+        module: 'auth',
+        location: 'register-view-model',
+      });
+
+      expect(Sentry.captureException).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.objectContaining({
+          contexts: {
+            operation_context: expect.objectContaining({
+              errorMessage: 'Usuario no encontrado',
+              originalError: customError,
+              module: 'auth',
+              location: 'register-view-model',
+            }),
+          },
+        })
+      );
+
+      const capturedError = (Sentry.captureException as jest.Mock).mock.calls[0][0];
+      expect(capturedError).toBeInstanceOf(Error);
+      expect(capturedError.message).toBe('Error de validación: Usuario no encontrado');
+      expect((capturedError as any).originalError).toEqual(customError);
+    });
+
+    it('should handle custom error objects without mensaje field', () => {
+      const customError = {
+        codigo: 500,
+        titulo: 'Error del servidor',
+      };
+
+      reportError('test_operation', customError, {
+        module: 'test',
+        location: 'test-file',
+      });
+
+      const capturedError = (Sentry.captureException as jest.Mock).mock.calls[0][0];
+      expect(capturedError).toBeInstanceOf(Error);
+      expect(capturedError.message).toContain('Error del servidor');
     });
   });
 
@@ -257,7 +310,7 @@ describe('sentry-helpers', () => {
       reportMutationError('login', error, { module: 'auth', email: 'test@example.com' });
 
       expect(Sentry.captureException).toHaveBeenCalledWith(
-        error,
+        expect.any(Error),
         expect.objectContaining({
           contexts: {
             operation_context: expect.objectContaining({
@@ -267,10 +320,36 @@ describe('sentry-helpers', () => {
               httpMethod: 'POST',
               module: 'auth',
               email: 'test@example.com',
+              originalError: error,
             }),
           },
         })
       );
+
+      const capturedError = (Sentry.captureException as jest.Mock).mock.calls[0][0];
+      expect(capturedError).toBeInstanceOf(Error);
+    });
+
+    it('should report standard Error instances without modification', () => {
+      const error = new Error('Standard error');
+      (error as any).response = { status: 500 };
+
+      reportMutationError('save', error, { module: 'data' });
+
+      expect(Sentry.captureException).toHaveBeenCalledWith(
+        error,
+        expect.objectContaining({
+          contexts: {
+            operation_context: expect.objectContaining({
+              isApiError: true,
+              statusCode: 500,
+            }),
+          },
+        })
+      );
+
+      const capturedError = (Sentry.captureException as jest.Mock).mock.calls[0][0];
+      expect(capturedError).toBe(error); // Same instance, not normalized
     });
 
     it('should not report network errors', () => {
