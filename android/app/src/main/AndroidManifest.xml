@@ -8,13 +8,15 @@
     <!-- CÁMARA: Requerido para react-native-vision-camera -->
     <uses-permission android:name="android.permission.CAMERA" />
 
-    <!-- CÁMARA (Android 13+): Permisos granulares de medios para guardar fotos -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-
     <!-- Features de hardware (opcional pero recomendado) -->
     <!-- required="false" permite instalar la app en dispositivos sin cámara -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+
+    <!-- CÁMARA: Remover permisos de medios agregados automáticamente por react-native-vision-camera -->
+    <!-- La app solo CAPTURA fotos nuevas, NO lee la galería existente del dispositivo -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" tools:node="remove" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" tools:node="remove" />
 
     <!-- GEOLOCALIZACIÓN EN SEGUNDO PLANO -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
