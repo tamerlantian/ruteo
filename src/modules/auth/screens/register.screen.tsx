@@ -81,7 +81,7 @@ export const RegisterScreen = () => {
     defaultValues: {
       username: '',
       password: '',
-      aplicacion: 'reddoc',
+      aplicacion: 'ruteo',
       confirmarPassword: '',
       aceptarTerminosCondiciones: false,
     },

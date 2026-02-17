@@ -50,7 +50,7 @@ export class AuthRepository extends HttpBaseRepository implements IAuthService {
    * @returns Promise con la respuesta del registro
    */
   async register(userData: RegisterCredentials): Promise<RegisterResponse> {
-    return this.post<RegisterResponse>('seguridad/usuario/nuevo/', userData);
+    return this.post<RegisterResponse>('contenedor/usuario/nuevo/', userData);
   }
 
   /**
@@ -59,7 +59,7 @@ export class AuthRepository extends HttpBaseRepository implements IAuthService {
    * @returns Promise con la confirmación del cambio de contraseña
    */
   async forgotPassword(username: string, aplicacion: string): Promise<boolean> {
-    return this.post<boolean>('seguridad/usuario/cambio-clave-solicitar/', { username, aplicacion });
+    return this.post<boolean>('contenedor/usuario/cambio-clave-solicitar/', { username, aplicacion });
   }
 
   /**
