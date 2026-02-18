@@ -5,7 +5,9 @@ import {
   StyleSheet,
   StatusBar,
   TouchableOpacity,
+  Linking,
 } from 'react-native';
+import Ionicons from '@react-native-vector-icons/ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../auth/context/auth.context';
 import { useAppSelector } from '../../../store/hooks';
@@ -30,6 +32,8 @@ import { toastTextOneStyle } from '../../../shared/styles/global.style';
 import { networkService } from '../../../shared/services/network.service';
 import { backgroundGeolocationService } from '../../../shared/services/background-geolocation.service';
 import { reportLocationTrackingError } from '../../../shared/utils/sentry-helpers';
+
+const WHATSAPP_NUMBER = '573001234567';
 
 export const DashboardScreen = () => {
   const { user } = useAuth();
@@ -254,6 +258,10 @@ export const DashboardScreen = () => {
     }
   };
 
+  const handleOpenWhatsApp = () => {
+    Linking.openURL(`whatsapp://send?phone=${WHATSAPP_NUMBER}`);
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar
@@ -378,6 +386,14 @@ export const DashboardScreen = () => {
           </TouchableOpacity>
         )}
       </View>
+
+      <TouchableOpacity
+        style={styles.whatsappButton}
+        onPress={handleOpenWhatsApp}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="logo-whatsapp" size={28} color="#fff" />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -571,5 +587,21 @@ const styles = StyleSheet.create({
   },
   locationButtonTextInactive: {
     color: '#fff',
+  },
+  whatsappButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#25D366',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
   },
 });
