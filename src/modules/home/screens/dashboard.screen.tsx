@@ -239,12 +239,6 @@ export const DashboardScreen = () => {
       await reintentarNovedadesConError(novedadesConErrorIds);
       await reintentarSolucionesConError(novedadesConErrorIds);
       await reintentarVisitasConError(visitasConErrorIds);
-
-      Toast.show({
-        type: 'success',
-        text1: 'Se han reintentado los envíos correctamente.',
-        text1Style: toastTextOneStyle,
-      });
     } catch (error) {
       Toast.show({
         type: 'error',
