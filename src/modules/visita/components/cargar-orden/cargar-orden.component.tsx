@@ -5,7 +5,6 @@ import { BottomSheetFormInputController } from '../../../../shared/components/ui
 import { verticalRepository } from '../../../vertical/repositories/vertical.repository';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { cargarVisitasThunk } from '../../store/thunk/visita.thunk';
-import { selectIsLoading } from '../../store/selector/visita.selector';
 import { FormButton } from '../../../../shared/components/ui/button/FormButton';
 import { updateSettingsThunk, selectSubdominio } from '../../../settings';
 import Toast from 'react-native-toast-message';
@@ -21,7 +20,7 @@ interface CargarOrdenFormValues {
 
 const CargarOrdenComponent = () => {
   const dispatch = useAppDispatch();
-  const isLoading = useAppSelector(selectIsLoading);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const subdominio = useAppSelector(selectSubdominio);
   const { user } = useAuth();
 
@@ -57,6 +56,7 @@ const CargarOrdenComponent = () => {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const entrega = await verticalRepository.getEntrega(data.codigo);
       if (entrega) {
@@ -129,6 +129,8 @@ const CargarOrdenComponent = () => {
       });
       // Cerrar teclado también en caso de error
       Keyboard.dismiss();
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -166,7 +168,7 @@ const CargarOrdenComponent = () => {
         title="Cargar orden"
         onPress={handleSubmit(onCargarOrden)}
         disabled={!isValid}
-        isLoading={isLoading}
+        isLoading={isSubmitting}
       />
     </View>
   );
