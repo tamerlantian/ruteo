@@ -120,13 +120,29 @@ const CargarOrdenComponent = () => {
         // Cerrar teclado después de cargar exitosamente
         Keyboard.dismiss();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
-      Toast.show({
-        type: 'error',
-        text1: 'La orden no existe',
-        text1Style: toastTextOneStyle,
-      });
+      if (error?.codigo === 404) {
+        Toast.show({
+          type: 'error',
+          text1: 'La orden no existe',
+          text1Style: toastTextOneStyle,
+        });
+      } else if (error?.titulo) {
+        Toast.show({
+          type: 'error',
+          text1: error.titulo,
+          text2: error.mensaje,
+          text1Style: toastTextOneStyle,
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Error al cargar la orden',
+          text2: 'Inténtalo nuevamente.',
+          text1Style: toastTextOneStyle,
+        });
+      }
       // Cerrar teclado también en caso de error
       Keyboard.dismiss();
     } finally {
