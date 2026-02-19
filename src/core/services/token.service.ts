@@ -14,7 +14,10 @@ import {
 class TokenService {
   private static instance: TokenService;
   private isRefreshing = false;
-  private refreshSubscribers: ((_token: string) => void)[] = [];
+  private refreshSubscribers: {
+    resolve: (_token: string) => void;
+    reject: (_error: unknown) => void;
+  }[] = [];
   private authService: IAuthService | null = null;
   private onAuthFailureCallback: (() => void) | null = null;
 
@@ -84,16 +87,18 @@ class TokenService {
    * @throws Error si no se puede renovar el token
    */
   public async refreshAccessToken(): Promise<string> {
+    // Si ya estamos en proceso de renovación, devolvemos una promesa que se resolverá
+    // cuando termine. Esta rama debe quedar FUERA del try/finally para que el finally
+    // no resetee isRefreshing prematuramente al encolar al suscriptor.
+    if (this.isRefreshing) {
+      return new Promise<string>((resolve, reject) => {
+        this.refreshSubscribers.push({ resolve, reject });
+      });
+    }
+
+    this.isRefreshing = true;
+
     try {
-      // Si ya estamos en proceso de renovación, devolvemos una promesa que se resolverá cuando termine
-      if (this.isRefreshing) {
-        return new Promise(resolve => {
-          this.refreshSubscribers.push(resolve);
-        });
-      }
-
-      this.isRefreshing = true;
-
       const refreshToken = await this.getRefreshToken();
 
       if (!refreshToken) {
@@ -121,6 +126,9 @@ class TokenService {
         throw new Error('Error al renovar el token');
       }
     } catch (error) {
+      // Rechazar todos los suscriptores en cola para no dejar Promises colgadas
+      this.onRefreshFailed(error);
+
       // Report token refresh failures (unless network error)
       if (!isNetworkError(error)) {
         reportTokenRefreshError('refresh_attempt', error, {
@@ -163,7 +171,7 @@ class TokenService {
    */
   private onRefreshed(token: string): void {
     try {
-      this.refreshSubscribers.forEach(callback => callback(token));
+      this.refreshSubscribers.forEach(({ resolve }) => resolve(token));
       this.refreshSubscribers = [];
     } catch (error) {
       console.error('Error notificando suscriptores de token refresh:', error);
@@ -179,11 +187,20 @@ class TokenService {
   }
 
   /**
+   * Rechaza todos los suscriptores en cola cuando el refresh falla.
+   * Evita que las Promises en cola queden colgadas indefinidamente.
+   */
+  private onRefreshFailed(error: unknown): void {
+    this.refreshSubscribers.forEach(({ reject }) => reject(error));
+    this.refreshSubscribers = [];
+  }
+
+  /**
    * Añade un suscriptor para ser notificado cuando el token se renueve
    * @param callback Función a llamar cuando el token se renueve
    */
   public subscribeTokenRefresh(callback: (_token: string) => void): void {
-    this.refreshSubscribers.push(callback);
+    this.refreshSubscribers.push({ resolve: callback, reject: () => {} });
   }
 }
 
