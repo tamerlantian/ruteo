@@ -10,12 +10,14 @@ interface VisitaState {
   visitas: VisitaResponse[];
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   seleccionadas: number[];
+  isSyncing: boolean;
 }
 
 const initialState: VisitaState = {
   visitas: [],
   status: 'idle',
   seleccionadas: [],
+  isSyncing: false,
 };
 
 const visitaSlice = createSlice({
@@ -155,6 +157,9 @@ const visitaSlice = createSlice({
         state.visitas[index].error_mensaje = undefined;
       }
     },
+    setSyncing: (state, action: PayloadAction<boolean>) => {
+      state.isSyncing = action.payload;
+    },
     anularVisitasNoRetryables: (state, action: PayloadAction<number[]>) => {
       const visitaIds = action.payload;
       visitaIds.forEach(visitaId => {
@@ -211,5 +216,6 @@ export const {
   guardarDatosFormularioEnVisita,
   limpiarDatosFormularioDeVisita,
   anularVisitasNoRetryables,
+  setSyncing,
 } = visitaSlice.actions;
 export default visitaSlice.reducer;

@@ -30,6 +30,8 @@ export const selectIsLoading = createSelector(
   visita => visita.status === 'loading',
 );
 
+export const selectIsSyncing = (state: RootState) => state.visita.isSyncing;
+
 export const selectIsSucceeded = createSelector(
   selectVisitasRootState,
   visita => visita.status === 'succeeded',

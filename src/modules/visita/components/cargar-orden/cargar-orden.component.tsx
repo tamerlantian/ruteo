@@ -5,7 +5,6 @@ import { BottomSheetFormInputController } from '../../../../shared/components/ui
 import { verticalRepository } from '../../../vertical/repositories/vertical.repository';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { cargarVisitasThunk } from '../../store/thunk/visita.thunk';
-import { selectIsLoading } from '../../store/selector/visita.selector';
 import { FormButton } from '../../../../shared/components/ui/button/FormButton';
 import { updateSettingsThunk, selectSubdominio } from '../../../settings';
 import Toast from 'react-native-toast-message';
@@ -21,7 +20,7 @@ interface CargarOrdenFormValues {
 
 const CargarOrdenComponent = () => {
   const dispatch = useAppDispatch();
-  const isLoading = useAppSelector(selectIsLoading);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const subdominio = useAppSelector(selectSubdominio);
   const { user } = useAuth();
 
@@ -57,6 +56,7 @@ const CargarOrdenComponent = () => {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const entrega = await verticalRepository.getEntrega(data.codigo);
       if (entrega) {
@@ -120,15 +120,33 @@ const CargarOrdenComponent = () => {
         // Cerrar teclado después de cargar exitosamente
         Keyboard.dismiss();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
-      Toast.show({
-        type: 'error',
-        text1: 'La orden no existe',
-        text1Style: toastTextOneStyle,
-      });
+      if (error?.codigo === 404) {
+        Toast.show({
+          type: 'error',
+          text1: 'La orden no existe',
+          text1Style: toastTextOneStyle,
+        });
+      } else if (error?.titulo) {
+        Toast.show({
+          type: 'error',
+          text1: error.titulo,
+          text2: error.mensaje,
+          text1Style: toastTextOneStyle,
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Error al cargar la orden',
+          text2: 'Inténtalo nuevamente.',
+          text1Style: toastTextOneStyle,
+        });
+      }
       // Cerrar teclado también en caso de error
       Keyboard.dismiss();
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -166,7 +184,7 @@ const CargarOrdenComponent = () => {
         title="Cargar orden"
         onPress={handleSubmit(onCargarOrden)}
         disabled={!isValid}
-        isLoading={isLoading}
+        isLoading={isSubmitting}
       />
     </View>
   );

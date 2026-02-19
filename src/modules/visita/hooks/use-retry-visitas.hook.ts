@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useVisitaProcessing } from './use-visita-processing.hook';
 import { useAppSelector } from '../../../store/hooks';
-import { selectVisitas } from '../store/selector/visita.selector';
+import { selectVisitas, selectIsSyncing } from '../store/selector/visita.selector';
 import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../shared/styles/global.style';
 
@@ -13,7 +13,8 @@ import { toastTextOneStyle } from '../../../shared/styles/global.style';
 export const useRetryVisitas = () => {
   const { procesarVisitasEnLote } = useVisitaProcessing();
   const visitas = useAppSelector(selectVisitas);
-  const [isRetryLoading, setIsRetryLoading] = useState(false);
+  const isSyncingFromDashboard = useAppSelector(selectIsSyncing);
+  const [localIsRetryLoading, setIsRetryLoading] = useState(false);
 
   /**
    * Reintenta el envío de visitas con error usando los datos guardados
@@ -75,12 +76,13 @@ export const useRetryVisitas = () => {
       } finally {
         setIsRetryLoading(false);
       }
+
     },
     [procesarVisitasEnLote, visitas],
   );
 
   return {
     reintentarVisitasConError,
-    isRetryLoading,
+    isRetryLoading: localIsRetryLoading || isSyncingFromDashboard,
   };
 };

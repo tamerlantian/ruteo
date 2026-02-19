@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../auth/context/auth.context';
-import { useAppSelector } from '../../../store/hooks';
+import { useAppSelector, useAppDispatch } from '../../../store/hooks';
 import {
   selectVisitasPendientes,
   selectVisitasEntregadas,
@@ -17,6 +17,7 @@ import {
   selectVisitasConErrorRetryables,
   selectVisitasConErrorNoRetryables,
 } from '../../visita/store/selector/visita.selector';
+import { setSyncing } from '../../visita/store/slice/visita.slice';
 import { selectOrdenEntrega, selectSubdominio, selectDespacho } from '../../settings';
 import { useRetryNovedades } from '../../novedad/hooks';
 import { useRetrySoluciones } from '../../novedad/hooks/use-retry-soluciones.hook';
@@ -33,6 +34,7 @@ import { reportLocationTrackingError } from '../../../shared/utils/sentry-helper
 
 export const DashboardScreen = () => {
   const { user } = useAuth();
+  const dispatch = useAppDispatch();
   const [isRetrying, setIsRetrying] = useState(false);
   const [isLocationTracking, setIsLocationTracking] = useState(true);
   const [isTogglingLocation, setIsTogglingLocation] = useState(false);
@@ -229,6 +231,7 @@ export const DashboardScreen = () => {
     }
 
     setIsRetrying(true);
+    dispatch(setSyncing(true));
     try {
       const visitasConErrorIds = visitasConError.map(visita => visita.id);
       const novedadesConErrorIds = novedadesConError.map(novedad => novedad.id);
@@ -236,12 +239,6 @@ export const DashboardScreen = () => {
       await reintentarNovedadesConError(novedadesConErrorIds);
       await reintentarSolucionesConError(novedadesConErrorIds);
       await reintentarVisitasConError(visitasConErrorIds);
-
-      Toast.show({
-        type: 'success',
-        text1: 'Se han reintentado los envíos correctamente.',
-        text1Style: toastTextOneStyle,
-      });
     } catch (error) {
       Toast.show({
         type: 'error',
@@ -251,6 +248,7 @@ export const DashboardScreen = () => {
       });
     } finally {
       setIsRetrying(false);
+      dispatch(setSyncing(false));
     }
   };
 
