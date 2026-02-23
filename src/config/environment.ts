@@ -8,6 +8,9 @@ export const API_URLS = {
   DEVELOPMENT: 'http://ruteoapi.online',
 };
 
+// Configuración de contacto
+export const WHATSAPP_NUMBER = '3106097801';
+
 // La configuración del entorno con opciones para cambiar dinámicamente
 export const environment = {
   production: false,

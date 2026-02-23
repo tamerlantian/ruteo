@@ -32,8 +32,7 @@ import { toastTextOneStyle } from '../../../shared/styles/global.style';
 import { networkService } from '../../../shared/services/network.service';
 import { backgroundGeolocationService } from '../../../shared/services/background-geolocation.service';
 import { reportLocationTrackingError } from '../../../shared/utils/sentry-helpers';
-
-const WHATSAPP_NUMBER = '573001234567';
+import { WHATSAPP_NUMBER } from '../../../config/environment';
 
 export const DashboardScreen = () => {
   const { user } = useAuth();
