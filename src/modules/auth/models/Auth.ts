@@ -1,55 +1,49 @@
-// Interfaces para el módulo de autenticación
+// Interfaces del módulo de autenticación — API v2 (/api/v2/auth/).
 
-// Interfaz para las credenciales de login
+// Credenciales de login (v2 no usa 'proyecto').
 export interface LoginCredentials {
   username: string;
   password: string;
-  proyecto: string;
 }
 
+// Datos que se envían al registro v2. nombre/telefono/empresa_nombre son
+// opcionales pero ayudan al super-admin a aprobar y asignar al conductor.
 export interface RegisterCredentials {
   username: string;
   password: string;
-  confirmarPassword: string;
-  aceptarTerminosCondiciones: boolean;
-  aplicacion: string;
+  nombre?: string;
+  telefono?: string;
+  empresa_nombre?: string;
 }
 
-// Interfaz para el usuario autenticado
+// Usuario que devuelve la API v2 (UsuarioMovilSerializer).
 export interface AuthUser {
   id: number;
   username: string;
-  imagen: string;
-  nombre_corto: string;
+  correo: string | null;
   nombre: string | null;
   apellido: string | null;
+  nombre_corto: string | null;
   telefono: string | null;
-  correo: string;
-  idioma: string | null;
-  dominio: string;
-  fecha_limite_pago: string;
-  fecha_creacion: string;
-  vr_saldo: number;
+  numero_identificacion: string | null;
+  imagen: string;
   verificado: boolean;
-  es_socio: boolean;
-  socio_id: string;
   is_active: boolean;
-  numero_identificacion: string;
-  cargo: string;
+  /** Estado de aprobación del registro: 'pendiente' | 'aprobado' | 'rechazado'. */
+  estado: string;
 }
 
-// Interfaz para la respuesta de login
+// Respuesta del login v2: tokens estándar + usuario.
 export interface LoginResponse {
-  user: AuthUser;
-  token: string;
-  'refresh-token': string;
-}
-
-export interface RegisterResponse {
+  access: string;
+  refresh: string;
   usuario: AuthUser;
 }
 
-// Interfaz para el estado de autenticación
+// El registro v2 devuelve el usuario creado.
+export type RegisterResponse = AuthUser;
+
+// Estado de autenticación.
 export interface AuthState {
   isAuthenticated: boolean;
   user: AuthUser | null;
@@ -57,12 +51,12 @@ export interface AuthState {
   error: string | null;
 }
 
-// Interfaz para la respuesta de token refresh
+// Respuesta del refresh v2: access nuevo (y refresh nuevo por rotación).
 export interface RefreshTokenResponse {
- access: string;
+  access: string;
+  refresh?: string;
 }
 
 export type ForgotPasswordFormValues = {
   username: string;
-  aplicacion: string;
 };

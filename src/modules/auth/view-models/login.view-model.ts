@@ -26,7 +26,7 @@ export const useLogin = () => {
     onSuccess: (response) => {
       // Actualizar el estado de autenticación inmediatamente
       queryClient.setQueryData(authKeys.session(), true);
-      queryClient.setQueryData(authKeys.user(), response.user);
+      queryClient.setQueryData(authKeys.user(), response.usuario);
       
       // Invalidar queries para refrescar datos
       queryClient.invalidateQueries({ queryKey: authKeys.session() });

@@ -23,9 +23,9 @@ export const authController = {
       const response = await AuthRepository.getInstance().login(credentials);
 
       // Guardar tokens y datos del usuario en el almacenamiento local
-      await AsyncStorage.setItem(AUTH_TOKEN_KEY, response.token);
-      await AsyncStorage.setItem(REFRESH_TOKEN_KEY, response['refresh-token']);
-      await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(response.user));
+      await AsyncStorage.setItem(AUTH_TOKEN_KEY, response.access);
+      await AsyncStorage.setItem(REFRESH_TOKEN_KEY, response.refresh);
+      await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(response.usuario));
 
       return response;
     } catch (error) {
@@ -88,9 +88,9 @@ export const authController = {
   },
 
   // Solicitar recuperación de contraseña
-  forgotPassword: async (data: ForgotPasswordFormValues): Promise<boolean> => {
+  forgotPassword: async (data: ForgotPasswordFormValues): Promise<{ mensaje: string }> => {
     try {
-      return await AuthRepository.getInstance().forgotPassword(data.username, data.aplicacion);
+      return await AuthRepository.getInstance().forgotPassword(data.username);
     } catch (error) {
       console.error('Error al solicitar recuperación de contraseña:', error);
       throw error;

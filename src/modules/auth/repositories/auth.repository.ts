@@ -41,7 +41,7 @@ export class AuthRepository extends HttpBaseRepository implements IAuthService {
    * @returns Promise con la respuesta del login
    */
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
-    return this.post<LoginResponse>('seguridad/login/', credentials);
+    return this.post<LoginResponse>('api/v2/auth/login/', credentials);
   }
 
   /**
@@ -50,7 +50,7 @@ export class AuthRepository extends HttpBaseRepository implements IAuthService {
    * @returns Promise con la respuesta del registro
    */
   async register(userData: RegisterCredentials): Promise<RegisterResponse> {
-    return this.post<RegisterResponse>('contenedor/usuario/nuevo/', userData);
+    return this.post<RegisterResponse>('api/v2/auth/registro/', userData);
   }
 
   /**
@@ -58,16 +58,16 @@ export class AuthRepository extends HttpBaseRepository implements IAuthService {
    * @param email Correo electrónico del usuario
    * @returns Promise con la confirmación del cambio de contraseña
    */
-  async forgotPassword(username: string, aplicacion: string): Promise<boolean> {
-    return this.post<boolean>('contenedor/usuario/cambio-clave-solicitar/', { username, aplicacion });
+  async forgotPassword(username: string): Promise<{ mensaje: string }> {
+    return this.post<{ mensaje: string }>('api/v2/auth/clave/solicitar/', { username });
   }
 
   /**
    * Cierra la sesión del usuario
    * @returns Promise con la confirmación del logout
    */
-  async logout(): Promise<boolean> {
-    return this.post<boolean>('seguridad/logout/', {});
+  async logout(): Promise<{ mensaje: string }> {
+    return this.post<{ mensaje: string }>('api/v2/auth/logout/', {});
   }
 
   async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
@@ -82,7 +82,7 @@ export class AuthRepository extends HttpBaseRepository implements IAuthService {
       
       // Hacer la petición directamente sin pasar por apiService
       const response = await directAxios.post<RefreshTokenResponse>(
-        '/seguridad/token/refresh/',
+        '/api/v2/auth/token/refresh/',
         { refresh: refreshToken }
       );
       

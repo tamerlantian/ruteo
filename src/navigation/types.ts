@@ -14,6 +14,7 @@ export type RootStackParamList = {
  * Parámetros para el stack de autenticación
  */
 export type AuthStackParamList = {
+  Welcome: undefined;
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;

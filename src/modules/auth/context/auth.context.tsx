@@ -67,7 +67,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await authController.login(credentials);
       
       setIsAuthenticated(true);
-      setUser(response.user);
+      setUser(response.usuario);
       
       Toast.show({
         type: 'success',

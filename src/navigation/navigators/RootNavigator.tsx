@@ -5,6 +5,7 @@ import { AuthNavigator } from './AuthNavigator';
 import { MainNavigator } from './MainNavigator';
 import { RootStackParamList } from '../types';
 import { SplashScreen } from '../../components/SplashScreen';
+import { PendingApprovalScreen } from '../../modules/auth/screens/pending-approval.screen';
 import { ErrorBoundary } from '../../shared/components/error-boundary';
 import * as Sentry from '@sentry/react-native';
 
@@ -19,11 +20,16 @@ export const navigationRef = createNavigationContainerRef();
  * Maneja la navegación entre Auth y Main basado en el estado de autenticación
  */
 export const RootNavigator: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   // Mostrar splash screen mientras se verifica el estado de autenticación
   if (isLoading) {
     return <SplashScreen />;
+  }
+
+  // Usuario autenticado pero con auto-registro pendiente de aprobación.
+  if (isAuthenticated && user?.estado === 'pendiente') {
+    return <PendingApprovalScreen />;
   }
 
   console.log('🔍 RootNavigator: isAuthenticated:', isAuthenticated);

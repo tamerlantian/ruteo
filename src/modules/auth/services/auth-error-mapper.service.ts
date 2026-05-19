@@ -49,7 +49,16 @@ export class AuthErrorMapperService {
       // Fallback para otros tipos de error
       statusCode = error?.status || error?.response?.status;
     }
-    
+
+    // Envelope v2: el backend ya entrega titulo y mensaje listos para mostrar.
+    if (apiError && apiError.titulo && apiError.mensaje) {
+      return {
+        title: apiError.titulo,
+        message: apiError.mensaje,
+        type: AuthErrorType.UNKNOWN_ERROR,
+      };
+    }
+
     console.log(' API Error:', apiError);
     console.log(' Status code extraído:', statusCode);
     

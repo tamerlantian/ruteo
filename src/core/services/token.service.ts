@@ -67,8 +67,13 @@ class TokenService {
    * @param jwtToken Token JWT
    * @param refreshToken Refresh token
    */
-  public async saveTokens(jwtToken: string): Promise<void> {
-    await Promise.all([storageService.setItem(AUTH_TOKEN_KEY, jwtToken)]);
+  public async saveTokens(accessToken: string, refreshToken?: string): Promise<void> {
+    const ops: Promise<void>[] = [storageService.setItem(AUTH_TOKEN_KEY, accessToken)];
+    // v2 rota el refresh token: si llega uno nuevo, lo guardamos.
+    if (refreshToken) {
+      ops.push(storageService.setItem(REFRESH_TOKEN_KEY, refreshToken));
+    }
+    await Promise.all(ops);
   }
 
   /**
@@ -112,8 +117,8 @@ class TokenService {
       const response = await this.authService.refreshToken(refreshToken);
 
       if (response && response.access) {
-        // Guardar los nuevos tokens
-        await this.saveTokens(response.access);
+        // Guardar los nuevos tokens (access y, si rotó, el nuevo refresh)
+        await this.saveTokens(response.access, response.refresh);
 
         // Notificar a todos los suscriptores que el token ha sido renovado
         this.onRefreshed(response.access);

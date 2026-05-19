@@ -81,9 +81,11 @@ export const RegisterScreen = () => {
     defaultValues: {
       username: '',
       password: '',
-      aplicacion: 'ruteo',
       confirmarPassword: '',
       aceptarTerminosCondiciones: false,
+      nombre: '',
+      telefono: '',
+      empresa_nombre: '',
     },
     mode: 'onChange',
   });
@@ -93,13 +95,15 @@ export const RegisterScreen = () => {
 
   // Manejar envío del formulario
   const onSubmit = (data: RegisterFormValues) => {
-    // Transformar los datos al formato esperado por el método register
+    // El registro v2 solo recibe credenciales + datos opcionales que ayudan
+    // al super-admin a aprobar al conductor. confirmarPassword y los términos
+    // son validación de cliente; no se envían.
     register({
       username: data.username,
       password: data.password,
-      confirmarPassword: data.confirmarPassword,
-      aceptarTerminosCondiciones: data.aceptarTerminosCondiciones,
-      aplicacion: data.aplicacion,
+      nombre: data.nombre || undefined,
+      telefono: data.telefono || undefined,
+      empresa_nombre: data.empresa_nombre || undefined,
     });
   };
 
@@ -183,6 +187,34 @@ export const RegisterScreen = () => {
               required: 'Debes confirmar tu contraseña',
               validate: (value: string) => value === password || 'Las contraseñas no coinciden',
             }}
+          />
+
+          {/* Nombre completo */}
+          <FormInputController<RegisterFormValues>
+            control={control}
+            name="nombre"
+            label="Nombre completo"
+            placeholder="Tu nombre"
+            error={errors.nombre}
+          />
+
+          {/* Teléfono */}
+          <FormInputController<RegisterFormValues>
+            control={control}
+            name="telefono"
+            label="Teléfono"
+            placeholder="3001234567"
+            keyboardType="phone-pad"
+            error={errors.telefono}
+          />
+
+          {/* Empresa donde trabajas */}
+          <FormInputController<RegisterFormValues>
+            control={control}
+            name="empresa_nombre"
+            label="Empresa donde trabajas"
+            placeholder="Nombre de tu empresa"
+            error={errors.empresa_nombre}
           />
 
           {/* Checkbox para términos y condiciones */}

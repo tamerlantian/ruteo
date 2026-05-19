@@ -41,6 +41,19 @@ const determineIfRetryable = (error: AxiosError<ApiErrorResponse>): boolean => {
  * Maneja los errores de respuesta HTTP y devuelve un objeto de error estandarizado
  */
 export const handleErrorResponse = (error: AxiosError<ApiErrorResponse>): ApiErrorResponse => {
+  // Envelope v2 {codigo, titulo, mensaje}: el backend ya entrega el error listo
+  // para mostrar. Lo pasamos tal cual (cubre cualquier status, incluido 403).
+  const data = error.response?.data as ApiErrorResponse | undefined;
+  if (data && data.titulo && data.mensaje) {
+    return {
+      titulo: data.titulo,
+      mensaje: data.mensaje,
+      codigo: data.codigo ?? error.response?.status ?? 500,
+      validaciones: data.validaciones,
+      isRetryable: determineIfRetryable(error),
+    };
+  }
+
   let _errores = new Map<number, (error: AxiosError<ApiErrorResponse>) => ApiErrorResponse>();
   _errores.set(400, error => error400(error));
   _errores.set(401, error => error401(error));

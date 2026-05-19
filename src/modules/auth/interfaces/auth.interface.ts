@@ -1,7 +1,6 @@
 export interface LoginFormValues {
   username: string;
   password: string;
-  proyecto: string;
 }
 
 export interface RegisterFormValues {
@@ -9,9 +8,12 @@ export interface RegisterFormValues {
   password: string;
   confirmarPassword: string;
   aceptarTerminosCondiciones: boolean;
-  aplicacion: string;
+  nombre: string;
+  telefono: string;
+  empresa_nombre: string;
 }
 
 export interface RefreshTokenResponse {
   access: string;
+  refresh?: string;
 }

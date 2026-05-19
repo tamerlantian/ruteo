@@ -23,7 +23,6 @@ export const ForgotPasswordScreen = () => {
   } = useForm<ForgotPasswordFormValues>({
     defaultValues: {
       username: '',
-      aplicacion: "ruteo",
     },
     mode: 'onChange',
   });
