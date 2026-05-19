@@ -17,6 +17,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   logoutTokenExpired: () => Promise<void>;
   checkAuthStatus: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -137,6 +138,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
+  // Re-consultar el usuario actual al backend (estado de aprobación / acceso).
+  // Si el estado cambió (ej. el admin lo aprobó), RootNavigator re-rutea solo.
+  const refreshUser = useCallback(async () => {
+    try {
+      const fresh = await authController.getMe();
+      setUser(fresh);
+    } catch (error) {
+      console.error('Error al refrescar usuario:', error);
+    }
+  }, []);
+
   // Verificar estado al montar el componente
   useEffect(() => {
     console.log('🔍 AuthProvider: useEffect ejecutándose...');
@@ -165,6 +177,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     logoutTokenExpired,
     checkAuthStatus,
+    refreshUser,
   };
 
   console.log('🔍 AuthProvider: Renderizando con valor:', value);

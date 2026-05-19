@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
+  AuthUser,
   ForgotPasswordFormValues,
   LoginCredentials,
   LoginResponse,
@@ -31,6 +32,13 @@ export const authController = {
     } catch (error) {
       throw error;
     }
+  },
+
+  // Re-consultar el usuario actual (estado de aprobación, acceso) y persistirlo
+  getMe: async (): Promise<AuthUser> => {
+    const usuario = await AuthRepository.getInstance().me();
+    await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(usuario));
+    return usuario;
   },
 
   // Registrar nuevo usuario

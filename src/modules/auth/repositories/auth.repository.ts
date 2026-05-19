@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { HttpBaseRepository } from '../../../core/repositories/http-base.repository';
 import {
+  AuthUser,
   LoginCredentials,
   LoginResponse,
   RefreshTokenResponse,
@@ -42,6 +43,14 @@ export class AuthRepository extends HttpBaseRepository implements IAuthService {
    */
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
     return this.post<LoginResponse>('api/v2/auth/login/', credentials);
+  }
+
+  /**
+   * Obtiene el usuario autenticado (estado de aprobación, acceso, etc.)
+   * @returns Promise con el usuario actual
+   */
+  async me(): Promise<AuthUser> {
+    return this.get<AuthUser>('api/v2/auth/me/');
   }
 
   /**
