@@ -100,6 +100,16 @@ export class AuthErrorMapperService {
           type: AuthErrorType.INVALID_EMAIL,
         };
 
+      case 404:
+      case 405:
+        // El endpoint de login no respondió: el servidor no lo expone
+        // (servidor incorrecto, fuera de servicio o despliegue desactualizado).
+        return {
+          title: 'Servicio no disponible',
+          message: 'No pudimos conectar con el servidor. Revisa tu conexión o intenta más tarde.',
+          type: AuthErrorType.SERVER_ERROR,
+        };
+
       case 500:
       case 502:
       case 503:

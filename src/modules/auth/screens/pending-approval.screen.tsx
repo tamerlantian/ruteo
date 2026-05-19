@@ -7,12 +7,32 @@ import { useAuth } from '../context/auth.context';
 import { authColors } from '../styles/auth.theme';
 
 /**
- * Se muestra cuando el conductor inició sesión pero su auto-registro aún está
- * pendiente de aprobación. Un super-admin debe aprobarlo y asignarlo a una
- * empresa; mientras tanto la app no tiene acceso al resto de funciones.
+ * Se muestra cuando el usuario inició sesión pero no puede usar la app:
+ * - registro pendiente de aprobación (estado === 'pendiente'), o
+ * - cuenta sin acceso móvil en ningún contenedor (acceso_movil === false).
+ * El contenido se ajusta a cada caso.
  */
 export const PendingApprovalScreen = () => {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const esPendiente = user?.estado === 'pendiente';
+
+  const contenido = esPendiente
+    ? {
+        icono: 'time-outline' as const,
+        badge: 'En revisión',
+        titulo: 'Cuenta pendiente de aprobación',
+        mensaje:
+          'Recibimos tu registro. Un administrador debe aprobar tu cuenta y asignarte a tu empresa antes de que puedas usar la app.',
+        hint: 'Si ya te aprobaron, cierra sesión y vuelve a iniciar sesión.',
+      }
+    : {
+        icono: 'lock-closed-outline' as const,
+        badge: 'Sin acceso',
+        titulo: 'No tienes acceso a la app',
+        mensaje:
+          'Tu cuenta no tiene permiso para usar esta app. Contacta al administrador de tu empresa para que te habilite el acceso.',
+        hint: 'Cuando te habiliten, cierra sesión y vuelve a iniciar sesión.',
+      };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -25,18 +45,17 @@ export const PendingApprovalScreen = () => {
           />
 
           <View style={styles.badge}>
-            <Ionicons name="time-outline" size={15} color={authColors.brandInk} />
-            <Text style={styles.badgeText}>En revisión</Text>
+            <Ionicons
+              name={contenido.icono}
+              size={15}
+              color={authColors.brandInk}
+            />
+            <Text style={styles.badgeText}>{contenido.badge}</Text>
           </View>
 
-          <Text style={styles.title}>Cuenta pendiente de aprobación</Text>
-          <Text style={styles.subtitle}>
-            Recibimos tu registro. Un administrador debe aprobar tu cuenta y
-            asignarte a tu empresa antes de que puedas usar la app.
-          </Text>
-          <Text style={styles.hint}>
-            Si ya te aprobaron, cierra sesión y vuelve a iniciar sesión.
-          </Text>
+          <Text style={styles.title}>{contenido.titulo}</Text>
+          <Text style={styles.subtitle}>{contenido.mensaje}</Text>
+          <Text style={styles.hint}>{contenido.hint}</Text>
         </View>
 
         <TouchableOpacity style={styles.cta} onPress={logout} activeOpacity={0.85}>

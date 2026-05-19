@@ -27,8 +27,12 @@ export const RootNavigator: React.FC = () => {
     return <SplashScreen />;
   }
 
-  // Usuario autenticado pero con auto-registro pendiente de aprobación.
-  if (isAuthenticated && user?.estado === 'pendiente') {
+  // Autenticado pero sin acceso a la app: registro pendiente de aprobación,
+  // o cuenta sin permiso móvil en ningún contenedor.
+  if (
+    isAuthenticated &&
+    (user?.estado === 'pendiente' || user?.acceso_movil === false)
+  ) {
     return <PendingApprovalScreen />;
   }
 

@@ -31,6 +31,8 @@ export interface AuthUser {
   is_active: boolean;
   /** Estado de aprobación del registro: 'pendiente' | 'aprobado' | 'rechazado'. */
   estado: string;
+  /** true si el usuario tiene acceso a la app móvil en algún contenedor. */
+  acceso_movil: boolean;
 }
 
 // Respuesta del login v2: tokens estándar + usuario.
