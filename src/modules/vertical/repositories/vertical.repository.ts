@@ -27,18 +27,29 @@ export class VerticalRepository extends HttpBaseRepository {
   }
 
   /**
-   * Realiza el login del usuario
-   * @param credentials Credenciales de login (email y password)
-   * @returns Promise con la respuesta del login
+   * Resuelve un codigo de orden a su despacho/entrega (API movil v2).
+   * El backend solo devuelve despachos asignados al conductor (o sin
+   * asignar); un despacho ajeno responde 404.
+   * @param codigo Codigo de la orden
+   * @returns Promise con el despacho/entrega
    */
   async getEntrega(codigo: string): Promise<Entrega> {
     try {
-      const response = await this.get<Entrega>(`vertical/entrega/${codigo}/`);
+      const response = await this.get<Entrega>(`api/v2/despachos/${codigo}/`);
       return response
     } catch (error) {
       console.log(error);
       throw error;
     }
+  }
+
+  /**
+   * Lista los despachos asignados al conductor autenticado (API movil v2).
+   * El backend filtra por VerEntrega.usuario_id == request.user.id.
+   * @returns Promise con el array de despachos asignados
+   */
+  async getMisDespachos(): Promise<Entrega[]> {
+    return this.get<Entrega[]>('api/v2/despachos/');
   }
 }
 

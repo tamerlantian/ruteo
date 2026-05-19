@@ -7,6 +7,7 @@ import {
 } from 'react-native-safe-area-context';
 import CustomBottomSheet from '../../../../shared/components/bottom-sheet/bottom-sheet';
 import CargarOrdenComponent from '../../components/cargar-orden/cargar-orden.component';
+import { MisOrdenesComponent } from '../../components/mis-ordenes/mis-ordenes.component';
 import VisitaCardComponent from '../../components/visita-card/visita-card.component';
 import { VisitaResponse } from '../../interfaces/visita.interface';
 import { useVisitasViewModel } from './visitas.view-model';
@@ -80,7 +81,6 @@ export const VisitasScreen = () => {
       <VisitasHeader
         hasVisitas={hasVisitas}
         hasOrdenCargada={hasOrdenCargada}
-        onOpenDevModeSheet={openDevModeSheet}
         onOpenOptionsSheet={openOptionsSheet}
         activeFilter={activeFilter}
         onFilterChange={onFilterChange}
@@ -95,30 +95,34 @@ export const VisitasScreen = () => {
         onScanResult={onScanResult}
         onClearFilters={onClearFilters}
       />
-      {/* Lista de visitas - solo las cards hacen scroll */}
-      <FlatList
-        data={visitas}
-        renderItem={renderVisitaItem}
-        keyExtractor={keyExtractor}
-        ListFooterComponent={<VisitasLoadingFooter isLoading={isLoading} />}
-        // Optimizaciones de rendimiento críticas
-        removeClippedSubviews={true}
-        maxToRenderPerBatch={listConfig.MAX_TO_RENDER_PER_BATCH}
-        initialNumToRender={listConfig.INITIAL_NUM_TO_RENDER}
-        windowSize={listConfig.WINDOW_SIZE}
-        updateCellsBatchingPeriod={listConfig.UPDATE_CELLS_BATCHING_PERIOD}
-        // Pull to refresh
-        refreshing={refreshing}
-        onRefresh={onRefresh}
-        // Estilos
-        style={visitasStyles.flatList}
-        contentContainerStyle={contentContainerStyle}
-        showsVerticalScrollIndicator={false}
-        // Optimización adicional para listas grandes
-        legacyImplementation={false}
-      />
+      {/* Si hay orden cargada, mostrar las visitas; si no, las ordenes asignadas */}
+      {hasOrdenCargada ? (
+        <FlatList
+          data={visitas}
+          renderItem={renderVisitaItem}
+          keyExtractor={keyExtractor}
+          ListFooterComponent={<VisitasLoadingFooter isLoading={isLoading} />}
+          // Optimizaciones de rendimiento críticas
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={listConfig.MAX_TO_RENDER_PER_BATCH}
+          initialNumToRender={listConfig.INITIAL_NUM_TO_RENDER}
+          windowSize={listConfig.WINDOW_SIZE}
+          updateCellsBatchingPeriod={listConfig.UPDATE_CELLS_BATCHING_PERIOD}
+          // Pull to refresh
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          // Estilos
+          style={visitasStyles.flatList}
+          contentContainerStyle={contentContainerStyle}
+          showsVerticalScrollIndicator={false}
+          // Optimización adicional para listas grandes
+          legacyImplementation={false}
+        />
+      ) : (
+        <MisOrdenesComponent onCargarPorCodigo={openDevModeSheet} />
+      )}
       {/* Floating Action Bar */}
-      {activeFilter !== 'novedades' && (
+      {hasOrdenCargada && activeFilter !== 'novedades' && (
         <VisitasFloatingActions
           totalSeleccionadas={totalSeleccionadas}
           totalConError={totalConErrorSeleccionadas}
@@ -136,7 +140,7 @@ export const VisitasScreen = () => {
       <CustomBottomSheet
         ref={bottomSheetRef}
         enableDynamicSizing={false}
-        initialSnapPoints={['35%']}
+        initialSnapPoints={['45%']}
         onDismiss={handleCargarOrdenDismiss}
       >
         <CargarOrdenComponent />

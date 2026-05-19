@@ -1,34 +1,23 @@
 import { View, Text, StyleSheet, Keyboard } from 'react-native';
 import React from 'react';
+import Ionicons from '@react-native-vector-icons/ionicons';
 import { useForm } from 'react-hook-form';
-import { BottomSheetFormInputController } from '../../../../shared/components/ui/form/BottomSheetFormInputController';
-import { verticalRepository } from '../../../vertical/repositories/vertical.repository';
-import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
-import { cargarVisitasThunk } from '../../store/thunk/visita.thunk';
-import { FormButton } from '../../../../shared/components/ui/button/FormButton';
-import { updateSettingsThunk, selectSubdominio } from '../../../settings';
 import Toast from 'react-native-toast-message';
+import { BottomSheetFormInputController } from '../../../../shared/components/ui/form/BottomSheetFormInputController';
+import { FormButton } from '../../../../shared/components/ui/button/FormButton';
+import { verticalRepository } from '../../../vertical/repositories/vertical.repository';
+import { networkService } from '../../../../shared/services';
 import { toastTextOneStyle } from '../../../../shared/styles/global.style';
-import { useNovedadTipos } from '../../../novedad/view-models/novedad.view-model';
-import { networkService, backgroundGeolocationService } from '../../../../shared/services';
-import { useAuth } from '../../../auth/context/auth.context';
-// import { FormInputController } from '../../../../shared/components/ui/form';
+import { authColors } from '../../../auth/styles/auth.theme';
+import { useCargarOrden } from '../../hooks/use-cargar-orden.hook';
 
 interface CargarOrdenFormValues {
   codigo: string;
 }
 
 const CargarOrdenComponent = () => {
-  const dispatch = useAppDispatch();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const subdominio = useAppSelector(selectSubdominio);
-  const { user } = useAuth();
-
-  // Query para cargar tipos de novedad cuando hay subdominio
-  const { refetch: refetchNovedadTipos } = useNovedadTipos(
-    subdominio || '',
-    !!subdominio,
-  );
+  const cargarOrden = useCargarOrden();
 
   const {
     control,
@@ -43,9 +32,7 @@ const CargarOrdenComponent = () => {
   });
 
   const onCargarOrden = async (data: CargarOrdenFormValues) => {
-    // Verificar conectividad antes de intentar cargar la orden
     const isConnected = await networkService.isConnected();
-
     if (!isConnected) {
       Toast.show({
         type: 'error',
@@ -60,72 +47,19 @@ const CargarOrdenComponent = () => {
     try {
       const entrega = await verticalRepository.getEntrega(data.codigo);
       if (entrega) {
-        const { schema_name, despacho_id } = entrega;
-        await dispatch(
-          updateSettingsThunk({
-            subdominio: schema_name,
-            despacho: `${despacho_id}`,
-            ordenEntrega: data.codigo,
-          }),
-        );
-
-        const visitas = await dispatch(
-          cargarVisitasThunk({
-            schemaName: schema_name,
-            despachoId: despacho_id,
-          }),
-        ).unwrap();
-
-        try {
-          await refetchNovedadTipos();
-        } catch (novedadError) {
-          console.warn('Error cargando tipos de novedad:', novedadError);
-          Toast.show({
-            type: 'error',
-            text1: 'Error cargando tipos de novedad',
-            text1Style: toastTextOneStyle,
-          });
-          // No bloquear el flujo principal si falla la carga de tipos de novedad
-        }
-
-        // Iniciar background geolocation tracking
-        try {
-          console.log('📍 Iniciando background geolocation tracking...');
-          await backgroundGeolocationService.startTracking({
-            schemaName: schema_name,
-            despacho: despacho_id,
-            usuarioId: user?.id || 0, // Usar el ID del usuario autenticado
-          });
-          console.log('📍 Background geolocation iniciado correctamente');
-        } catch (geoError) {
-          console.warn('Error iniciando background geolocation:', geoError);
-          // No mostrar error al usuario, el tracking es opcional
-        }
-
-        if(visitas.length > 0) {
-          Toast.show({
-            type: 'success',
-            text1: 'Orden cargada correctamente',
-            text1Style: toastTextOneStyle,
-          });
-        } else {
-          Toast.show({
-            type: 'success',
-            text1: 'La orden está completada',
-            text1Style: toastTextOneStyle,
-          });
-        }
-
+        await cargarOrden(entrega);
         reset();
-        // Cerrar teclado después de cargar exitosamente
         Keyboard.dismiss();
       }
     } catch (error: any) {
       console.log(error);
-      if (error?.codigo === 404) {
+      // 404 / codigo 5 (envelope v2 "no encontrado"): con el scoping por
+      // conductor, un despacho ajeno tambien responde 404 a proposito.
+      if (error?.codigo === 404 || error?.codigo === 5) {
         Toast.show({
           type: 'error',
-          text1: 'La orden no existe',
+          text1: 'Orden no disponible',
+          text2: 'La orden no existe o no está asignada a ti.',
           text1Style: toastTextOneStyle,
         });
       } else if (error?.titulo) {
@@ -143,7 +77,6 @@ const CargarOrdenComponent = () => {
           text1Style: toastTextOneStyle,
         });
       }
-      // Cerrar teclado también en caso de error
       Keyboard.dismiss();
     } finally {
       setIsSubmitting(false);
@@ -151,49 +84,80 @@ const CargarOrdenComponent = () => {
   };
 
   return (
-    <View>
+    <View style={styles.container}>
+      <View style={styles.iconCircle}>
+        <Ionicons name="cube-outline" size={28} color={authColors.brandInk} />
+      </View>
+
       <Text style={styles.title}>Cargar orden</Text>
-      <BottomSheetFormInputController
-        keyboardType="numeric"
-        control={control}
-        name="codigo"
-        label=""
-        placeholder="Ingrese el código de la orden"
-        error={errors.codigo}
-        rules={{
-          required: 'El código es obligatorio',
-        }}
-        isNumeric={true}
-      />
-      {/* {Platform.OS === 'ios' ? (
-      ) : (
-        <FormInputController
+      <Text style={styles.subtitle}>
+        Ingresa el código de la orden asignada para ver sus entregas.
+      </Text>
+
+      <View style={styles.form}>
+        <BottomSheetFormInputController
           keyboardType="numeric"
           control={control}
           name="codigo"
-          label=""
-          placeholder="Ingrese el código de la orden"
+          label="Código de la orden"
+          placeholder="Ingresa el código"
           error={errors.codigo}
           rules={{
             required: 'El código es obligatorio',
           }}
           isNumeric={true}
         />
-      )} */}
-      <FormButton
-        title="Cargar orden"
-        onPress={handleSubmit(onCargarOrden)}
-        disabled={!isValid}
-        isLoading={isSubmitting}
-      />
+        <FormButton
+          title="Cargar orden"
+          onPress={handleSubmit(onCargarOrden)}
+          disabled={!isValid}
+          isLoading={isSubmitting}
+          style={styles.submitButton}
+        />
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    paddingTop: 4,
+    paddingHorizontal: 4,
+  },
+  iconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(27, 155, 215, 0.10)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
   title: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 20,
+    fontWeight: '800',
+    color: authColors.ink,
+    textAlign: 'center',
+    letterSpacing: -0.2,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: authColors.inkSoft,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginTop: 6,
+    marginBottom: 18,
+    paddingHorizontal: 12,
+  },
+  form: {
+    width: '100%',
+  },
+  submitButton: {
+    backgroundColor: authColors.brandInk,
+    borderRadius: 14,
+    height: 52,
+    marginTop: 4,
   },
 });
 

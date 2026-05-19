@@ -10,7 +10,6 @@ import { ScanResult } from '../../../../shared/components/scanner';
 interface VisitasHeaderProps {
   hasVisitas: boolean;
   hasOrdenCargada: boolean;
-  onOpenDevModeSheet: () => void;
   onOpenOptionsSheet: () => void;
   activeFilter: FilterType;
   onFilterChange: (filter: FilterType) => void;
@@ -29,7 +28,6 @@ interface VisitasHeaderProps {
 
 export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
   hasOrdenCargada,
-  onOpenDevModeSheet,
   onOpenOptionsSheet,
   activeFilter,
   onFilterChange,
@@ -115,20 +113,6 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
         </>
       )}
             
-      {!hasOrdenCargada && (
-        <View style={visitasStyles.emptyState}>
-          <Text style={visitasStyles.emptyTitle}>No tienes una orden cargada</Text>
-          <Text style={visitasStyles.emptySubtitle}>
-            Carga una orden de entrega para comenzar
-          </Text>
-          <TouchableOpacity 
-            style={visitasStyles.emptyButtonContainer} 
-            onPress={onOpenDevModeSheet}
-          >
-            <Text style={visitasStyles.emptyButton}>Cargar orden</Text>
-          </TouchableOpacity>
-        </View>
-      )}
     </View>
   );
 };
