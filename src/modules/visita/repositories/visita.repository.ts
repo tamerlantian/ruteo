@@ -28,28 +28,34 @@ export class VisitaRepository extends HttpBaseRepository {
   }
 
   /**
-   * Obtiene las visitas
-   * @param schemaName Nombre del schema
-   * @param despachoId Id del despacho
-   * @param estadoEntregado Estado de entregado
-   * @param estadoNovedad Estado de novedad
-   * @returns Promise con la respuesta del login
+   * Obtiene las visitas del despacho. Los filtros estadoEntregado y
+   * estadoNovedad son opcionales — si NO se pasan, el server devuelve TODAS
+   * las visitas (lo que necesita el cliente para tener la foto completa,
+   * incluyendo entregadas, y filtrar visualmente por tab en el detalle).
+   *
+   * Si pasas `false` explicitamente filtra por ese estado en el server (modo
+   * legacy). El nuevo flujo de cargarVisitasThunk usa "sin filtros".
    */
   async getVisitas(
     schemaName: string,
     despachoId: number,
-    estadoEntregado: boolean,
-    estadoNovedad: boolean,
+    estadoEntregado?: boolean,
+    estadoNovedad?: boolean,
   ): Promise<VisitaResponse[]> {
     const url = await buildUrlWithSubdomain(schemaName, 'ruteo/visita/');
-    return this.get<VisitaResponse[]>(url, {
-        estado_entregado: estadoEntregado ? 'True' : 'False',
-        despacho_id: despachoId,
-        estado_novedad: estadoNovedad ? 'True' : 'False',
-        lista: true,
-        serializador: 'lista',
-        ordering: 'orden'
-    });
+    const params: Record<string, string | number | boolean> = {
+      despacho_id: despachoId,
+      lista: true,
+      serializador: 'lista',
+      ordering: 'orden',
+    };
+    if (estadoEntregado !== undefined) {
+      params.estado_entregado = estadoEntregado ? 'True' : 'False';
+    }
+    if (estadoNovedad !== undefined) {
+      params.estado_novedad = estadoNovedad ? 'True' : 'False';
+    }
+    return this.get<VisitaResponse[]>(url, params);
   }
 
   async entregaVisita(
