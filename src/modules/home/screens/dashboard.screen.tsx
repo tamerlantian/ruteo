@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useAuth } from '../../auth/context/auth.context';
 import { useAppSelector, useAppDispatch } from '../../../store/hooks';
 import {
@@ -21,6 +23,7 @@ import {
   selectVisitasConErrorRetryables,
   selectVisitasConErrorNoRetryables,
 } from '../../visita/store/selector/visita.selector';
+import { MainTabParamList } from '../../../navigation/types';
 import { setSyncing } from '../../visita/store/slice/visita.slice';
 import { selectOrdenEntrega, selectSubdominio, selectDespacho } from '../../settings';
 import { useRetryNovedades } from '../../novedad/hooks';
@@ -62,6 +65,61 @@ export const DashboardScreen = () => {
   const visitaIdsConError = useAppSelector(selectVisitaIdsConErrorCompleto);
   const visitasConErrorRetryables = useAppSelector(selectVisitasConErrorRetryables);
   const visitasConErrorNoRetryables = useAppSelector(selectVisitasConErrorNoRetryables);
+
+  // === Agregacion de snapshots para el modelo navegacional ===
+  // Despues del refactor a Lista -> Detalle, NO hay "una orden activa" cuyo
+  // state.visitas resuma la pantalla. Los stats reales se calculan
+  // agregando todos los snapshots de ordenes en las que el conductor
+  // trabajo localmente.
+  const snapshots = useAppSelector(
+    state => state.visita.snapshotsByDespacho ?? {},
+  );
+  const agregado = useMemo(() => {
+    let visitasTotal = 0;
+    let entregadasTotal = 0;
+    let pendientesTotal = 0;
+    let novedadesTotal = 0;
+    let erroresTotal = 0;
+    let erroresRetryablesTotal = 0;
+    let ordenesEnCurso = 0;
+
+    Object.values(snapshots).forEach(snap => {
+      if (!snap?.entrega) {
+        return;
+      }
+      const vs = snap.visitas || [];
+      const entregadas = vs.filter(v => v.estado_entregado).length;
+      visitasTotal += vs.length;
+      entregadasTotal += entregadas;
+      pendientesTotal += vs.filter(
+        v => !v.estado_entregado && !v.estado_novedad && v.estado !== 'error',
+      ).length;
+      novedadesTotal += vs.filter(v => v.estado_novedad).length;
+      const errores = vs.filter(v => v.estado === 'error');
+      erroresTotal += errores.length;
+      erroresRetryablesTotal += errores.filter(
+        v => v.es_error_retryable !== false,
+      ).length;
+      if (entregadas > 0) {
+        ordenesEnCurso += 1;
+      }
+    });
+    const progreso =
+      visitasTotal > 0
+        ? Math.round((entregadasTotal / visitasTotal) * 100)
+        : 0;
+    return {
+      visitasTotal,
+      entregadasTotal,
+      pendientesTotal,
+      novedadesTotal,
+      erroresTotal,
+      erroresRetryablesTotal,
+      ordenesEnCurso,
+      progreso,
+    };
+  }, [snapshots]);
+  const hayActividad = agregado.ordenesEnCurso > 0 || agregado.visitasTotal > 0;
 
   // === Auto-stop de geolocation cuando no quedan pendientes ===
   useEffect(() => {
@@ -195,11 +253,8 @@ export const DashboardScreen = () => {
     Linking.openURL(`whatsapp://send?phone=${WHATSAPP_NUMBER}`);
   };
 
-  const totalVisitas = visitas.length;
-  const entregadas = visitasEntregadas.length;
-  const progreso = totalVisitas > 0 ? Math.round((entregadas / totalVisitas) * 100) : 0;
-  const pendingSyncTotal =
-    visitasConErrorRetryables.length + novedadesConError.length;
+  const navigation =
+    useNavigation<BottomTabNavigationProp<MainTabParamList>>();
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -210,13 +265,23 @@ export const DashboardScreen = () => {
       />
       <AppBar
         title="Inicio"
-        subtitle={ordenEntrega ? 'Orden en curso' : 'Sin orden cargada'}
+        subtitle={
+          hayActividad
+            ? `${agregado.ordenesEnCurso} ${
+                agregado.ordenesEnCurso === 1 ? 'orden' : 'órdenes'
+              } en curso`
+            : undefined
+        }
       />
       <View style={styles.content}>
-        {ordenEntrega ? (
+        {hayActividad ? (
           <>
-            {/* ===== Hero: orden actual + progreso ===== */}
-            <View style={styles.heroCard}>
+            {/* ===== Hero: total agregado de TODAS las ordenes ===== */}
+            <TouchableOpacity
+              style={styles.heroCard}
+              onPress={() => navigation.navigate('Visitas')}
+              activeOpacity={0.85}
+            >
               <View style={styles.heroTopRow}>
                 <View style={styles.heroIcon}>
                   <Ionicons
@@ -226,42 +291,54 @@ export const DashboardScreen = () => {
                   />
                 </View>
                 <View style={styles.heroBody}>
-                  <Text style={styles.heroTitulo}>Orden en curso</Text>
+                  <Text style={styles.heroTitulo}>
+                    {agregado.ordenesEnCurso === 0
+                      ? `${Object.keys(snapshots).length} ${
+                          Object.keys(snapshots).length === 1 ? 'orden' : 'órdenes'
+                        }`
+                      : `${agregado.ordenesEnCurso} ${
+                          agregado.ordenesEnCurso === 1 ? 'orden' : 'órdenes'
+                        } en curso`}
+                  </Text>
                   <Text style={styles.heroSubtitulo}>
-                    {totalVisitas} visita{totalVisitas === 1 ? '' : 's'} ·{' '}
-                    <Text style={styles.heroOrdenId}>#{ordenEntrega}</Text>
+                    {agregado.entregadasTotal} de {agregado.visitasTotal}{' '}
+                    entregadas
                   </Text>
                 </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={authColors.inkMuted}
+                />
               </View>
 
-              {totalVisitas > 0 && (
+              {agregado.visitasTotal > 0 && (
                 <>
                   <View style={styles.progressTrack}>
                     <View
-                      style={[styles.progressFill, { width: `${progreso}%` }]}
+                      style={[
+                        styles.progressFill,
+                        { width: `${agregado.progreso}%` },
+                      ]}
                     />
                   </View>
                   <View style={styles.progressLabels}>
-                    <Text style={styles.progressTexto}>
-                      {entregadas} de {totalVisitas} entregadas
-                    </Text>
-                    <Text style={styles.progressPct}>{progreso}%</Text>
+                    <Text style={styles.progressTexto}>Ver mis órdenes</Text>
+                    <Text style={styles.progressPct}>{agregado.progreso}%</Text>
                   </View>
                 </>
               )}
-            </View>
+            </TouchableOpacity>
 
-            {/* ===== Stats compactas ===== */}
+            {/* ===== Stats agregadas ===== */}
             <View style={styles.statsRow}>
               <View style={styles.statBlock}>
-                <Text style={styles.statNumero}>
-                  {visitasPendientes.length}
-                </Text>
+                <Text style={styles.statNumero}>{agregado.pendientesTotal}</Text>
                 <Text style={styles.statLabel}>Pendientes</Text>
               </View>
               <View style={styles.statDivisor} />
               <View style={styles.statBlock}>
-                <Text style={styles.statNumero}>{novedades.length}</Text>
+                <Text style={styles.statNumero}>{agregado.novedadesTotal}</Text>
                 <Text style={styles.statLabel}>Novedades</Text>
               </View>
               <View style={styles.statDivisor} />
@@ -269,55 +346,51 @@ export const DashboardScreen = () => {
                 <Text
                   style={[
                     styles.statNumero,
-                    visitasConErrorNoRetryables.length > 0 && styles.statNumeroError,
+                    agregado.erroresTotal > 0 && styles.statNumeroError,
                   ]}
                 >
-                  {visitasConErrorNoRetryables.length}
+                  {agregado.erroresTotal}
                 </Text>
                 <Text style={styles.statLabel}>Con error</Text>
               </View>
             </View>
 
-            {/* ===== Acción: sincronizar pendientes (solo si los hay) ===== */}
-            {pendingSyncTotal > 0 && (
+            {/* ===== Aviso de pendientes de sincronizar (no auto-retry desde
+                aqui: el reintentar vive dentro de cada detalle, sino habria
+                que restaurar/sync/guardar cada snapshot — feature aparte). */}
+            {agregado.erroresRetryablesTotal > 0 && (
               <TouchableOpacity
-                style={[
-                  styles.syncCard,
-                  isRetrying && styles.syncCardDisabled,
-                ]}
-                onPress={handleRetryErrorVisitas}
-                disabled={isRetrying}
+                style={styles.syncCard}
+                onPress={() => navigation.navigate('Visitas')}
                 activeOpacity={0.85}
               >
                 <View style={styles.syncIcon}>
                   <Ionicons
-                    name={isRetrying ? 'sync' : 'sync-outline'}
+                    name="sync-outline"
                     size={20}
                     color={authColors.brandInk}
                   />
                 </View>
                 <View style={styles.syncBody}>
                   <Text style={styles.syncTitulo}>
-                    {pendingSyncTotal} pendiente
-                    {pendingSyncTotal === 1 ? '' : 's'} de sincronizar
+                    {agregado.erroresRetryablesTotal} entrega
+                    {agregado.erroresRetryablesTotal === 1 ? '' : 's'} con error
                   </Text>
                   <Text style={styles.syncSubtitulo}>
-                    {isRetrying
-                      ? 'Sincronizando…'
-                      : 'Tocá para reintentar el envío'}
+                    Abrí la orden y reintentá el envío desde ahí
                   </Text>
                 </View>
-                {!isRetrying && (
-                  <Ionicons
-                    name="chevron-forward"
-                    size={20}
-                    color={authColors.inkMuted}
-                  />
-                )}
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={authColors.inkMuted}
+                />
               </TouchableOpacity>
             )}
 
-            {/* ===== Toggle de ubicación ===== */}
+            {/* ===== Toggle de ubicación — solo si hay una orden con
+                tracking config en settings (la ultima abierta) ===== */}
+            {ordenEntrega && (
             <View style={styles.toggleCard}>
               <View style={styles.toggleIcon}>
                 <Ionicons
@@ -350,9 +423,10 @@ export const DashboardScreen = () => {
                 ios_backgroundColor={authColors.border}
               />
             </View>
+            )}
           </>
         ) : (
-          /* ===== Empty state: sin orden cargada ===== */
+          /* ===== Empty state: sin actividad ===== */
           <View style={styles.emptyCard}>
             <View style={styles.emptyIcon}>
               <Ionicons
@@ -361,7 +435,7 @@ export const DashboardScreen = () => {
                 color={authColors.brandInk}
               />
             </View>
-            <Text style={styles.emptyTitulo}>Sin orden cargada</Text>
+            <Text style={styles.emptyTitulo}>Sin trabajo activo</Text>
             <Text style={styles.emptySubtitulo}>
               Andá a la pestaña <Text style={styles.emptyBold}>Entregas</Text>{' '}
               para ver tus órdenes asignadas y empezar el día.
