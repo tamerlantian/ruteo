@@ -5,7 +5,6 @@ import {
   FlatList,
   RefreshControl,
   TouchableOpacity,
-  ActivityIndicator,
   StyleSheet,
 } from 'react-native';
 import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
@@ -15,16 +14,16 @@ import Toast from 'react-native-toast-message';
 import { authColors } from '../../../auth/styles/auth.theme';
 import { verticalRepository } from '../../../vertical/repositories/vertical.repository';
 import { Entrega } from '../../../vertical/interfaces/entrega.interface';
-import { useCambiarOrden } from '../../hooks/use-cambiar-orden.hook';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { descartarSnapshotsVisitasExcepto } from '../../store/slice/visita.slice';
 import { descartarSnapshotsNovedadesExcepto } from '../../../novedad/store/slice/novedad.slice';
 import { toastTextOneStyle } from '../../../../shared/styles/global.style';
 
 interface MisOrdenesComponentProps {
+  /** Abre el bottom sheet "Cargar por codigo" (fallback). */
   onCargarPorCodigo: () => void;
-  ordenActualId?: number | null;
-  onSeleccionExitosa?: () => void;
+  /** Callback al tocar una orden — el parent navega al detalle. */
+  onSeleccionOrden: (entrega: Entrega) => void;
   /**
    * `true` cuando el componente se renderiza adentro de un CustomBottomSheet.
    * Usa BottomSheetFlatList para que el gesto del sheet no se coma los taps
@@ -50,12 +49,10 @@ const formatearFecha = (iso: string) => {
 
 export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
   onCargarPorCodigo,
-  ordenActualId = null,
-  onSeleccionExitosa,
+  onSeleccionOrden,
   enBottomSheet = false,
 }) => {
   const dispatch = useAppDispatch();
-  const cambiarOrden = useCambiarOrden();
   /** Mapa de snapshots locales — permite mostrar "Pausada · X/Y" en cada card.
    *  ?? {} defiende rehidrataciones desde versiones sin snapshotsByDespacho. */
   const snapshots = useAppSelector(
@@ -64,18 +61,13 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
   const [ordenes, setOrdenes] = useState<Entrega[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [cargandoId, setCargandoId] = useState<number | null>(null);
 
   const obtenerOrdenes = useCallback(async () => {
     try {
       const data = await verticalRepository.getMisDespachos();
       setOrdenes(data);
       // Limpia snapshots de ordenes que el server ya no asigna.
-      // Mantenemos la activa por seguridad (re-asignaciones mid-route).
       const idsAMantener: number[] = data.map(e => e.id);
-      if (ordenActualId !== null && !idsAMantener.includes(ordenActualId)) {
-        idsAMantener.push(ordenActualId);
-      }
       dispatch(descartarSnapshotsVisitasExcepto(idsAMantener));
       dispatch(descartarSnapshotsNovedadesExcepto(idsAMantener));
     } catch (error: any) {
@@ -86,7 +78,7 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
         text1Style: toastTextOneStyle,
       });
     }
-  }, [dispatch, ordenActualId]);
+  }, [dispatch]);
 
   useEffect(() => {
     (async () => {
@@ -102,30 +94,13 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
     setRefreshing(false);
   }, [obtenerOrdenes]);
 
-  const onSelectOrden = useCallback(
-    async (entrega: Entrega) => {
-      setCargandoId(entrega.id);
-      try {
-        const exito = await cambiarOrden(entrega, ordenActualId);
-        if (exito) {
-          onSeleccionExitosa?.();
-        }
-      } finally {
-        setCargandoId(null);
-      }
-    },
-    [cambiarOrden, ordenActualId, onSeleccionExitosa],
-  );
-
   const renderItem = ({ item }: { item: Entrega }) => {
-    const isLoading = cargandoId === item.id;
-    const esActual = ordenActualId !== null && ordenActualId === item.id;
     const peso = Math.round(item.peso || 0);
 
     // Si hay snapshot local del despacho, mostramos el progreso DEL CONDUCTOR
     // (no el del server) — refleja lo que realmente lleva entregado en su
-    // sesion local. La orden activa no se trata como "pausada".
-    const snapshot = !esActual ? snapshots[item.id] : undefined;
+    // sesion local.
+    const snapshot = snapshots[item.id];
     const localEntregadas = snapshot
       ? snapshot.visitas.filter(v => v.estado_entregado).length
       : 0;
@@ -136,40 +111,25 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
     // otro dispositivo, etc.) mantenemos el indicador anterior.
     const serverEntregadas = Math.round(item.visitas_entregadas || 0);
     const tieneProgresoServer =
-      !tienePausa &&
-      !esActual &&
-      serverEntregadas > 0 &&
-      serverEntregadas < item.visitas;
+      !tienePausa && serverEntregadas > 0 && serverEntregadas < item.visitas;
 
     return (
       <TouchableOpacity
-        style={[styles.card, esActual && styles.cardActual]}
-        onPress={() => onSelectOrden(item)}
-        disabled={cargandoId !== null}
+        style={styles.card}
+        onPress={() => onSeleccionOrden(item)}
         activeOpacity={0.85}
         accessibilityRole="button"
         accessibilityLabel={`Orden ${item.id}, ${item.visitas} visitas`}
       >
-        {/* La franja izquierda colorea solo la orden actual: comunica
-            "esta es la cargada" sin tener que sumar un chip. */}
-        {esActual && <View style={styles.cardActualAccent} />}
-
         <View style={styles.cardIcon}>
           <Ionicons name="cube-outline" size={22} color={authColors.brandInk} />
         </View>
         <View style={styles.cardBody}>
-          {/* Linea principal: la carga de trabajo, que es lo que el
-              conductor escanea para decidir. */}
           <Text style={styles.cardHeadline}>
             {item.visitas} visita{item.visitas === 1 ? '' : 's'}
             {peso > 0 ? ` · ${peso.toLocaleString('es')} kg` : ''}
           </Text>
-          {/* Linea de contexto: fecha + id como referencia. "Actual" o
-              "Pausada" se insertan inline solo cuando aplica. */}
           <Text style={styles.cardMeta}>
-            {esActual && (
-              <Text style={styles.metaActual}>Actual · </Text>
-            )}
             {tienePausa && (
               <Text style={styles.metaPausada}>Pausada · </Text>
             )}
@@ -202,15 +162,11 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
             </View>
           )}
         </View>
-        {isLoading ? (
-          <ActivityIndicator size="small" color={authColors.brandInk} />
-        ) : (
-          <Ionicons
-            name="chevron-forward"
-            size={20}
-            color={authColors.inkMuted}
-          />
-        )}
+        <Ionicons
+          name="chevron-forward"
+          size={20}
+          color={authColors.inkMuted}
+        />
       </TouchableOpacity>
     );
   };

@@ -25,6 +25,14 @@ export type AuthStackParamList = {
  */
 export type MainStackParamList = {
   HomeTabs: undefined;
+  EntregasDetalle: {
+    /** Identificador de la entrega (lo que el conductor llama "orden"). */
+    entregaId: number;
+    /** Despacho asociado, necesario para el load de visitas. */
+    despachoId: number;
+    /** Tenant schema (subdominio). */
+    schemaName: string;
+  };
   EntregaForm: {
     visitasSeleccionadas: string[];
   };

@@ -9,15 +9,25 @@ import { verticalRepository } from '../../../vertical/repositories/vertical.repo
 import { networkService } from '../../../../shared/services';
 import { toastTextOneStyle } from '../../../../shared/styles/global.style';
 import { authColors } from '../../../auth/styles/auth.theme';
-import { useCargarOrden } from '../../hooks/use-cargar-orden.hook';
+import { Entrega } from '../../../vertical/interfaces/entrega.interface';
 
 interface CargarOrdenFormValues {
   codigo: string;
 }
 
-const CargarOrdenComponent = () => {
+interface CargarOrdenComponentProps {
+  /**
+   * Llamado al resolver con exito el codigo a una entrega. El parent
+   * navega al detalle (no se carga aqui — la pantalla de detalle es la
+   * unica que dispara cargarOrden).
+   */
+  onEntregaResuelta: (entrega: Entrega) => void;
+}
+
+const CargarOrdenComponent: React.FC<CargarOrdenComponentProps> = ({
+  onEntregaResuelta,
+}) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const cargarOrden = useCargarOrden();
 
   const {
     control,
@@ -47,9 +57,9 @@ const CargarOrdenComponent = () => {
     try {
       const entrega = await verticalRepository.getEntrega(data.codigo);
       if (entrega) {
-        await cargarOrden(entrega);
         reset();
         Keyboard.dismiss();
+        onEntregaResuelta(entrega);
       }
     } catch (error: any) {
       console.log(error);

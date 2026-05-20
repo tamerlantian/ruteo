@@ -1,6 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { HomeTabsNavigator } from '../../modules/home/navigation/home-tabs.navigator';
+import { EntregasDetalleScreen } from '../../modules/visita/screen/entregas-detalle/entregas-detalle.screen';
 import { EntregaFormScreen } from '../../modules/visita/screen/entrega-form/entrega-form.screen';
 import { NovedadFormScreen } from '../../modules/novedad/screen/novedad-form/novedad-form.screen';
 import { SolucionFormScreen } from '../../modules/novedad/screen/solucion-form/solucion-form.screen';
@@ -22,15 +23,23 @@ export const MainNavigator: React.FC = () => {
         headerShown: false,
       }}
     >
-      <MainStack.Screen 
-        name="HomeTabs" 
+      <MainStack.Screen
+        name="HomeTabs"
         component={HomeTabsNavigator}
         options={{
           title: 'Inicio',
         }}
       />
-      <MainStack.Screen 
-        name="EntregaForm" 
+      <MainStack.Screen
+        name="EntregasDetalle"
+        component={EntregasDetalleScreen}
+        options={{
+          animation: 'slide_from_right',
+          gestureEnabled: true,
+        }}
+      />
+      <MainStack.Screen
+        name="EntregaForm"
         component={EntregaFormScreen}
         options={{
           presentation: 'modal',
