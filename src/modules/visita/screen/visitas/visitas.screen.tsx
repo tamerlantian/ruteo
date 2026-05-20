@@ -66,6 +66,16 @@ export const VisitasScreen = () => {
     anularSelectedVisitas,
   } = useVisitasViewModel();
   const ordenActualId = ordenEntrega ? parseInt(ordenEntrega, 10) : null;
+
+  // Contador de ordenes pausadas (con snapshot local), excluyendo la activa.
+  // Se renderiza como badge en el boton "Cambiar de orden" del AppBar.
+  const snapshots = useAppSelector(state => state.visita.snapshotsByDespacho);
+  const ordenesPausadas = useMemo(() => {
+    const ids = Object.keys(snapshots).map(id => parseInt(id, 10));
+    return ordenActualId !== null
+      ? ids.filter(id => id !== ordenActualId).length
+      : ids.length;
+  }, [snapshots, ordenActualId]);
   const puedeDesvincular = useAppSelector(selectPuedeDesvincular);
   const conteoVisitas = useAppSelector(selectConteoVisitasQueImpidenDesvinculacion);
 
@@ -102,8 +112,13 @@ export const VisitasScreen = () => {
             <>
               <AppBarAction
                 icon="swap-horizontal-outline"
-                label="Cambiar de orden"
+                label={
+                  ordenesPausadas > 0
+                    ? `Cambiar de orden (${ordenesPausadas} en pausa)`
+                    : 'Cambiar de orden'
+                }
                 onPress={openCambiarOrdenSheet}
+                badge={ordenesPausadas}
               />
               <AppBarAction
                 icon="ellipsis-horizontal"
