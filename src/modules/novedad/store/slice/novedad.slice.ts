@@ -30,6 +30,9 @@ const novedadSlice = createSlice({
     },
     /** Guarda novedades + seleccionadas como snapshot del despacho actual. */
     guardarSnapshotNovedades: (state, action: PayloadAction<number>) => {
+      if (!state.snapshotsByDespacho) {
+        state.snapshotsByDespacho = {};
+      }
       state.snapshotsByDespacho[action.payload] = {
         novedades: state.novedades,
         seleccionadas: state.seleccionadas,
@@ -42,12 +45,15 @@ const novedadSlice = createSlice({
         state.seleccionadas = [];
         return;
       }
-      const snap = state.snapshotsByDespacho[action.payload];
+      const snap = state.snapshotsByDespacho?.[action.payload];
       state.novedades = snap?.novedades ?? [];
       state.seleccionadas = snap?.seleccionadas ?? [];
     },
     /** Descarta el snapshot (ej. al terminar/anular esa orden). */
     descartarSnapshotNovedades: (state, action: PayloadAction<number>) => {
+      if (!state.snapshotsByDespacho) {
+        return;
+      }
       delete state.snapshotsByDespacho[action.payload];
     },
     /** Mantiene solo snapshots de las ordenes vigentes (ver visita.slice). */
@@ -55,6 +61,10 @@ const novedadSlice = createSlice({
       state,
       action: PayloadAction<number[]>,
     ) => {
+      if (!state.snapshotsByDespacho) {
+        state.snapshotsByDespacho = {};
+        return;
+      }
       const idsAMantener = new Set(action.payload);
       for (const idStr of Object.keys(state.snapshotsByDespacho)) {
         const id = Number(idStr);

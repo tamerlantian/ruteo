@@ -248,6 +248,9 @@ const visitaSlice = createSlice({
      * sync + selecciones) tal como lo dejo.
      */
     guardarSnapshotVisitas: (state, action: PayloadAction<number>) => {
+      if (!state.snapshotsByDespacho) {
+        state.snapshotsByDespacho = {};
+      }
       state.snapshotsByDespacho[action.payload] = {
         visitas: state.visitas,
         seleccionadas: state.seleccionadas,
@@ -264,12 +267,15 @@ const visitaSlice = createSlice({
         state.seleccionadas = [];
         return;
       }
-      const snap = state.snapshotsByDespacho[action.payload];
+      const snap = state.snapshotsByDespacho?.[action.payload];
       state.visitas = snap?.visitas ?? [];
       state.seleccionadas = snap?.seleccionadas ?? [];
     },
     /** Descarta el snapshot de un despacho (ej. al terminar/anular). */
     descartarSnapshotVisitas: (state, action: PayloadAction<number>) => {
+      if (!state.snapshotsByDespacho) {
+        return;
+      }
       delete state.snapshotsByDespacho[action.payload];
     },
     /**
@@ -283,6 +289,10 @@ const visitaSlice = createSlice({
       state,
       action: PayloadAction<number[]>,
     ) => {
+      if (!state.snapshotsByDespacho) {
+        state.snapshotsByDespacho = {};
+        return;
+      }
       const idsAMantener = new Set(action.payload);
       for (const idStr of Object.keys(state.snapshotsByDespacho)) {
         const id = Number(idStr);

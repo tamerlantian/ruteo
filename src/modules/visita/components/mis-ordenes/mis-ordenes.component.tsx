@@ -48,9 +48,10 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const cambiarOrden = useCambiarOrden();
-  /** Mapa de snapshots locales — permite mostrar "Pausada · X/Y" en cada card. */
+  /** Mapa de snapshots locales — permite mostrar "Pausada · X/Y" en cada card.
+   *  ?? {} defiende rehidrataciones desde versiones sin snapshotsByDespacho. */
   const snapshots = useAppSelector(
-    state => state.visita.snapshotsByDespacho,
+    state => state.visita.snapshotsByDespacho ?? {},
   );
   const [ordenes, setOrdenes] = useState<Entrega[]>([]);
   const [loading, setLoading] = useState(true);

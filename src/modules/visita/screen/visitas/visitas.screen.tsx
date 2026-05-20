@@ -69,7 +69,10 @@ export const VisitasScreen = () => {
 
   // Contador de ordenes pausadas (con snapshot local), excluyendo la activa.
   // Se renderiza como badge en el boton "Cambiar de orden" del AppBar.
-  const snapshots = useAppSelector(state => state.visita.snapshotsByDespacho);
+  // ?? {} defiende rehidrataciones desde versiones sin snapshotsByDespacho.
+  const snapshots = useAppSelector(
+    state => state.visita.snapshotsByDespacho ?? {},
+  );
   const ordenesPausadas = useMemo(() => {
     const ids = Object.keys(snapshots).map(id => parseInt(id, 10));
     return ordenActualId !== null
