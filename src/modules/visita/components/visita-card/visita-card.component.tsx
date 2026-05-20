@@ -13,18 +13,21 @@ import { useMoverVisita } from '../../hooks/use-mover-visita.hook'
 interface VisitaCardProps {
   visita: VisitaResponse;
   index: number;
+  onVerDetalle?: (visita: VisitaResponse) => void;
 }
 
-const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
+const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita, onVerDetalle }) => {
   const dispatch = useAppDispatch();
   const isSelected = useAppSelector(selectIsVisitaSeleccionada(visita.id));
   const { openLocationInMaps } = useMaps();
   const mostrarMenuMover = useMoverVisita();
 
   const handlePress = () => {
-    // Una visita ya entregada no se puede re-entregar — no la dejamos
-    // seleccionar para evitar exponer la accion "Entregar" desde abajo.
+    // Una visita ya entregada no se puede re-entregar. Si el caller registro
+    // un onVerDetalle, redirigimos el tap a "ver que entregue"; si no, no
+    // pasa nada (mejor que exponer la accion "Entregar" indebidamente).
     if (visita.estado_entregado) {
+      onVerDetalle?.(visita);
       return;
     }
     dispatch(toggleVisitaSeleccion(visita.id));
@@ -82,7 +85,7 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
         visita.estado_entregado && moverStyles.containerEntregada,
       ]}
       onPress={handlePress}
-      activeOpacity={visita.estado_entregado ? 1 : 0.7}
+      activeOpacity={0.7}
     >
       <View style={visitaCardStyle.content}>
         {/* Header con número y documento */}

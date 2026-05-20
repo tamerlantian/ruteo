@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, ListRenderItem } from 'react-native';
+import BottomSheet from '@gorhom/bottom-sheet';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -15,6 +16,7 @@ import { VisitasFloatingActions } from '../../components/visita-floating-actions
 import { VisitasLoadingFooter } from '../../components/visitas-loading-footer/visitas-loading-footer.component';
 import { VisitasOptionsComponent } from '../../components/visitas-options/visitas-options.component';
 import { ConfirmacionDesvincularComponent } from '../../components/confirmacion-desvincular/confirmacion-desvincular.component';
+import { VisitaDetalleEntregadaComponent } from '../../components/visita-detalle-entregada/visita-detalle-entregada.component';
 import {
   selectConteoVisitasQueImpidenDesvinculacion,
   selectPuedeDesvincular,
@@ -153,9 +155,30 @@ export const EntregasDetalleScreen = () => {
     selectConteoVisitasQueImpidenDesvinculacion,
   );
 
+  // Sheet de "Detalle de entrega": al tapear una visita ya entregada el card
+  // dispara onVerDetalle y abrimos el sheet con los datos cacheados de esa
+  // visita. No es accion (no re-entregamos) — es solo lectura.
+  const detalleEntregaSheetRef = useRef<BottomSheet>(null);
+  const [visitaDetalle, setVisitaDetalle] = useState<VisitaResponse | null>(
+    null,
+  );
+  const abrirDetalleEntrega = useCallback((visita: VisitaResponse) => {
+    setVisitaDetalle(visita);
+    detalleEntregaSheetRef.current?.expand();
+  }, []);
+  const cerrarDetalleEntrega = useCallback(() => {
+    setVisitaDetalle(null);
+  }, []);
+
   const renderVisitaItem: ListRenderItem<VisitaResponse> = useCallback(
-    ({ item, index }) => <VisitaCardComponent visita={item} index={index} />,
-    [],
+    ({ item, index }) => (
+      <VisitaCardComponent
+        visita={item}
+        index={index}
+        onVerDetalle={abrirDetalleEntrega}
+      />
+    ),
+    [abrirDetalleEntrega],
   );
 
   const contentContainerStyle = useMemo(
@@ -277,6 +300,14 @@ export const EntregasDetalleScreen = () => {
           puedeDesvincular={puedeDesvincular}
           conteoVisitas={conteoVisitas}
         />
+      </CustomBottomSheet>
+      <CustomBottomSheet
+        ref={detalleEntregaSheetRef}
+        enableDynamicSizing={false}
+        initialSnapPoints={['65%']}
+        onDismiss={cerrarDetalleEntrega}
+      >
+        <VisitaDetalleEntregadaComponent visita={visitaDetalle} />
       </CustomBottomSheet>
     </SafeAreaView>
   );

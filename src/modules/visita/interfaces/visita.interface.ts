@@ -30,6 +30,12 @@ export interface VisitaResponse {
   estado_entregado: boolean;
   estado_despacho: boolean;
 
+  // Campos opcionales que vienen del serializer pero no siempre se modelan.
+  // Se usan en la vista de "detalle de entrega" para visitas ya cerradas.
+  fecha_entrega?: string | null;
+  observacion?: string | null;
+  destinatario_direccion_complemento?: string | null;
+
   // estados locales
   estado?: VisitaEstado;
 
