@@ -103,8 +103,40 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
     const locales: Entrega[] = Object.values(snapshots)
       .map(s => s.entrega)
       .filter((e): e is Entrega => !!e && !idsServer.has(e.id));
-    return [...ordenes, ...locales];
+    const todas = [...ordenes, ...locales];
+    // Recientes arriba. Sin fecha va al final.
+    return todas.sort((a, b) => {
+      if (!a.fecha) return 1;
+      if (!b.fecha) return -1;
+      return new Date(b.fecha).getTime() - new Date(a.fecha).getTime();
+    });
   }, [ordenes, snapshots]);
+
+  // Conteo de ordenes "en curso" = con snapshot local que tiene visitas
+  // (el conductor ya entro al menos una vez y se cargaron los datos).
+  const conteoEnCurso = useMemo(() => {
+    return ordenesCombinadas.reduce((acc, o) => {
+      const snap = snapshots[o.id];
+      return acc + (snap && snap.visitas.length > 0 ? 1 : 0);
+    }, 0);
+  }, [ordenesCombinadas, snapshots]);
+
+  const listHeader = useMemo(
+    () => (
+      <View style={styles.listHeader}>
+        <Text style={styles.listHeaderTitle}>
+          {ordenesCombinadas.length}{' '}
+          {ordenesCombinadas.length === 1 ? 'orden' : 'órdenes'}
+        </Text>
+        {conteoEnCurso > 0 && (
+          <Text style={styles.listHeaderSubtitle}>
+            {conteoEnCurso} en curso
+          </Text>
+        )}
+      </View>
+    ),
+    [ordenesCombinadas.length, conteoEnCurso],
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -248,6 +280,7 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
       renderItem={renderItem}
       keyExtractor={(item: Entrega) => `${item.id}`}
       contentContainerStyle={styles.list}
+      ListHeaderComponent={listHeader}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -269,6 +302,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 24,
+  },
+  // ----- List header (contador) -----
+  listHeader: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+    paddingBottom: 12,
+    paddingTop: 4,
+  },
+  listHeaderTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: authColors.ink,
+    letterSpacing: -0.1,
+  },
+  listHeaderSubtitle: {
+    fontSize: 12.5,
+    fontWeight: '600',
+    color: authColors.inkSoft,
   },
   // ----- Card -----
   card: {
