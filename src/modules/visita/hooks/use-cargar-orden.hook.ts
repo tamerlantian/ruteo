@@ -71,20 +71,10 @@ export const useCargarOrden = () => {
         console.warn('Error iniciando background geolocation:', geoError);
       }
 
-      if (visitas.length > 0) {
-        Toast.show({
-          type: 'success',
-          text1: 'Orden cargada correctamente',
-          text1Style: toastTextOneStyle,
-        });
-      } else {
-        Toast.show({
-          type: 'success',
-          text1: 'La orden está completada',
-          text1Style: toastTextOneStyle,
-        });
-      }
-
+      // No mostramos toast de exito: en el modelo navegacional cargarOrden
+      // corre en CADA mount del detalle, y un toast "Orden cargada" en cada
+      // entrada se vuelve ruido. La aparicion de las visitas en pantalla ya
+      // es feedback suficiente.
       return visitas;
     },
     [dispatch, user, refetchNovedadTipos],
