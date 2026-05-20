@@ -61,8 +61,8 @@ export const VisitasScreen = () => {
         title="Entregas"
         actions={
           <AppBarAction
-            icon="keypad-outline"
-            label="Cargar orden por código"
+            icon="add-outline"
+            label="Agregar orden por código"
             onPress={openCargarOrdenSheet}
           />
         }
