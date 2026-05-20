@@ -209,6 +209,7 @@ export const VisitasScreen = () => {
           }}
           ordenActualId={ordenActualId}
           onSeleccionExitosa={closeCambiarOrdenSheet}
+          enBottomSheet
         />
       </CustomBottomSheet>
       <CustomBottomSheet

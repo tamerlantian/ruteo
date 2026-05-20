@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import Toast from 'react-native-toast-message';
 
@@ -24,6 +25,12 @@ interface MisOrdenesComponentProps {
   onCargarPorCodigo: () => void;
   ordenActualId?: number | null;
   onSeleccionExitosa?: () => void;
+  /**
+   * `true` cuando el componente se renderiza adentro de un CustomBottomSheet.
+   * Usa BottomSheetFlatList para que el gesto del sheet no se coma los taps
+   * de las cards. Default false (uso inline en la pantalla).
+   */
+  enBottomSheet?: boolean;
 }
 
 const formatearFecha = (iso: string) => {
@@ -45,6 +52,7 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
   onCargarPorCodigo,
   ordenActualId = null,
   onSeleccionExitosa,
+  enBottomSheet = false,
 }) => {
   const dispatch = useAppDispatch();
   const cambiarOrden = useCambiarOrden();
@@ -255,11 +263,16 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
     );
   }
 
+  // Adentro de un CustomBottomSheet hay que usar BottomSheetFlatList:
+  // sino el gesto del sheet (PanGestureHandler) intercepta los taps de las
+  // cards y la lista no responde — el conductor termina creyendo que la
+  // accion no funciona y forzando un Desvincular para "salir" del sheet.
+  const Lista: any = enBottomSheet ? BottomSheetFlatList : FlatList;
   return (
-    <FlatList
+    <Lista
       data={ordenes}
       renderItem={renderItem}
-      keyExtractor={(item) => `${item.id}`}
+      keyExtractor={(item: Entrega) => `${item.id}`}
       contentContainerStyle={styles.list}
       refreshControl={
         <RefreshControl
