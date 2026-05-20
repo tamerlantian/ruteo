@@ -89,6 +89,10 @@ export const DashboardScreen = () => {
       }
       const vs = snap.visitas || [];
       const entregadas = vs.filter(v => v.estado_entregado).length;
+      // Saltea las completadas: no aportan a "lo que falta".
+      if (vs.length > 0 && entregadas >= vs.length) {
+        return;
+      }
       visitasTotal += vs.length;
       entregadasTotal += entregadas;
       pendientesTotal += vs.filter(

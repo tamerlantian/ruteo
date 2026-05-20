@@ -95,17 +95,30 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
     }, [obtenerOrdenes]),
   );
 
-  // Combina las asignadas del server con las que tenemos localmente
-  // snapshotadas pero el server no esta listando (caso comun: orden cargada
-  // por codigo por un admin/coordinador que no tiene asignacion server-side).
+  // Combina server + snapshots locales no listados por server, y filtra las
+  // ordenes completadas (todas las visitas entregadas) — ahi no hay nada que
+  // hacer en la app, no aportan a la lista de trabajo.
   const ordenesCombinadas = useMemo(() => {
     const idsServer = new Set(ordenes.map(o => o.id));
     const locales: Entrega[] = Object.values(snapshots)
       .map(s => s.entrega)
       .filter((e): e is Entrega => !!e && !idsServer.has(e.id));
     const todas = [...ordenes, ...locales];
-    // Recientes arriba. Sin fecha va al final.
-    return todas.sort((a, b) => {
+
+    const activas = todas.filter(o => {
+      const snap = snapshots[o.id];
+      const localEntregadas = snap
+        ? snap.visitas.filter(v => v.estado_entregado).length
+        : 0;
+      const serverEntregadas = Math.round(o.visitas_entregadas || 0);
+      const entregadas =
+        snap && snap.visitas.length > 0 ? localEntregadas : serverEntregadas;
+      // Si visitas == 0 (caso raro, server sin carga) no filtramos; si
+      // entregadas >= visitas total esta completada, fuera.
+      return !(o.visitas > 0 && entregadas >= o.visitas);
+    });
+
+    return activas.sort((a, b) => {
       if (!a.fecha) return 1;
       if (!b.fecha) return -1;
       return new Date(b.fecha).getTime() - new Date(a.fecha).getTime();
