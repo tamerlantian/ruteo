@@ -244,7 +244,7 @@ export const EntregasDetalleScreen = () => {
         showsVerticalScrollIndicator={false}
         legacyImplementation={false}
       />
-      {activeFilter !== 'novedades' && (
+      {activeFilter !== 'novedades' && activeFilter !== 'entregadas' && (
         <VisitasFloatingActions
           totalSeleccionadas={totalSeleccionadas}
           totalConError={totalConErrorSeleccionadas}

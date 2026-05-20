@@ -22,6 +22,11 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
   const mostrarMenuMover = useMoverVisita();
 
   const handlePress = () => {
+    // Una visita ya entregada no se puede re-entregar — no la dejamos
+    // seleccionar para evitar exponer la accion "Entregar" desde abajo.
+    if (visita.estado_entregado) {
+      return;
+    }
     dispatch(toggleVisitaSeleccion(visita.id));
   };
 
@@ -73,10 +78,11 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
         visitaCardStyle.container,
         isSelected && visitaCardStyle.containerSelected,
         isNonRetryableError && visitaCardStyle.containerError,
-        isRetryableError && visitaCardStyle.containerWarning
+        isRetryableError && visitaCardStyle.containerWarning,
+        visita.estado_entregado && moverStyles.containerEntregada,
       ]}
       onPress={handlePress}
-      activeOpacity={0.7}
+      activeOpacity={visita.estado_entregado ? 1 : 0.7}
     >
       <View style={visitaCardStyle.content}>
         {/* Header con número y documento */}
@@ -89,6 +95,12 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
           </View>
           <View style={visitaCardStyle.headerRight}>
             <Text style={visitaCardStyle.document}>DOC: {visita.documento}</Text>
+            {visita.estado_entregado && (
+              <View style={moverStyles.entregadaBadge}>
+                <Ionicons name="checkmark-circle" size={12} color="#FFFFFF" />
+                <Text style={moverStyles.entregadaBadgeText}>Entregada</Text>
+              </View>
+            )}
             {isNonRetryableError && (
               <View style={visitaCardStyle.errorBadge}>
                 <Ionicons name="alert-circle" size={12} color="#ffffff" />
@@ -233,6 +245,27 @@ const moverStyles = StyleSheet.create({
     paddingHorizontal: 4,
     paddingVertical: 2,
     marginLeft: 4,
+  },
+  containerEntregada: {
+    // Atenuamos visualmente la card de una visita ya entregada: sigue
+    // tappable para no romper la consistencia, pero queda claro que
+    // esta cerrada (no hay accion sobre ella).
+    opacity: 0.7,
+  },
+  entregadaBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    backgroundColor: '#1F7A38',
+  },
+  entregadaBadgeText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
   },
 });
 
