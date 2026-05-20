@@ -76,8 +76,13 @@ const visitaSlice = createSlice({
       const visitaId = action.payload;
       const index = state.visitas.findIndex(visita => visita.id === visitaId);
       if (index > -1) {
-        state.visitas[index].estado_entregado = true;
-        state.visitas[index].estado = 'sync';
+        const visita = state.visitas[index];
+        visita.estado_entregado = true;
+        visita.estado = 'sync';
+        // Una visita entregada no carga error residual. Limpiamos los campos
+        // de error para que no filtre incorrectamente en Sincronizar/Errores.
+        visita.error_mensaje = undefined;
+        visita.es_error_retryable = undefined;
       }
     },
     revertirEntregaOptimista: (
@@ -156,13 +161,9 @@ const visitaSlice = createSlice({
       const index = state.visitas.findIndex(visita => visita.id === visitaId);
       if (index > -1) {
         state.visitas[index].datos_formulario_guardados = datosFormulario;
-        console.log(
-          `💾 Datos de formulario guardados para visita ${visitaId}:`,
-          datosFormulario,
-        );
       } else {
         console.error(
-          `❌ No se pudo guardar datos para visita ${visitaId} - visita no encontrada`,
+          `No se pudo guardar datos para visita ${visitaId} - visita no encontrada`,
         );
       }
     },
@@ -371,6 +372,20 @@ const visitaSlice = createSlice({
       state.visitas = payload.map(visita => {
         const local = localPorId.get(visita.id);
         if (local) {
+          // Si el server dice que ya esta entregada, el `estado='error'`
+          // local es obsoleto — probablemente el POST original SI llego al
+          // server pero la respuesta se perdio en la red. Descartamos los
+          // campos de error locales para que no quede en Sincronizar.
+          if (visita.estado_entregado) {
+            return {
+              ...visita,
+              orden: local.orden,
+              estado: 'sync',
+              error_mensaje: undefined,
+              es_error_retryable: undefined,
+              datos_formulario_guardados: undefined,
+            };
+          }
           return {
             ...visita,
             orden: local.orden,

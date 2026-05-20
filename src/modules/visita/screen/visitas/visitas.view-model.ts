@@ -171,11 +171,14 @@ export const useVisitasViewModel = () => {
   }, [dispatch]);
 
   const selectAllErrors = useCallback(() => {
-    if (activeFilter === 'error' && visitasConError.length > 0) {
-      const errorIds = visitasConError.map(visita => visita.id);
+    // El filtro "Sincronizar" muestra solo retryables; "Seleccionar todos"
+    // debe seleccionar exactamente esos, no `visitasConError` (que incluye
+    // no-retryables que viven en el filtro "Errores").
+    if (activeFilter === 'error' && visitasConErrorRetryables.length > 0) {
+      const errorIds = visitasConErrorRetryables.map(visita => visita.id);
       dispatch(seleccionarMultiplesVisitas(errorIds));
     }
-  }, [dispatch, activeFilter, visitasConError]);
+  }, [dispatch, activeFilter, visitasConErrorRetryables]);
 
   const deliverSelectedVisitas = useCallback(() => {
     if (visitasSeleccionadas.length === 0) {
@@ -231,13 +234,10 @@ export const useVisitasViewModel = () => {
     }
 
     const visitaIds = visitasSeleccionadasNoRetryables.map(visita => visita.id);
-    console.log(`🔄 Anulando ${visitaIds.length} visita(s) no-retryables:`, visitaIds);
-    
+
     // Dispatch de la acción para resetear las visitas a estado pending
     dispatch(anularVisitasNoRetryables(visitaIds));
-    
-    console.log(`✅ ${visitaIds.length} visita(s) anulada(s) y reseteada(s) a estado pending`);
-    
+
     // Mostrar toast de confirmación
     Toast.show({
       type: 'success',
@@ -275,7 +275,6 @@ export const useVisitasViewModel = () => {
   const handleScanResult = useCallback((result: any) => {
     // Actualizar el valor de búsqueda con el código escaneado
     setSearchValue(result.value);
-    console.log('Scan result processed:', result);
   }, []);
 
   const clearFilters = useCallback(() => {
@@ -308,8 +307,6 @@ export const useVisitasViewModel = () => {
       default:
         filteredByCategory = visitasPendientes;
     }
-
-    console.log('Visitas filtradas:', filteredByCategory);
 
     // Luego aplicar búsqueda por número si hay texto de búsqueda
     if (searchValue.trim()) {

@@ -62,15 +62,13 @@ export class VisitaProcessingService {
       
       // Usar datos proporcionados directamente o datos guardados en Redux
       let datosGuardados: EntregaFormData;
-      
+
       if (datosFormulario) {
-        // Usar datos proporcionados directamente (para entrega inicial)
+        // Datos directos: entrega inicial.
         datosGuardados = datosFormulario;
-        console.log(`📋 Usando datos proporcionados directamente para visita ${visitaId}`);
       } else if (visita.datos_formulario_guardados) {
-        // Usar datos guardados en Redux (para reintentos)
+        // Datos guardados en Redux: reintento.
         datosGuardados = visita.datos_formulario_guardados;
-        console.log(`💾 Usando datos guardados de Redux para visita ${visitaId}`);
       } else {
         const error = `No hay datos de formulario disponibles para la visita ${visitaId}. Proporciona datos o asegúrate de que estén guardados.`;
         console.error(error);

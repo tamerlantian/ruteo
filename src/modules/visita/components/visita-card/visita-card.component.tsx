@@ -113,7 +113,7 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita, onVerDetalle 
             {isRetryableError && (
               <View style={visitaCardStyle.warningBadge}>
                 <Ionicons name="sync" size={12} color="#ffffff" />
-                <Text style={visitaCardStyle.errorBadgeText}>Pendiente</Text>
+                <Text style={visitaCardStyle.errorBadgeText}>Sincronizar</Text>
               </View>
             )}
             {puedeMover && (

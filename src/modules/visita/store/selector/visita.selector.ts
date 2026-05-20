@@ -211,14 +211,16 @@ export const selectConteoVisitasQueImpidenDesvinculacion = createSelector(
 );
 
 /**
- * Selector para obtener visitas con error que son retryables
- * Filtra solo visitas donde es_error_retryable !== false
+ * Selector para obtener visitas con error que son retryables.
+ * Base: `selectVisitasConError` (visitas con `estado === 'error'` directo).
+ * El cross-module con novedades NO aplica aca — una novedad en error es otro
+ * flujo, no se re-procesa por "Reintentar".
  */
 export const selectVisitasConErrorRetryables = createSelector(
-  [selectVisitasConErrorCompleto],
+  [selectVisitasConError],
   visitasConError =>
     visitasConError.filter(
-      visita => visita.es_error_retryable !== false && visita.estado === 'error', // Incluir undefined para retrocompatibilidad
+      visita => visita.es_error_retryable !== false, // undefined cuenta como retryable por retrocompat
     ),
 );
 
