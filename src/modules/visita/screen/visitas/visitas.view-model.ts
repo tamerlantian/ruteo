@@ -82,6 +82,7 @@ export const useVisitasViewModel = () => {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const optionsBottomSheetRef = useRef<BottomSheet>(null);
   const confirmacionBottomSheetRef = useRef<BottomSheet>(null);
+  const cambiarOrdenSheetRef = useRef<BottomSheet>(null);
 
   const retirarOrden = () => {
     dispatch(removerVisitas());
@@ -108,6 +109,14 @@ export const useVisitasViewModel = () => {
 
   const closeOptionsSheet = useCallback(() => {
     optionsBottomSheetRef.current?.close();
+  }, []);
+
+  const openCambiarOrdenSheet = useCallback(() => {
+    cambiarOrdenSheetRef.current?.expand();
+  }, []);
+
+  const closeCambiarOrdenSheet = useCallback(() => {
+    cambiarOrdenSheetRef.current?.close();
   }, []);
 
   const openConfirmacionSheet = useCallback(() => {
@@ -385,6 +394,10 @@ export const useVisitasViewModel = () => {
     bottomSheetRef,
     optionsBottomSheetRef,
     confirmacionBottomSheetRef,
+    cambiarOrdenSheetRef,
+
+    // Estado de orden cargada
+    ordenEntrega,
 
     // Acciones de Bottom Sheet
     openDevModeSheet,
@@ -393,6 +406,8 @@ export const useVisitasViewModel = () => {
     closeOptionsSheet,
     openConfirmacionSheet,
     closeConfirmacionSheet,
+    openCambiarOrdenSheet,
+    closeCambiarOrdenSheet,
     handleCargarOrdenDismiss,
 
     // Acciones de Desvinculación

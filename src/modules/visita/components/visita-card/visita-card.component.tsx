@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Linking } from 'react-native'
+import { View, Text, TouchableOpacity, Linking, StyleSheet } from 'react-native'
 import React from 'react'
 import Ionicons from '@react-native-vector-icons/ionicons'
 import { VisitaResponse } from '../../interfaces/visita.interface'
@@ -8,6 +8,7 @@ import { toggleVisitaSeleccion } from '../../store/slice/visita.slice'
 import { visitaCardStyle } from './visita-card.style'
 import { getFirstPhoneNumber } from '../../../../shared/utils/phone.util'
 import { useMaps } from '../../../../shared/hooks/use-maps.hook'
+import { useMoverVisita } from '../../hooks/use-mover-visita.hook'
 
 interface VisitaCardProps {
   visita: VisitaResponse;
@@ -18,10 +19,19 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
   const dispatch = useAppDispatch();
   const isSelected = useAppSelector(selectIsVisitaSeleccionada(visita.id));
   const { openLocationInMaps } = useMaps();
+  const mostrarMenuMover = useMoverVisita();
 
   const handlePress = () => {
     dispatch(toggleVisitaSeleccion(visita.id));
   };
+
+  const handleMoverPress = (event: any) => {
+    event.stopPropagation();
+    mostrarMenuMover(visita);
+  };
+
+  // Una visita ya entregada o con novedad no se reordena.
+  const puedeMover = !visita.estado_entregado && !visita.estado_novedad;
 
   const handlePhonePress = (event: any) => {
     event.stopPropagation();
@@ -71,6 +81,9 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
       <View style={visitaCardStyle.content}>
         {/* Header con número y documento */}
         <View style={visitaCardStyle.header}>
+          <View style={moverStyles.ordenChip}>
+            <Text style={moverStyles.ordenChipText}>{visita.orden}</Text>
+          </View>
           <View style={visitaCardStyle.numberBadge}>
             <Text style={visitaCardStyle.numberText}>{visita.id} #{visita.numero}</Text>
           </View>
@@ -87,6 +100,15 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
                 <Ionicons name="sync" size={12} color="#ffffff" />
                 <Text style={visitaCardStyle.errorBadgeText}>Pendiente</Text>
               </View>
+            )}
+            {puedeMover && (
+              <TouchableOpacity
+                onPress={handleMoverPress}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                style={moverStyles.kebab}
+              >
+                <Ionicons name="ellipsis-vertical" size={18} color="#8e8e93" />
+              </TouchableOpacity>
             )}
           </View>
         </View>
@@ -190,5 +212,28 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita }) => {
 })
 
 VisitaCardComponent.displayName = 'VisitaCardComponent'
+
+const moverStyles = StyleSheet.create({
+  ordenChip: {
+    minWidth: 28,
+    height: 28,
+    borderRadius: 14,
+    paddingHorizontal: 8,
+    backgroundColor: 'rgba(14, 123, 176, 0.10)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  ordenChipText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0E7BB0',
+  },
+  kebab: {
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    marginLeft: 4,
+  },
+});
 
 export default VisitaCardComponent

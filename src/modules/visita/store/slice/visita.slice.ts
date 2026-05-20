@@ -160,6 +160,73 @@ const visitaSlice = createSlice({
     setSyncing: (state, action: PayloadAction<boolean>) => {
       state.isSyncing = action.payload;
     },
+    /**
+     * Reordena una visita LOCALMENTE (sin tocar el server).
+     * El orden manual del conductor sobrevive a cargarVisitas (ver el
+     * extraReducer .fulfilled que preserva orden por id). Visitas ya
+     * entregadas o con novedad se ignoran.
+     */
+    moverVisitaLocal: (
+      state,
+      action: PayloadAction<{
+        visitaId: number;
+        posicion: 'primero' | 'ultimo' | 'arriba' | 'abajo';
+      }>,
+    ) => {
+      const { visitaId, posicion } = action.payload;
+      const ordenadas = [...state.visitas].sort((a, b) => a.orden - b.orden);
+      const idx = ordenadas.findIndex(v => v.id === visitaId);
+      if (idx === -1) {
+        return;
+      }
+      const visita = ordenadas[idx];
+      if (visita.estado_entregado || visita.estado_novedad) {
+        return;
+      }
+
+      let nuevas: typeof ordenadas;
+      if (posicion === 'primero') {
+        if (idx === 0) {
+          return;
+        }
+        nuevas = [visita, ...ordenadas.filter((_, i) => i !== idx)];
+      } else if (posicion === 'ultimo') {
+        if (idx === ordenadas.length - 1) {
+          return;
+        }
+        nuevas = [...ordenadas.filter((_, i) => i !== idx), visita];
+      } else if (posicion === 'arriba') {
+        if (idx === 0) {
+          return;
+        }
+        nuevas = [
+          ...ordenadas.slice(0, idx - 1),
+          ordenadas[idx],
+          ordenadas[idx - 1],
+          ...ordenadas.slice(idx + 1),
+        ];
+      } else {
+        if (idx === ordenadas.length - 1) {
+          return;
+        }
+        nuevas = [
+          ...ordenadas.slice(0, idx),
+          ordenadas[idx + 1],
+          ordenadas[idx],
+          ...ordenadas.slice(idx + 2),
+        ];
+      }
+
+      // Renumerar 1..N preservando referencias en state.visitas.
+      const nuevoOrden = new Map<number, number>();
+      nuevas.forEach((v, i) => nuevoOrden.set(v.id, i + 1));
+      state.visitas.forEach(v => {
+        const nuevo = nuevoOrden.get(v.id);
+        if (nuevo !== undefined && v.orden !== nuevo) {
+          v.orden = nuevo;
+        }
+      });
+    },
     anularVisitasNoRetryables: (state, action: PayloadAction<number[]>) => {
       const visitaIds = action.payload;
       visitaIds.forEach(visitaId => {
@@ -189,9 +256,18 @@ const visitaSlice = createSlice({
     });
     builder.addCase(cargarVisitasThunk.fulfilled, (state, { payload }) => {
       state.status = 'succeeded';
-      // Inicializar propiedades adicionales que no vienen de la API
+      // Preserva el orden local del conductor (modificado via moverVisitaLocal)
+      // a traves de las recargas: si la visita ya estaba en estado, mantengo
+      // su `orden` aunque el server haya devuelto otro. Visitas nuevas usan
+      // el orden del server.
+      const ordenLocal = new Map<number, number>();
+      state.visitas.forEach(v => ordenLocal.set(v.id, v.orden));
+
       state.visitas = payload.map(visita => ({
         ...visita,
+        orden: ordenLocal.has(visita.id)
+          ? (ordenLocal.get(visita.id) as number)
+          : visita.orden,
         datos_formulario_guardados: undefined,
         estado: 'pending',
       }));
@@ -217,5 +293,6 @@ export const {
   limpiarDatosFormularioDeVisita,
   anularVisitasNoRetryables,
   setSyncing,
+  moverVisitaLocal,
 } = visitaSlice.actions;
 export default visitaSlice.reducer;

@@ -11,6 +11,7 @@ interface VisitasHeaderProps {
   hasVisitas: boolean;
   hasOrdenCargada: boolean;
   onOpenOptionsSheet: () => void;
+  onAbrirCambiarOrden: () => void;
   activeFilter: FilterType;
   onFilterChange: (filter: FilterType) => void;
   pendingCount: number;
@@ -29,6 +30,7 @@ interface VisitasHeaderProps {
 export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
   hasOrdenCargada,
   onOpenOptionsSheet,
+  onAbrirCambiarOrden,
   activeFilter,
   onFilterChange,
   pendingCount,
@@ -78,14 +80,27 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
             </View>
           )}
           {hasOrdenCargada && (
-            <TouchableOpacity 
+            <TouchableOpacity
+              style={visitasStyles.optionsButton}
+              onPress={onAbrirCambiarOrden}
+              accessibilityLabel="Cambiar de orden"
+            >
+              <Ionicons
+                name="swap-horizontal-outline"
+                size={20}
+                color="#8e8e93"
+              />
+            </TouchableOpacity>
+          )}
+          {hasOrdenCargada && (
+            <TouchableOpacity
               style={visitasStyles.optionsButton}
               onPress={onOpenOptionsSheet}
             >
-              <Ionicons 
-                name="ellipsis-horizontal" 
-                size={20} 
-                color="#8e8e93" 
+              <Ionicons
+                name="ellipsis-horizontal"
+                size={20}
+                color="#8e8e93"
               />
             </TouchableOpacity>
           )}

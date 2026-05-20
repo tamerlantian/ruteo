@@ -14,12 +14,16 @@ import Toast from 'react-native-toast-message';
 import { authColors } from '../../../auth/styles/auth.theme';
 import { verticalRepository } from '../../../vertical/repositories/vertical.repository';
 import { Entrega } from '../../../vertical/interfaces/entrega.interface';
-import { useCargarOrden } from '../../hooks/use-cargar-orden.hook';
+import { useCambiarOrden } from '../../hooks/use-cambiar-orden.hook';
 import { toastTextOneStyle } from '../../../../shared/styles/global.style';
 
 interface MisOrdenesComponentProps {
   /** Abre el bottom sheet "Cargar por código" (fallback cuando no hay asignación). */
   onCargarPorCodigo: () => void;
+  /** Id de la orden actualmente cargada (null si ninguna). Activa el flujo de "cambiar de orden". */
+  ordenActualId?: number | null;
+  /** Callback invocado cuando una orden se cargo/cambio con exito (para cerrar el sheet). */
+  onSeleccionExitosa?: () => void;
 }
 
 const formatearFecha = (iso: string) => {
@@ -39,8 +43,10 @@ const formatearFecha = (iso: string) => {
 
 export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
   onCargarPorCodigo,
+  ordenActualId = null,
+  onSeleccionExitosa,
 }) => {
-  const cargarOrden = useCargarOrden();
+  const cambiarOrden = useCambiarOrden();
   const [ordenes, setOrdenes] = useState<Entrega[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -78,26 +84,23 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
     async (entrega: Entrega) => {
       setCargandoId(entrega.id);
       try {
-        await cargarOrden(entrega);
-      } catch (error: any) {
-        Toast.show({
-          type: 'error',
-          text1: error?.titulo || 'Error al cargar la orden',
-          text2: error?.mensaje || 'Inténtalo nuevamente.',
-          text1Style: toastTextOneStyle,
-        });
+        const exito = await cambiarOrden(entrega, ordenActualId);
+        if (exito) {
+          onSeleccionExitosa?.();
+        }
       } finally {
         setCargandoId(null);
       }
     },
-    [cargarOrden],
+    [cambiarOrden, ordenActualId, onSeleccionExitosa],
   );
 
   const renderItem = ({ item }: { item: Entrega }) => {
     const isLoading = cargandoId === item.id;
+    const esActual = ordenActualId !== null && ordenActualId === item.id;
     return (
       <TouchableOpacity
-        style={styles.card}
+        style={[styles.card, esActual && styles.cardActual]}
         onPress={() => onSelectOrden(item)}
         disabled={cargandoId !== null}
         activeOpacity={0.85}
@@ -106,7 +109,14 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
           <Ionicons name="cube-outline" size={22} color={authColors.brandInk} />
         </View>
         <View style={styles.cardBody}>
-          <Text style={styles.cardCode}>Orden #{item.id}</Text>
+          <View style={styles.cardTitleRow}>
+            <Text style={styles.cardCode}>Orden #{item.id}</Text>
+            {esActual && (
+              <View style={styles.actualChip}>
+                <Text style={styles.actualChipText}>Actual</Text>
+              </View>
+            )}
+          </View>
           <Text style={styles.cardMeta}>
             {formatearFecha(item.fecha)}
             {item.fecha ? ' · ' : ''}
@@ -202,6 +212,28 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: authColors.border,
     gap: 12,
+  },
+  cardActual: {
+    borderColor: authColors.brandInk,
+    borderWidth: 1.5,
+    backgroundColor: 'rgba(27, 155, 215, 0.04)',
+  },
+  cardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  actualChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+    backgroundColor: authColors.brandInk,
+  },
+  actualChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
   },
   cardIcon: {
     width: 44,

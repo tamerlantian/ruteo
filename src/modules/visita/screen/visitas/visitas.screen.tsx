@@ -45,6 +45,8 @@ export const VisitasScreen = () => {
     bottomSheetRef,
     optionsBottomSheetRef,
     confirmacionBottomSheetRef,
+    cambiarOrdenSheetRef,
+    ordenEntrega,
     handleDesvincular,
     confirmarDesvinculacion,
     cancelarDesvinculacion,
@@ -58,8 +60,11 @@ export const VisitasScreen = () => {
     totalConErrorSeleccionadas,
     selectAllErrors,
     handleCargarOrdenDismiss,
+    openCambiarOrdenSheet,
+    closeCambiarOrdenSheet,
     anularSelectedVisitas,
   } = useVisitasViewModel();
+  const ordenActualId = ordenEntrega ? parseInt(ordenEntrega, 10) : null;
   const puedeDesvincular = useAppSelector(selectPuedeDesvincular);
   const conteoVisitas = useAppSelector(selectConteoVisitasQueImpidenDesvinculacion);
 
@@ -82,6 +87,7 @@ export const VisitasScreen = () => {
         hasVisitas={hasVisitas}
         hasOrdenCargada={hasOrdenCargada}
         onOpenOptionsSheet={openOptionsSheet}
+        onAbrirCambiarOrden={openCambiarOrdenSheet}
         activeFilter={activeFilter}
         onFilterChange={onFilterChange}
         pendingCount={pendingCount}
@@ -144,6 +150,21 @@ export const VisitasScreen = () => {
         onDismiss={handleCargarOrdenDismiss}
       >
         <CargarOrdenComponent />
+      </CustomBottomSheet>
+      <CustomBottomSheet
+        ref={cambiarOrdenSheetRef}
+        enableDynamicSizing={false}
+        initialSnapPoints={['75%']}
+        useScrollView={false}
+      >
+        <MisOrdenesComponent
+          onCargarPorCodigo={() => {
+            closeCambiarOrdenSheet();
+            openDevModeSheet();
+          }}
+          ordenActualId={ordenActualId}
+          onSeleccionExitosa={closeCambiarOrdenSheet}
+        />
       </CustomBottomSheet>
       <CustomBottomSheet
         ref={optionsBottomSheetRef}
