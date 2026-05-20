@@ -50,6 +50,19 @@ const novedadSlice = createSlice({
     descartarSnapshotNovedades: (state, action: PayloadAction<number>) => {
       delete state.snapshotsByDespacho[action.payload];
     },
+    /** Mantiene solo snapshots de las ordenes vigentes (ver visita.slice). */
+    descartarSnapshotsNovedadesExcepto: (
+      state,
+      action: PayloadAction<number[]>,
+    ) => {
+      const idsAMantener = new Set(action.payload);
+      for (const idStr of Object.keys(state.snapshotsByDespacho)) {
+        const id = Number(idStr);
+        if (!idsAMantener.has(id)) {
+          delete state.snapshotsByDespacho[id];
+        }
+      }
+    },
     guardarNovedad: (state, action: PayloadAction<{ novedad: Novedad }>) => {
       state.novedades.push(action.payload.novedad);
     },
@@ -177,5 +190,6 @@ export const {
   guardarSnapshotNovedades,
   restaurarSnapshotNovedades,
   descartarSnapshotNovedades,
+  descartarSnapshotsNovedadesExcepto,
 } = novedadSlice.actions;
 export default novedadSlice.reducer;

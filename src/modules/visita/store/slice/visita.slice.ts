@@ -272,6 +272,25 @@ const visitaSlice = createSlice({
     descartarSnapshotVisitas: (state, action: PayloadAction<number>) => {
       delete state.snapshotsByDespacho[action.payload];
     },
+    /**
+     * Limpia snapshots cuyo despacho_id NO esta en la lista recibida.
+     * Pensado para llamarse despues de refrescar "Mis ordenes": si el
+     * server ya no asigna esa orden, no tiene sentido mantener su
+     * snapshot local. El caller manda la lista de ids vigentes
+     * (incluyendo la activa por seguridad ante re-asignaciones).
+     */
+    descartarSnapshotsVisitasExcepto: (
+      state,
+      action: PayloadAction<number[]>,
+    ) => {
+      const idsAMantener = new Set(action.payload);
+      for (const idStr of Object.keys(state.snapshotsByDespacho)) {
+        const id = Number(idStr);
+        if (!idsAMantener.has(id)) {
+          delete state.snapshotsByDespacho[id];
+        }
+      }
+    },
     anularVisitasNoRetryables: (state, action: PayloadAction<number[]>) => {
       const visitaIds = action.payload;
       visitaIds.forEach(visitaId => {
@@ -353,5 +372,6 @@ export const {
   guardarSnapshotVisitas,
   restaurarSnapshotVisitas,
   descartarSnapshotVisitas,
+  descartarSnapshotsVisitasExcepto,
 } = visitaSlice.actions;
 export default visitaSlice.reducer;

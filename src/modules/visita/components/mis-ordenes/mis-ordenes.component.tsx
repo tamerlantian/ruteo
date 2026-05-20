@@ -15,7 +15,9 @@ import { authColors } from '../../../auth/styles/auth.theme';
 import { verticalRepository } from '../../../vertical/repositories/vertical.repository';
 import { Entrega } from '../../../vertical/interfaces/entrega.interface';
 import { useCambiarOrden } from '../../hooks/use-cambiar-orden.hook';
-import { useAppSelector } from '../../../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
+import { descartarSnapshotsVisitasExcepto } from '../../store/slice/visita.slice';
+import { descartarSnapshotsNovedadesExcepto } from '../../../novedad/store/slice/novedad.slice';
 import { toastTextOneStyle } from '../../../../shared/styles/global.style';
 
 interface MisOrdenesComponentProps {
@@ -44,6 +46,7 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
   ordenActualId = null,
   onSeleccionExitosa,
 }) => {
+  const dispatch = useAppDispatch();
   const cambiarOrden = useCambiarOrden();
   /** Mapa de snapshots locales — permite mostrar "Pausada · X/Y" en cada card. */
   const snapshots = useAppSelector(
@@ -58,6 +61,14 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
     try {
       const data = await verticalRepository.getMisDespachos();
       setOrdenes(data);
+      // Limpia snapshots de ordenes que el server ya no asigna.
+      // Mantenemos la activa por seguridad (re-asignaciones mid-route).
+      const idsAMantener: number[] = data.map(e => e.id);
+      if (ordenActualId !== null && !idsAMantener.includes(ordenActualId)) {
+        idsAMantener.push(ordenActualId);
+      }
+      dispatch(descartarSnapshotsVisitasExcepto(idsAMantener));
+      dispatch(descartarSnapshotsNovedadesExcepto(idsAMantener));
     } catch (error: any) {
       Toast.show({
         type: 'error',
@@ -66,7 +77,7 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
         text1Style: toastTextOneStyle,
       });
     }
-  }, []);
+  }, [dispatch, ordenActualId]);
 
   useEffect(() => {
     (async () => {
