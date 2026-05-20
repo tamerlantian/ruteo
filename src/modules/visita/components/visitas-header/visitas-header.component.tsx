@@ -13,6 +13,7 @@ interface VisitasHeaderProps {
   errorCount: number;
   erroresCount: number;
   novedadesCount: number;
+  entregadasCount: number;
   searchValue: string;
   onSearchChange: (value: string) => void;
   onScanResult: (result: ScanResult) => void;
@@ -32,6 +33,7 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
   errorCount,
   erroresCount,
   novedadesCount,
+  entregadasCount,
   searchValue,
   onSearchChange,
   onScanResult,
@@ -53,6 +55,7 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
         errorCount={errorCount}
         erroresCount={erroresCount}
         novedadesCount={novedadesCount}
+        entregadasCount={entregadasCount}
       />
     </View>
   );

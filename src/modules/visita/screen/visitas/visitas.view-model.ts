@@ -302,6 +302,9 @@ export const useVisitasViewModel = () => {
       case 'novedades':
         filteredByCategory = visitasConNovedades;
         break;
+      case 'entregadas':
+        filteredByCategory = visitasEntregadas;
+        break;
       default:
         filteredByCategory = visitasPendientes;
     }

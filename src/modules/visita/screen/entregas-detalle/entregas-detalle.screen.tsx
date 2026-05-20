@@ -130,6 +130,24 @@ export const EntregasDetalleScreen = () => {
     anularSelectedVisitas,
   } = useVisitasViewModel();
 
+  // Si la orden ya esta completada al entrar (todas las visitas entregadas),
+  // saltamos al filtro "Entregadas" — sino veriamos lista vacia bajo
+  // "Pendientes" sin saber por que. Solo se dispara en la primera carga
+  // (no en el momento que el conductor entrega la ultima visita en vivo,
+  // ahi seria intrusivo).
+  const filtroInicialAjustadoRef = useRef(false);
+  useEffect(() => {
+    if (filtroInicialAjustadoRef.current) {
+      return;
+    }
+    if (totalCount > 0) {
+      filtroInicialAjustadoRef.current = true;
+      if (deliveredCount >= totalCount) {
+        onFilterChange('entregadas');
+      }
+    }
+  }, [totalCount, deliveredCount, onFilterChange]);
+
   const puedeDesvincular = useAppSelector(selectPuedeDesvincular);
   const conteoVisitas = useAppSelector(
     selectConteoVisitasQueImpidenDesvinculacion,
@@ -203,6 +221,7 @@ export const EntregasDetalleScreen = () => {
         errorCount={errorCount}
         erroresCount={erroresCount}
         novedadesCount={novedadesCount}
+        entregadasCount={deliveredCount}
         searchValue={searchValue}
         onSearchChange={onSearchChange}
         onScanResult={onScanResult}
