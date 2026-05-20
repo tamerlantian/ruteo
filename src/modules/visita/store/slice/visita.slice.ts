@@ -5,16 +5,20 @@ import {
   VisitaEstado,
 } from '../../interfaces/visita.interface';
 import { cargarVisitasThunk } from '../thunk/visita.thunk';
+import { Entrega } from '../../../vertical/interfaces/entrega.interface';
 
 /**
  * Snapshot del estado de una orden cuando se pausa para abrir otra.
  * Preserva visitas (con su orden local, estado de sync y datos de formulario
- * guardados) y la seleccion. Al volver, restauramos esto y el merge de
- * cargarVisitasThunk.fulfilled actualiza solo los campos del server.
+ * guardados), la seleccion y la metadata de la Entrega. La metadata permite
+ * surfacear ordenes "locales" en MisOrdenes aunque el server ya no las
+ * asigne (caso comun con "Cargar por codigo" de admin/coordinador).
  */
 interface VisitaSnapshot {
   visitas: VisitaResponse[];
   seleccionadas: number[];
+  /** Opcional: snapshots creados antes de v3 no la tienen. */
+  entrega?: Entrega;
 }
 
 interface VisitaState {
@@ -247,13 +251,19 @@ const visitaSlice = createSlice({
      * conductor encuentre su trabajo local (reorden + entregas pendientes de
      * sync + selecciones) tal como lo dejo.
      */
-    guardarSnapshotVisitas: (state, action: PayloadAction<number>) => {
+    guardarSnapshotVisitas: (
+      state,
+      action: PayloadAction<{ entregaId: number; entrega?: Entrega }>,
+    ) => {
       if (!state.snapshotsByDespacho) {
         state.snapshotsByDespacho = {};
       }
-      state.snapshotsByDespacho[action.payload] = {
+      const { entregaId, entrega } = action.payload;
+      state.snapshotsByDespacho[entregaId] = {
         visitas: state.visitas,
         seleccionadas: state.seleccionadas,
+        // Preserva la entrega si ya estaba, si no usa la que mandamos.
+        entrega: entrega ?? state.snapshotsByDespacho[entregaId]?.entrega,
       };
     },
     /**

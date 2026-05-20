@@ -1,6 +1,7 @@
 /**
  * Tipos de navegación para toda la aplicación
  */
+import type { Entrega } from '../modules/vertical/interfaces/entrega.interface';
 
 /**
  * Parámetros para el stack raíz de la aplicación
@@ -26,12 +27,12 @@ export type AuthStackParamList = {
 export type MainStackParamList = {
   HomeTabs: undefined;
   EntregasDetalle: {
-    /** Identificador de la entrega (lo que el conductor llama "orden"). */
-    entregaId: number;
-    /** Despacho asociado, necesario para el load de visitas. */
-    despachoId: number;
-    /** Tenant schema (subdominio). */
-    schemaName: string;
+    /**
+     * Entrega completa (lo que el conductor llama "orden"). Va el objeto
+     * entero porque se guarda en el snapshot para poder surfacearla en la
+     * lista aunque no este en las asignadas del server.
+     */
+    entrega: Entrega;
   };
   EntregaForm: {
     visitasSeleccionadas: string[];

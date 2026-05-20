@@ -1,9 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Novedad, NovedadEstado, NovedadEstadoSolucion, NovedadFormData } from '../../interfaces/novedad.interface';
+import { Entrega } from '../../../vertical/interfaces/entrega.interface';
 
 interface NovedadSnapshot {
   novedades: Novedad[];
   seleccionadas: string[];
+  /** Metadata de la entrega para el surfacing en la lista (ver visita.slice). */
+  entrega?: Entrega;
 }
 
 interface NovedadState {
@@ -29,13 +32,18 @@ const novedadSlice = createSlice({
       state.novedades = [];
     },
     /** Guarda novedades + seleccionadas como snapshot del despacho actual. */
-    guardarSnapshotNovedades: (state, action: PayloadAction<number>) => {
+    guardarSnapshotNovedades: (
+      state,
+      action: PayloadAction<{ entregaId: number; entrega?: Entrega }>,
+    ) => {
       if (!state.snapshotsByDespacho) {
         state.snapshotsByDespacho = {};
       }
-      state.snapshotsByDespacho[action.payload] = {
+      const { entregaId, entrega } = action.payload;
+      state.snapshotsByDespacho[entregaId] = {
         novedades: state.novedades,
         seleccionadas: state.seleccionadas,
+        entrega: entrega ?? state.snapshotsByDespacho[entregaId]?.entrega,
       };
     },
     /** Restaura el snapshot del despacho (o limpia si no hay). */

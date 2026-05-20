@@ -58,29 +58,26 @@ export const EntregasDetalleScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const dispatch = useAppDispatch();
   const cargarOrden = useCargarOrden();
-  const { entregaId, despachoId, schemaName } = route.params;
+  const { entrega } = route.params;
+  const entregaId = entrega.id;
 
   useEffect(() => {
     // Restaura snapshot (no-op si no hay) y carga la orden contra el server.
     // El merge en cargarVisitasThunk.fulfilled preserva los campos locales.
     dispatch(restaurarSnapshotVisitas(entregaId));
     dispatch(restaurarSnapshotNovedades(entregaId));
-    const entregaMinima = {
-      id: entregaId,
-      despacho_id: despachoId,
-      schema_name: schemaName,
-    } as Entrega;
-    cargarOrden(entregaMinima).catch(() => {
+    cargarOrden(entrega).catch(() => {
       // El hook ya muestra el toast; el caller no necesita reaccionar.
     });
 
     return () => {
-      // Al desmontar (back), pausamos la orden: snapshot + detener tracking.
-      dispatch(guardarSnapshotVisitas(entregaId));
-      dispatch(guardarSnapshotNovedades(entregaId));
+      // Al desmontar (back), pausamos la orden: snapshot (con metadata
+      // de la entrega, asi MisOrdenes puede mostrarla) + detener tracking.
+      dispatch(guardarSnapshotVisitas({ entregaId, entrega }));
+      dispatch(guardarSnapshotNovedades({ entregaId, entrega }));
       backgroundGeolocationService.cleanup().catch(() => {});
     };
-  }, [entregaId, despachoId, schemaName, dispatch, cargarOrden]);
+  }, [entregaId, entrega, dispatch, cargarOrden]);
 
   const {
     openOptionsSheet,

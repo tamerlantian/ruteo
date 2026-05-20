@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import { useFocusEffect } from '@react-navigation/native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import Toast from 'react-native-toast-message';
 
@@ -87,6 +88,26 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
       setLoading(false);
     })();
   }, [obtenerOrdenes]);
+
+  // Refresca al volver al tab (ej. tras hacer back desde el detalle de una
+  // orden). Sin esto, la lista mostraria los datos del primer fetch para
+  // siempre — el chip "Pausada" recien aparece despues de este refresh.
+  useFocusEffect(
+    useCallback(() => {
+      obtenerOrdenes();
+    }, [obtenerOrdenes]),
+  );
+
+  // Combina las asignadas del server con las que tenemos localmente
+  // snapshotadas pero el server no esta listando (caso comun: orden cargada
+  // por codigo por un admin/coordinador que no tiene asignacion server-side).
+  const ordenesCombinadas = useMemo(() => {
+    const idsServer = new Set(ordenes.map(o => o.id));
+    const locales: Entrega[] = Object.values(snapshots)
+      .map(s => s.entrega)
+      .filter((e): e is Entrega => !!e && !idsServer.has(e.id));
+    return [...ordenes, ...locales];
+  }, [ordenes, snapshots]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -189,7 +210,7 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
     );
   }
 
-  if (ordenes.length === 0) {
+  if (ordenesCombinadas.length === 0) {
     return (
       <View style={styles.empty}>
         <View style={styles.emptyIcon}>
@@ -226,7 +247,7 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
   const Lista: any = enBottomSheet ? BottomSheetFlatList : FlatList;
   return (
     <Lista
-      data={ordenes}
+      data={ordenesCombinadas}
       renderItem={renderItem}
       keyExtractor={(item: Entrega) => `${item.id}`}
       contentContainerStyle={styles.list}

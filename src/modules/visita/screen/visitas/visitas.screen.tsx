@@ -35,11 +35,7 @@ export const VisitasScreen = () => {
 
   const irAlDetalle = useCallback(
     (entrega: Entrega) => {
-      navigation.navigate('EntregasDetalle', {
-        entregaId: entrega.id,
-        despachoId: entrega.despacho_id,
-        schemaName: entrega.schema_name,
-      });
+      navigation.navigate('EntregasDetalle', { entrega });
     },
     [navigation],
   );
