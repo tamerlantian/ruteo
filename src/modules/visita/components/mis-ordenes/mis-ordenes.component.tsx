@@ -259,21 +259,6 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
           colors={[authColors.brandInk]}
         />
       }
-      ListFooterComponent={
-        <TouchableOpacity
-          style={styles.footerCta}
-          onPress={onCargarPorCodigo}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-        >
-          <Ionicons
-            name="keypad-outline"
-            size={16}
-            color={authColors.brandInk}
-          />
-          <Text style={styles.footerCtaText}>Cargar por código</Text>
-        </TouchableOpacity>
-      }
       style={styles.flex}
     />
   );

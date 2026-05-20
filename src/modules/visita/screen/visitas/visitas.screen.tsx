@@ -6,7 +6,10 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import BottomSheet from '@gorhom/bottom-sheet';
 
 import CustomBottomSheet from '../../../../shared/components/bottom-sheet/bottom-sheet';
-import { AppBar } from '../../../../shared/components/ui/app-bar/app-bar.component';
+import {
+  AppBar,
+  AppBarAction,
+} from '../../../../shared/components/ui/app-bar/app-bar.component';
 import CargarOrdenComponent from '../../components/cargar-orden/cargar-orden.component';
 import { MisOrdenesComponent } from '../../components/mis-ordenes/mis-ordenes.component';
 import { visitasStyles } from './visitas.style';
@@ -54,7 +57,16 @@ export const VisitasScreen = () => {
 
   return (
     <SafeAreaView style={visitasStyles.container}>
-      <AppBar title="Entregas" />
+      <AppBar
+        title="Entregas"
+        actions={
+          <AppBarAction
+            icon="keypad-outline"
+            label="Cargar orden por código"
+            onPress={openCargarOrdenSheet}
+          />
+        }
+      />
       <MisOrdenesComponent
         onCargarPorCodigo={openCargarOrdenSheet}
         onSeleccionOrden={irAlDetalle}
