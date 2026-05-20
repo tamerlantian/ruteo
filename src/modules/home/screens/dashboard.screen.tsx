@@ -6,12 +6,14 @@ import {
   StatusBar,
   TouchableOpacity,
   Linking,
+  Switch,
 } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../auth/context/auth.context';
 import { useAppSelector, useAppDispatch } from '../../../store/hooks';
 import {
+  selectVisitas,
   selectVisitasPendientes,
   selectVisitasEntregadas,
   selectVisitaIdsConErrorCompleto,
@@ -34,6 +36,8 @@ import { networkService } from '../../../shared/services/network.service';
 import { backgroundGeolocationService } from '../../../shared/services/background-geolocation.service';
 import { reportLocationTrackingError } from '../../../shared/utils/sentry-helpers';
 import { WHATSAPP_NUMBER } from '../../../config/environment';
+import { authColors } from '../../auth/styles/auth.theme';
+import { AppBar } from '../../../shared/components/ui/app-bar/app-bar.component';
 
 export const DashboardScreen = () => {
   const { user } = useAuth();
@@ -46,10 +50,10 @@ export const DashboardScreen = () => {
   const { reintentarSolucionesConError } = useRetrySoluciones();
   const { reintentarVisitasConError } = useRetryVisitas();
 
-  // Selectores para obtener estadísticas de visitas
   const ordenEntrega = useAppSelector(selectOrdenEntrega);
   const subdominio = useAppSelector(selectSubdominio);
   const despacho = useAppSelector(selectDespacho);
+  const visitas = useAppSelector(selectVisitas);
   const visitasConError = useAppSelector(selectVisitasConError);
   const novedadesConError = useAppSelector(selectNovedadesConEstadosError);
   const novedades = useAppSelector(selectNovedadesPendientesPorSolventar);
@@ -59,26 +63,19 @@ export const DashboardScreen = () => {
   const visitasConErrorRetryables = useAppSelector(selectVisitasConErrorRetryables);
   const visitasConErrorNoRetryables = useAppSelector(selectVisitasConErrorNoRetryables);
 
-  // Automatic location stop when no pending deliveries
+  // === Auto-stop de geolocation cuando no quedan pendientes ===
   useEffect(() => {
-    // Only proceed if we have the required configuration and location is currently tracking
     if (!ordenEntrega || !subdominio || !despacho || !user?.id || !isLocationTracking) {
       return;
     }
-
-    // Clear any existing timeout
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
-
-    // If there are no pending deliveries, schedule automatic stop
     if (visitasPendientes.length === 0) {
       debounceTimeoutRef.current = setTimeout(async () => {
         try {
-          console.log('📍 Auto-stopping location tracking: no pending deliveries');
           await backgroundGeolocationService.stopTracking();
           setIsLocationTracking(false);
-          
           Toast.show({
             type: 'info',
             text1: 'Ubicación detenida automáticamente',
@@ -86,21 +83,14 @@ export const DashboardScreen = () => {
             text1Style: toastTextOneStyle,
           });
         } catch (error) {
-          console.error('Error auto-stopping location tracking:', error);
-
-          // Report auto-stop errors as warnings (silent error, no user impact)
           reportLocationTrackingError('runtime', error, {
             phase: 'auto_stop',
             pendingCount: visitasPendientes.length,
             wasTracking: isLocationTracking,
           });
-
-          // Don't show error toast for automatic actions to avoid user confusion
         }
-      }, 1000); // 3 second debounce to prevent rapid on/off cycles
+      }, 1000);
     }
-
-    // Cleanup timeout on unmount
     return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
@@ -108,101 +98,57 @@ export const DashboardScreen = () => {
     };
   }, [visitasPendientes.length, isLocationTracking, ordenEntrega, subdominio, despacho, user?.id]);
 
-  // Verificar y sincronizar estado del tracking al cargar componente
+  // === Sincronizar estado real del tracking ===
   useEffect(() => {
     const checkAndSyncTrackingStatus = () => {
       try {
         const isTracking = backgroundGeolocationService.isTrackingActive();
-        const hasValidConfig = backgroundGeolocationService.hasValidTrackingConfig();
-
-        console.log('📱 [Dashboard] Estado tracking:', {
-          isTracking,
-          hasValidConfig,
-          localState: isLocationTracking
-        });
-
-        // Sincronizar UI con estado real del servicio
         if (isTracking !== isLocationTracking) {
-          console.log('📱 [Dashboard] Sincronizando UI con estado real:', isTracking);
           setIsLocationTracking(isTracking);
         }
       } catch (error) {
-        console.error('📱 [Dashboard] Error checking tracking status:', error);
-
-        // Report status sync errors as warnings
         reportLocationTrackingError('runtime', error, {
           phase: 'status_sync',
           localState: isLocationTracking,
         });
       }
     };
-
     checkAndSyncTrackingStatus();
-
-    // Verificar cada 5 segundos
     const interval = setInterval(checkAndSyncTrackingStatus, 5000);
-
     return () => clearInterval(interval);
   }, [isLocationTracking]);
 
-  // Función para toggle del tracking de ubicación
   const handleToggleLocationTracking = async () => {
     if (!ordenEntrega || !subdominio || !despacho || !user?.id) {
       Toast.show({
         type: 'error',
         text1: 'Configuración incompleta',
-        text2: 'Faltan datos necesarios para el tracking de ubicación',
+        text2: 'Faltan datos necesarios para el tracking',
         text1Style: toastTextOneStyle,
       });
       return;
     }
-
     setIsTogglingLocation(true);
-    
     try {
       if (isLocationTracking) {
-        // Detener tracking
         await backgroundGeolocationService.stopTracking();
         setIsLocationTracking(false);
-        
-        Toast.show({
-          type: 'info',
-          text1: 'Tracking detenido',
-          text2: 'El envío de ubicación se ha pausado',
-          text1Style: toastTextOneStyle,
-        });
       } else {
-        // Iniciar tracking
-        const trackingConfig = {
+        await backgroundGeolocationService.startTracking({
           schemaName: subdominio,
           despacho: parseInt(despacho, 10),
           usuarioId: user.id,
-        };
-        
-        await backgroundGeolocationService.startTracking(trackingConfig);
-        setIsLocationTracking(true);
-        
-        Toast.show({
-          type: 'success',
-          text1: 'Tracking iniciado',
-          text2: 'El envío de ubicación está activo',
-          text1Style: toastTextOneStyle,
         });
+        setIsLocationTracking(true);
       }
     } catch (error) {
-      console.error('Error toggling location tracking:', error);
-
-      // Report location toggle errors
       reportLocationTrackingError('runtime', error, {
         phase: 'toggle_tracking',
         action: isLocationTracking ? 'stop' : 'start',
-        hasConfig: !!(ordenEntrega && subdominio && despacho && user?.id),
       });
-
       Toast.show({
         type: 'error',
-        text1: 'Error',
-        text2: 'No se pudo cambiar el estado del tracking',
+        text1: 'Error al cambiar el estado',
         text1Style: toastTextOneStyle,
       });
     } finally {
@@ -210,10 +156,8 @@ export const DashboardScreen = () => {
     }
   };
 
-  // Función para manejar el retry de visitas con error
   const handleRetryErrorVisitas = async () => {
     const isConnected = await networkService.isConnected();
-
     if (!isConnected) {
       Toast.show({
         type: 'error',
@@ -223,31 +167,23 @@ export const DashboardScreen = () => {
       });
       return;
     }
-
     if (visitaIdsConError.length === 0) {
-      // Toast.show({
-      //   type: 'info',
-      //   text1: 'Sin errores',
-      //   text2: 'No hay visitas con error para reintentar.',
-      // });
       return;
     }
-
     setIsRetrying(true);
     dispatch(setSyncing(true));
     try {
-      const visitasConErrorIds = visitasConError.map(visita => visita.id);
-      const novedadesConErrorIds = novedadesConError.map(novedad => novedad.id);
-
+      const visitasConErrorIds = visitasConError.map(v => v.id);
+      const novedadesConErrorIds = novedadesConError.map(n => n.id);
       await reintentarNovedadesConError(novedadesConErrorIds);
       await reintentarSolucionesConError(novedadesConErrorIds);
       await reintentarVisitasConError(visitasConErrorIds);
-    } catch (error) {
+    } catch {
       Toast.show({
         type: 'error',
-        text1: 'Error',
-        text2:
-          'Ocurrió un error al reintentar los envíos. Inténtalo nuevamente.',
+        text1: 'Error al reintentar',
+        text2: 'Inténtalo nuevamente.',
+        text1Style: toastTextOneStyle,
       });
     } finally {
       setIsRetrying(false);
@@ -259,137 +195,190 @@ export const DashboardScreen = () => {
     Linking.openURL(`whatsapp://send?phone=${WHATSAPP_NUMBER}`);
   };
 
+  const totalVisitas = visitas.length;
+  const entregadas = visitasEntregadas.length;
+  const progreso = totalVisitas > 0 ? Math.round((entregadas / totalVisitas) * 100) : 0;
+  const pendingSyncTotal =
+    visitasConErrorRetryables.length + novedadesConError.length;
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar
         barStyle="dark-content"
-        backgroundColor="#f8f9fa"
+        backgroundColor={authColors.background}
         translucent={false}
       />
+      <AppBar
+        title="Inicio"
+        subtitle={ordenEntrega ? 'Orden en curso' : 'Sin orden cargada'}
+      />
       <View style={styles.content}>
-        <Text style={styles.title}>Dashboard</Text>
-        {user && (
-          <View style={styles.welcomeContainer}>
-            <Text style={styles.welcomeText}>
-              ¡Hola, {user.nombre || user.username}!
-            </Text>
-            <Text style={styles.subtitleText}>
-              Bienvenido a tu panel principal
-            </Text>
-            {ordenEntrega && (
-              <View style={styles.ordenContainer}>
-                <Text style={styles.ordenLabel}>OE:</Text>
-                <Text style={styles.ordenValue}>#{ordenEntrega}</Text>
+        {ordenEntrega ? (
+          <>
+            {/* ===== Hero: orden actual + progreso ===== */}
+            <View style={styles.heroCard}>
+              <View style={styles.heroTopRow}>
+                <View style={styles.heroIcon}>
+                  <Ionicons
+                    name="cube-outline"
+                    size={22}
+                    color={authColors.brandInk}
+                  />
+                </View>
+                <View style={styles.heroBody}>
+                  <Text style={styles.heroTitulo}>Orden en curso</Text>
+                  <Text style={styles.heroSubtitulo}>
+                    {totalVisitas} visita{totalVisitas === 1 ? '' : 's'} ·{' '}
+                    <Text style={styles.heroOrdenId}>#{ordenEntrega}</Text>
+                  </Text>
+                </View>
               </View>
-            )}
-          </View>
-        )}
 
-        {ordenEntrega && (
-          <View>
-            <View style={styles.statsContainer}>
-              <View style={styles.statCard}>
-                <Text style={[styles.statNumber, styles.pendingNumber]}>
+              {totalVisitas > 0 && (
+                <>
+                  <View style={styles.progressTrack}>
+                    <View
+                      style={[styles.progressFill, { width: `${progreso}%` }]}
+                    />
+                  </View>
+                  <View style={styles.progressLabels}>
+                    <Text style={styles.progressTexto}>
+                      {entregadas} de {totalVisitas} entregadas
+                    </Text>
+                    <Text style={styles.progressPct}>{progreso}%</Text>
+                  </View>
+                </>
+              )}
+            </View>
+
+            {/* ===== Stats compactas ===== */}
+            <View style={styles.statsRow}>
+              <View style={styles.statBlock}>
+                <Text style={styles.statNumero}>
                   {visitasPendientes.length}
                 </Text>
                 <Text style={styles.statLabel}>Pendientes</Text>
               </View>
-
-              <View style={styles.statCard}>
-                <Text style={[styles.statNumber, styles.completedNumber]}>
-                  {visitasEntregadas.length}
-                </Text>
-                <Text style={styles.statLabel}>Entregadas</Text>
-              </View>
-            </View>
-            <View style={[styles.statsContainer, { marginTop: 8 }]}>
-              <View style={styles.statCard}>
-                <Text style={[styles.statNumber, styles.novedadesNumber]}>
-                  {novedades.length}
-                </Text>
+              <View style={styles.statDivisor} />
+              <View style={styles.statBlock}>
+                <Text style={styles.statNumero}>{novedades.length}</Text>
                 <Text style={styles.statLabel}>Novedades</Text>
               </View>
-
-              <View style={styles.statCard}>
-                <Text style={[styles.statNumber, styles.errorNumber]}>
-                  {visitasConErrorRetryables.length}
+              <View style={styles.statDivisor} />
+              <View style={styles.statBlock}>
+                <Text
+                  style={[
+                    styles.statNumero,
+                    visitasConErrorNoRetryables.length > 0 && styles.statNumeroError,
+                  ]}
+                >
+                  {visitasConErrorNoRetryables.length}
                 </Text>
-                <Text style={styles.statLabel}>Sincronizar</Text>
+                <Text style={styles.statLabel}>Con error</Text>
               </View>
             </View>
-            
-            {/* Nueva fila para errores no-retryables */}
-            {visitasConErrorNoRetryables.length > 0 && (
-              <View style={[styles.statsContainer, { marginTop: 8 }]}>
-                <View style={styles.statCard}>
-                  <Text style={[styles.statNumber, styles.erroresNumber]}>
-                    {visitasConErrorNoRetryables.length}
+
+            {/* ===== Acción: sincronizar pendientes (solo si los hay) ===== */}
+            {pendingSyncTotal > 0 && (
+              <TouchableOpacity
+                style={[
+                  styles.syncCard,
+                  isRetrying && styles.syncCardDisabled,
+                ]}
+                onPress={handleRetryErrorVisitas}
+                disabled={isRetrying}
+                activeOpacity={0.85}
+              >
+                <View style={styles.syncIcon}>
+                  <Ionicons
+                    name={isRetrying ? 'sync' : 'sync-outline'}
+                    size={20}
+                    color={authColors.brandInk}
+                  />
+                </View>
+                <View style={styles.syncBody}>
+                  <Text style={styles.syncTitulo}>
+                    {pendingSyncTotal} pendiente
+                    {pendingSyncTotal === 1 ? '' : 's'} de sincronizar
                   </Text>
-                  <Text style={styles.statLabel}>Errores</Text>
+                  <Text style={styles.syncSubtitulo}>
+                    {isRetrying
+                      ? 'Sincronizando…'
+                      : 'Tocá para reintentar el envío'}
+                  </Text>
                 </View>
-                
-                {/* Placeholder para mantener simetría */}
-                <View style={[styles.statCard, { opacity: 0 }]}>
-                  <Text style={styles.statNumber}>0</Text>
-                  <Text style={styles.statLabel}>-</Text>
-                </View>
-              </View>
+                {!isRetrying && (
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={authColors.inkMuted}
+                  />
+                )}
+              </TouchableOpacity>
             )}
+
+            {/* ===== Toggle de ubicación ===== */}
+            <View style={styles.toggleCard}>
+              <View style={styles.toggleIcon}>
+                <Ionicons
+                  name="location-outline"
+                  size={20}
+                  color={
+                    isLocationTracking
+                      ? authColors.brandInk
+                      : authColors.inkMuted
+                  }
+                />
+              </View>
+              <View style={styles.toggleBody}>
+                <Text style={styles.toggleTitulo}>Ubicación en vivo</Text>
+                <Text style={styles.toggleSubtitulo}>
+                  {isLocationTracking
+                    ? 'Tu posición se está enviando'
+                    : 'No estás enviando tu posición'}
+                </Text>
+              </View>
+              <Switch
+                value={isLocationTracking}
+                onValueChange={handleToggleLocationTracking}
+                disabled={isTogglingLocation}
+                trackColor={{
+                  false: authColors.border,
+                  true: authColors.brandInk,
+                }}
+                thumbColor="#FFFFFF"
+                ios_backgroundColor={authColors.border}
+              />
+            </View>
+          </>
+        ) : (
+          /* ===== Empty state: sin orden cargada ===== */
+          <View style={styles.emptyCard}>
+            <View style={styles.emptyIcon}>
+              <Ionicons
+                name="cube-outline"
+                size={28}
+                color={authColors.brandInk}
+              />
+            </View>
+            <Text style={styles.emptyTitulo}>Sin orden cargada</Text>
+            <Text style={styles.emptySubtitulo}>
+              Andá a la pestaña <Text style={styles.emptyBold}>Entregas</Text>{' '}
+              para ver tus órdenes asignadas y empezar el día.
+            </Text>
           </View>
-        )}
-
-        {/* Botón de retry para visitas con error retryables */}
-        {ordenEntrega && visitasConErrorRetryables.length > 0 && (
-          <TouchableOpacity
-            style={[
-              styles.retryButton,
-              isRetrying && styles.retryButtonDisabled,
-            ]}
-            onPress={handleRetryErrorVisitas}
-            disabled={isRetrying}
-          >
-            <Text style={styles.retryButtonText}>
-              {isRetrying
-                ? 'Reintentando...'
-                : `Sincronizar ${visitasConErrorRetryables.length} pendiente${
-                    visitasConErrorRetryables.length > 1 ? 's' : ''
-                  }`}
-            </Text>
-          </TouchableOpacity>
-        )}
-
-        {/* Botón para controlar tracking de ubicación */}
-        {ordenEntrega && (
-          <TouchableOpacity
-            style={[
-              styles.locationButton,
-              isLocationTracking ? styles.locationButtonActive : styles.locationButtonInactive,
-              isTogglingLocation && styles.locationButtonDisabled,
-            ]}
-            onPress={handleToggleLocationTracking}
-            disabled={isTogglingLocation}
-          >
-            <Text style={[
-              styles.locationButtonText,
-              isLocationTracking ? styles.locationButtonTextActive : styles.locationButtonTextInactive,
-            ]}>
-              {isTogglingLocation
-                ? 'Cambiando...'
-                : isLocationTracking
-                ? '📍 Detener ubicación'
-                : '📍 Iniciar ubicación'
-              }
-            </Text>
-          </TouchableOpacity>
         )}
       </View>
 
+      {/* ===== FAB de soporte ===== */}
       <TouchableOpacity
         style={styles.whatsappButton}
         onPress={handleOpenWhatsApp}
-        activeOpacity={0.8}
+        activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel="Soporte por WhatsApp"
       >
-        <Ionicons name="logo-whatsapp" size={28} color="#fff" />
+        <Ionicons name="logo-whatsapp" size={26} color="#FFFFFF" />
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -398,207 +387,232 @@ export const DashboardScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: authColors.background,
   },
   content: {
     flex: 1,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 16,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1c1c1e',
-    marginBottom: 20,
+  // ----- Hero -----
+  heroCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: authColors.border,
+    marginBottom: 14,
   },
-  welcomeContainer: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  welcomeText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1c1c1e',
-    marginBottom: 4,
-  },
-  subtitleText: {
-    fontSize: 14,
-    color: '#8e8e93',
-  },
-  ordenContainer: {
+  heroTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    gap: 12,
+    marginBottom: 14,
   },
-  ordenLabel: {
-    fontSize: 14,
-    color: '#8e8e93',
-    marginRight: 8,
+  heroIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(27, 155, 215, 0.10)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  ordenValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#007aff',
-    backgroundColor: '#f0f8ff',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-  },
-  statCard: {
+  heroBody: {
     flex: 1,
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 12,
+  },
+  heroTitulo: {
+    fontSize: 14,
+    color: authColors.inkSoft,
+    fontWeight: '600',
+  },
+  heroSubtitulo: {
+    fontSize: 15.5,
+    fontWeight: '700',
+    color: authColors.ink,
+    marginTop: 2,
+  },
+  heroOrdenId: {
+    color: authColors.inkMuted,
+    fontWeight: '600',
+  },
+  progressTrack: {
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: authColors.border,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: authColors.brandInk,
+    borderRadius: 4,
+  },
+  progressLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  progressTexto: {
+    fontSize: 12.5,
+    color: authColors.inkSoft,
+    fontWeight: '500',
+  },
+  progressPct: {
+    fontSize: 12.5,
+    color: authColors.brandInk,
+    fontWeight: '700',
+  },
+  // ----- Stats compactas -----
+  statsRow: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: authColors.border,
+    marginBottom: 14,
+  },
+  statBlock: {
+    flex: 1,
     alignItems: 'center',
-    marginHorizontal: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#007aff',
-    marginBottom: 4,
+  statNumero: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: authColors.ink,
+    letterSpacing: -0.4,
   },
-  pendingNumber: {
-    color: '#ff9500', // Naranja para pendientes
-  },
-  completedNumber: {
-    color: '#34c759', // Verde para entregadas
-  },
-  novedadesNumber: {
-    color: '#5856d6', // Púrpura para novedades
-  },
-  errorNumber: {
-    color: '#ff3b30', // Rojo para errores retryables
-  },
-  erroresNumber: {
-    color: '#dc143c', // Rojo más oscuro para errores no-retryables
+  statNumeroError: {
+    color: authColors.danger,
   },
   statLabel: {
     fontSize: 12,
-    color: '#8e8e93',
-    textAlign: 'center',
+    color: authColors.inkSoft,
+    marginTop: 2,
+    fontWeight: '500',
   },
-  permissionsStatus: {
-    marginBottom: 20,
-    padding: 16,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    marginHorizontal: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  statDivisor: {
+    width: 1,
+    backgroundColor: authColors.border,
   },
-  permissionItem: {
+  // ----- Sync card -----
+  syncCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: authColors.brandInk,
+    gap: 12,
+    marginBottom: 14,
+  },
+  syncCardDisabled: {
+    opacity: 0.6,
+  },
+  syncIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(27, 155, 215, 0.10)',
     justifyContent: 'center',
-    gap: 8,
+    alignItems: 'center',
   },
-  permissionText: {
+  syncBody: {
+    flex: 1,
+  },
+  syncTitulo: {
+    fontSize: 14.5,
+    fontWeight: '700',
+    color: authColors.ink,
+  },
+  syncSubtitulo: {
+    fontSize: 12.5,
+    color: authColors.inkSoft,
+    marginTop: 2,
+  },
+  // ----- Toggle de ubicación -----
+  toggleCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: authColors.border,
+    gap: 12,
+  },
+  toggleIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(27, 155, 215, 0.10)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  toggleBody: {
+    flex: 1,
+  },
+  toggleTitulo: {
+    fontSize: 14.5,
+    fontWeight: '700',
+    color: authColors.ink,
+  },
+  toggleSubtitulo: {
+    fontSize: 12.5,
+    color: authColors.inkSoft,
+    marginTop: 2,
+  },
+  // ----- Empty state -----
+  emptyCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+    borderWidth: 1,
+    borderColor: authColors.border,
+    alignItems: 'center',
+  },
+  emptyIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(27, 155, 215, 0.10)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  emptyTitulo: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: authColors.ink,
+    letterSpacing: -0.2,
+  },
+  emptySubtitulo: {
     fontSize: 14,
-    fontWeight: '500',
+    color: authColors.inkSoft,
     textAlign: 'center',
+    lineHeight: 20,
+    marginTop: 6,
   },
-  requestingText: {
-    fontSize: 12,
-    color: '#8e8e93',
-    marginTop: 8,
-    fontStyle: 'italic',
-    textAlign: 'center',
+  emptyBold: {
+    fontWeight: '700',
+    color: authColors.ink,
   },
-  permissionGranted: {
-    color: '#34c759',
-  },
-  permissionPending: {
-    color: '#ff9500',
-  },
-  retryButton: {
-    backgroundColor: '#ff3b30',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    marginTop: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  retryButtonDisabled: {
-    backgroundColor: '#8e8e93',
-    opacity: 0.6,
-  },
-  retryButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  locationButton: {
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    marginTop: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  locationButtonActive: {
-    backgroundColor: '#34c759', // Verde cuando está activo
-  },
-  locationButtonInactive: {
-    backgroundColor: '#007aff', // Azul cuando está inactivo
-  },
-  locationButtonDisabled: {
-    backgroundColor: '#8e8e93',
-    opacity: 0.6,
-  },
-  locationButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  locationButtonTextActive: {
-    color: '#fff',
-  },
-  locationButtonTextInactive: {
-    color: '#fff',
-  },
+  // ----- WhatsApp FAB -----
   whatsappButton: {
     position: 'absolute',
     bottom: 20,
     right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: '#25D366',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
     elevation: 8,
   },
 });

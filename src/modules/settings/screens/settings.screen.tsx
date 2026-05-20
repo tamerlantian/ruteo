@@ -5,6 +5,7 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import { useAuth } from '../../auth/context/auth.context';
 import { useTabNavigation } from '../../../navigation/hooks/useTypedNavigation';
 import { settingsStyles } from '../styles/settings.style';
+import { AppBar } from '../../../shared/components/ui/app-bar/app-bar.component';
 
 export const SettingsScreen = () => {
   const { logout } = useAuth();
@@ -47,14 +48,9 @@ export const SettingsScreen = () => {
 
   return (
     <SafeAreaView style={settingsStyles.container}>
+      <AppBar title="Configuración" />
       <ScrollView style={settingsStyles.scrollContainer}>
         {/* Header */}
-        <View style={settingsStyles.header}>
-          <Text style={settingsStyles.headerTitle}>
-            Ajustes
-          </Text>
-        </View>
-
         {/* Opciones de configuración */}
         <View style={settingsStyles.optionsContainer}>
           {/* Perfil */}

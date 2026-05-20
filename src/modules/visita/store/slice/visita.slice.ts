@@ -6,11 +6,24 @@ import {
 } from '../../interfaces/visita.interface';
 import { cargarVisitasThunk } from '../thunk/visita.thunk';
 
+/**
+ * Snapshot del estado de una orden cuando se pausa para abrir otra.
+ * Preserva visitas (con su orden local, estado de sync y datos de formulario
+ * guardados) y la seleccion. Al volver, restauramos esto y el merge de
+ * cargarVisitasThunk.fulfilled actualiza solo los campos del server.
+ */
+interface VisitaSnapshot {
+  visitas: VisitaResponse[];
+  seleccionadas: number[];
+}
+
 interface VisitaState {
   visitas: VisitaResponse[];
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   seleccionadas: number[];
   isSyncing: boolean;
+  /** Snapshots de ordenes pausadas, indexados por despacho_id. */
+  snapshotsByDespacho: Record<number, VisitaSnapshot>;
 }
 
 const initialState: VisitaState = {
@@ -18,6 +31,7 @@ const initialState: VisitaState = {
   status: 'idle',
   seleccionadas: [],
   isSyncing: false,
+  snapshotsByDespacho: {},
 };
 
 const visitaSlice = createSlice({
@@ -227,6 +241,37 @@ const visitaSlice = createSlice({
         }
       });
     },
+    /**
+     * Guarda el estado actual de visitas como snapshot del despacho indicado.
+     * Se llama justo antes de cambiar a otra orden, para que al volver el
+     * conductor encuentre su trabajo local (reorden + entregas pendientes de
+     * sync + selecciones) tal como lo dejo.
+     */
+    guardarSnapshotVisitas: (state, action: PayloadAction<number>) => {
+      state.snapshotsByDespacho[action.payload] = {
+        visitas: state.visitas,
+        seleccionadas: state.seleccionadas,
+      };
+    },
+    /**
+     * Restaura el snapshot guardado del despacho (o limpia si no hay).
+     * El refetch posterior (cargarVisitasThunk.fulfilled) mergeara campos del
+     * server sin pisar lo local.
+     */
+    restaurarSnapshotVisitas: (state, action: PayloadAction<number | null>) => {
+      if (action.payload === null) {
+        state.visitas = [];
+        state.seleccionadas = [];
+        return;
+      }
+      const snap = state.snapshotsByDespacho[action.payload];
+      state.visitas = snap?.visitas ?? [];
+      state.seleccionadas = snap?.seleccionadas ?? [];
+    },
+    /** Descarta el snapshot de un despacho (ej. al terminar/anular). */
+    descartarSnapshotVisitas: (state, action: PayloadAction<number>) => {
+      delete state.snapshotsByDespacho[action.payload];
+    },
     anularVisitasNoRetryables: (state, action: PayloadAction<number[]>) => {
       const visitaIds = action.payload;
       visitaIds.forEach(visitaId => {
@@ -256,21 +301,32 @@ const visitaSlice = createSlice({
     });
     builder.addCase(cargarVisitasThunk.fulfilled, (state, { payload }) => {
       state.status = 'succeeded';
-      // Preserva el orden local del conductor (modificado via moverVisitaLocal)
-      // a traves de las recargas: si la visita ya estaba en estado, mantengo
-      // su `orden` aunque el server haya devuelto otro. Visitas nuevas usan
-      // el orden del server.
-      const ordenLocal = new Map<number, number>();
-      state.visitas.forEach(v => ordenLocal.set(v.id, v.orden));
+      // Merge server <- local: por cada visita que ya estaba en estado (o
+      // recien restaurada desde un snapshot), preservamos los campos que
+      // SOLO el cliente gobierna — orden manual, estado de sync, datos de
+      // formulario guardados, info de error. Los demas vienen del server.
+      // Visitas nuevas (ids que no estaban en local) parten en `pending`.
+      const localPorId = new Map<number, VisitaResponse>();
+      state.visitas.forEach(v => localPorId.set(v.id, v));
 
-      state.visitas = payload.map(visita => ({
-        ...visita,
-        orden: ordenLocal.has(visita.id)
-          ? (ordenLocal.get(visita.id) as number)
-          : visita.orden,
-        datos_formulario_guardados: undefined,
-        estado: 'pending',
-      }));
+      state.visitas = payload.map(visita => {
+        const local = localPorId.get(visita.id);
+        if (local) {
+          return {
+            ...visita,
+            orden: local.orden,
+            estado: local.estado,
+            error_mensaje: local.error_mensaje,
+            es_error_retryable: local.es_error_retryable,
+            datos_formulario_guardados: local.datos_formulario_guardados,
+          };
+        }
+        return {
+          ...visita,
+          datos_formulario_guardados: undefined,
+          estado: 'pending',
+        };
+      });
     });
     builder.addCase(cargarVisitasThunk.rejected, state => {
       state.status = 'failed';
@@ -294,5 +350,8 @@ export const {
   anularVisitasNoRetryables,
   setSyncing,
   moverVisitaLocal,
+  guardarSnapshotVisitas,
+  restaurarSnapshotVisitas,
+  descartarSnapshotVisitas,
 } = visitaSlice.actions;
 export default visitaSlice.reducer;

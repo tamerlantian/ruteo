@@ -7,14 +7,13 @@ import { Entrega } from '../../vertical/interfaces/entrega.interface';
 import { useCargarOrden } from './use-cargar-orden.hook';
 import { backgroundGeolocationService } from '../../../shared/services';
 import {
-  removerVisitas,
-  limpiarSeleccionVisitas,
+  guardarSnapshotVisitas,
+  restaurarSnapshotVisitas,
 } from '../store/slice/visita.slice';
 import {
-  limpiarNovedades,
-  limpiarSeleccionNovedades,
+  guardarSnapshotNovedades,
+  restaurarSnapshotNovedades,
 } from '../../novedad/store/slice/novedad.slice';
-import { resetSettings } from '../../settings';
 import {
   selectPuedeDesvincular,
   selectConteoVisitasQueImpidenDesvinculacion,
@@ -22,16 +21,18 @@ import {
 import { toastTextOneStyle } from '../../../shared/styles/global.style';
 
 /**
- * Carga una orden manejando el caso "ya hay otra orden cargada":
- *   - Misma orden -> no-op (devuelve false).
- *   - Sin orden cargada -> carga directa.
- *   - Orden distinta -> valida que no haya visitas/novedades con error sin
- *     sincronizar, pide confirmacion al conductor, limpia el estado de la
- *     orden actual (visitas, novedades, settings, geolocation) y carga la
- *     nueva.
+ * Cambio de orden con memoria local (Opcion A, fase 1).
  *
- * Devuelve true si la nueva orden quedo cargada; false si se cancelo o
- * bloqueo. El caller usa eso para cerrar el bottom sheet, etc.
+ * - Misma orden -> no-op.
+ * - Sin orden cargada -> restaura el snapshot del target (si existe) y carga.
+ * - Distinta orden y SIN pendientes de sync -> guarda snapshot de la actual,
+ *   restaura snapshot del target y carga. Sin confirmacion: con snapshots
+ *   no se pierde nada al saltar, asi que la friccion deja de tener sentido.
+ * - Distinta orden y CON pendientes -> bloqueamos (igual que desvincular).
+ *   Una orden "Pausada" tiene cero pending por contrato; si tiene errores
+ *   el conductor los resuelve antes de moverse.
+ *
+ * Devuelve true si la nueva orden quedo cargada; false si se cancelo/bloqueo.
  */
 export const useCambiarOrden = () => {
   const dispatch = useAppDispatch();
@@ -47,15 +48,25 @@ export const useCambiarOrden = () => {
         return false;
       }
 
+      // Sin orden cargada: solo restaurar (no-op si no hay snapshot) y cargar.
       if (ordenActualId === null) {
+        dispatch(restaurarSnapshotVisitas(entrega.id));
+        dispatch(restaurarSnapshotNovedades(entrega.id));
         try {
           await cargarOrden(entrega);
           return true;
-        } catch {
+        } catch (error: any) {
+          Toast.show({
+            type: 'error',
+            text1: error?.titulo || 'Error al cargar la orden',
+            text2: error?.mensaje || 'Inténtalo nuevamente.',
+            text1Style: toastTextOneStyle,
+          });
           return false;
         }
       }
 
+      // Bloqueo: errores pendientes en la orden actual.
       if (!puedeDesvincular) {
         const { visitasConError, novedadesConError } = conteoQueImpiden;
         const partes: string[] = [];
@@ -80,31 +91,18 @@ export const useCambiarOrden = () => {
         return false;
       }
 
-      const confirmado = await new Promise<boolean>((resolve) => {
-        Alert.alert(
-          '¿Cambiar de orden?',
-          `Se cerrará la orden actual y se cargará la Orden #${entrega.id}.`,
-          [
-            { text: 'Cancelar', style: 'cancel', onPress: () => resolve(false) },
-            { text: 'Cambiar', onPress: () => resolve(true) },
-          ],
-          { cancelable: true, onDismiss: () => resolve(false) },
-        );
-      });
-      if (!confirmado) {
-        return false;
-      }
+      // Cambio "limpio": snapshot de la actual -> restaurar la nueva.
+      dispatch(guardarSnapshotVisitas(ordenActualId));
+      dispatch(guardarSnapshotNovedades(ordenActualId));
 
       try {
         await backgroundGeolocationService.cleanup();
       } catch (geoError) {
         console.warn('Error deteniendo background geolocation:', geoError);
       }
-      dispatch(removerVisitas());
-      dispatch(limpiarNovedades());
-      dispatch(limpiarSeleccionVisitas());
-      dispatch(limpiarSeleccionNovedades());
-      dispatch(resetSettings());
+
+      dispatch(restaurarSnapshotVisitas(entrega.id));
+      dispatch(restaurarSnapshotNovedades(entrega.id));
 
       try {
         await cargarOrden(entrega);

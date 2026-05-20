@@ -7,6 +7,7 @@ import { NovedadesHeader } from '../../components/novedades-header/novedades-hea
 import { NovedadCardComponent } from '../../components/novedad-card/novedad-card.component';
 import { NovedadFloatingActions } from '../../components/novedad-floating-actions/novedad-floating-actions.component';
 import { useNovedadesViewModel } from './novedades.view-model';
+import { AppBar } from '../../../../shared/components/ui/app-bar/app-bar.component';
 
 export const NovedadesScreen = () => {
   const {
@@ -46,6 +47,7 @@ export const NovedadesScreen = () => {
 
   return (
     <SafeAreaView style={visitasStyles.container}>
+      <AppBar title="Novedades" />
       {/* Header fijo - no se mueve con el scroll */}
       <NovedadesHeader
         hasNovedades={hasNovedades}

@@ -1,16 +1,24 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Novedad, NovedadEstado, NovedadEstadoSolucion, NovedadFormData } from '../../interfaces/novedad.interface';
 
+interface NovedadSnapshot {
+  novedades: Novedad[];
+  seleccionadas: string[];
+}
+
 interface NovedadState {
   novedades: Novedad[];
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   seleccionadas: string[];
+  /** Snapshots por despacho_id, para pausar/restaurar al cambiar de orden. */
+  snapshotsByDespacho: Record<number, NovedadSnapshot>;
 }
 
 const initialState: NovedadState = {
   novedades: [],
   status: 'idle',
   seleccionadas: [],
+  snapshotsByDespacho: {},
 };
 
 const novedadSlice = createSlice({
@@ -19,6 +27,28 @@ const novedadSlice = createSlice({
   reducers: {
     limpiarNovedades: (state) => {
       state.novedades = [];
+    },
+    /** Guarda novedades + seleccionadas como snapshot del despacho actual. */
+    guardarSnapshotNovedades: (state, action: PayloadAction<number>) => {
+      state.snapshotsByDespacho[action.payload] = {
+        novedades: state.novedades,
+        seleccionadas: state.seleccionadas,
+      };
+    },
+    /** Restaura el snapshot del despacho (o limpia si no hay). */
+    restaurarSnapshotNovedades: (state, action: PayloadAction<number | null>) => {
+      if (action.payload === null) {
+        state.novedades = [];
+        state.seleccionadas = [];
+        return;
+      }
+      const snap = state.snapshotsByDespacho[action.payload];
+      state.novedades = snap?.novedades ?? [];
+      state.seleccionadas = snap?.seleccionadas ?? [];
+    },
+    /** Descarta el snapshot (ej. al terminar/anular esa orden). */
+    descartarSnapshotNovedades: (state, action: PayloadAction<number>) => {
+      delete state.snapshotsByDespacho[action.payload];
     },
     guardarNovedad: (state, action: PayloadAction<{ novedad: Novedad }>) => {
       state.novedades.push(action.payload.novedad);
@@ -144,5 +174,8 @@ export const {
   guardarSolucionNovedad,
   guardarDatosFormularioEnNovedad,
   revertirNovedadOptimista,
+  guardarSnapshotNovedades,
+  restaurarSnapshotNovedades,
+  descartarSnapshotNovedades,
 } = novedadSlice.actions;
 export default novedadSlice.reducer;

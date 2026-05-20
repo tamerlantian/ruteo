@@ -15,14 +15,12 @@ import { authColors } from '../../../auth/styles/auth.theme';
 import { verticalRepository } from '../../../vertical/repositories/vertical.repository';
 import { Entrega } from '../../../vertical/interfaces/entrega.interface';
 import { useCambiarOrden } from '../../hooks/use-cambiar-orden.hook';
+import { useAppSelector } from '../../../../store/hooks';
 import { toastTextOneStyle } from '../../../../shared/styles/global.style';
 
 interface MisOrdenesComponentProps {
-  /** Abre el bottom sheet "Cargar por código" (fallback cuando no hay asignación). */
   onCargarPorCodigo: () => void;
-  /** Id de la orden actualmente cargada (null si ninguna). Activa el flujo de "cambiar de orden". */
   ordenActualId?: number | null;
-  /** Callback invocado cuando una orden se cargo/cambio con exito (para cerrar el sheet). */
   onSeleccionExitosa?: () => void;
 }
 
@@ -32,9 +30,9 @@ const formatearFecha = (iso: string) => {
   }
   try {
     return new Date(iso).toLocaleDateString('es', {
-      day: '2-digit',
+      weekday: 'short',
+      day: 'numeric',
       month: 'short',
-      year: 'numeric',
     });
   } catch {
     return '';
@@ -47,6 +45,10 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
   onSeleccionExitosa,
 }) => {
   const cambiarOrden = useCambiarOrden();
+  /** Mapa de snapshots locales — permite mostrar "Pausada · X/Y" en cada card. */
+  const snapshots = useAppSelector(
+    state => state.visita.snapshotsByDespacho,
+  );
   const [ordenes, setOrdenes] = useState<Entrega[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -98,35 +100,96 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
   const renderItem = ({ item }: { item: Entrega }) => {
     const isLoading = cargandoId === item.id;
     const esActual = ordenActualId !== null && ordenActualId === item.id;
+    const peso = Math.round(item.peso || 0);
+
+    // Si hay snapshot local del despacho, mostramos el progreso DEL CONDUCTOR
+    // (no el del server) — refleja lo que realmente lleva entregado en su
+    // sesion local. La orden activa no se trata como "pausada".
+    const snapshot = !esActual ? snapshots[item.id] : undefined;
+    const localEntregadas = snapshot
+      ? snapshot.visitas.filter(v => v.estado_entregado).length
+      : 0;
+    const localTotal = snapshot ? snapshot.visitas.length : 0;
+    const tienePausa = !!snapshot && localTotal > 0;
+
+    // Si no hay snapshot pero el server reporta progreso parcial (otra sesion,
+    // otro dispositivo, etc.) mantenemos el indicador anterior.
+    const serverEntregadas = Math.round(item.visitas_entregadas || 0);
+    const tieneProgresoServer =
+      !tienePausa &&
+      !esActual &&
+      serverEntregadas > 0 &&
+      serverEntregadas < item.visitas;
+
     return (
       <TouchableOpacity
         style={[styles.card, esActual && styles.cardActual]}
         onPress={() => onSelectOrden(item)}
         disabled={cargandoId !== null}
         activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel={`Orden ${item.id}, ${item.visitas} visitas`}
       >
+        {/* La franja izquierda colorea solo la orden actual: comunica
+            "esta es la cargada" sin tener que sumar un chip. */}
+        {esActual && <View style={styles.cardActualAccent} />}
+
         <View style={styles.cardIcon}>
           <Ionicons name="cube-outline" size={22} color={authColors.brandInk} />
         </View>
         <View style={styles.cardBody}>
-          <View style={styles.cardTitleRow}>
-            <Text style={styles.cardCode}>Orden #{item.id}</Text>
-            {esActual && (
-              <View style={styles.actualChip}>
-                <Text style={styles.actualChipText}>Actual</Text>
-              </View>
-            )}
-          </View>
+          {/* Linea principal: la carga de trabajo, que es lo que el
+              conductor escanea para decidir. */}
+          <Text style={styles.cardHeadline}>
+            {item.visitas} visita{item.visitas === 1 ? '' : 's'}
+            {peso > 0 ? ` · ${peso.toLocaleString('es')} kg` : ''}
+          </Text>
+          {/* Linea de contexto: fecha + id como referencia. "Actual" o
+              "Pausada" se insertan inline solo cuando aplica. */}
           <Text style={styles.cardMeta}>
+            {esActual && (
+              <Text style={styles.metaActual}>Actual · </Text>
+            )}
+            {tienePausa && (
+              <Text style={styles.metaPausada}>Pausada · </Text>
+            )}
             {formatearFecha(item.fecha)}
             {item.fecha ? ' · ' : ''}
-            {item.visitas} visita{item.visitas === 1 ? '' : 's'}
+            <Text style={styles.metaId}>#{item.id}</Text>
           </Text>
+          {tienePausa && (
+            <View style={styles.progresoLinea}>
+              <Ionicons
+                name="checkmark-circle-outline"
+                size={13}
+                color={authColors.inkSoft}
+              />
+              <Text style={styles.progresoTexto}>
+                {localEntregadas} de {localTotal} entregadas en tu sesión
+              </Text>
+            </View>
+          )}
+          {tieneProgresoServer && (
+            <View style={styles.progresoLinea}>
+              <Ionicons
+                name="checkmark-circle-outline"
+                size={13}
+                color={authColors.inkSoft}
+              />
+              <Text style={styles.progresoTexto}>
+                {serverEntregadas} de {item.visitas} entregadas
+              </Text>
+            </View>
+          )}
         </View>
         {isLoading ? (
           <ActivityIndicator size="small" color={authColors.brandInk} />
         ) : (
-          <Ionicons name="chevron-forward" size={20} color={authColors.inkMuted} />
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color={authColors.inkMuted}
+          />
         )}
       </TouchableOpacity>
     );
@@ -134,8 +197,18 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={authColors.brandInk} />
+      <View style={[styles.flex, styles.list]}>
+        {[1, 2, 3].map(i => (
+          <View key={i} style={styles.skeletonCard}>
+            <View style={styles.skeletonIcon} />
+            <View style={styles.skeletonBody}>
+              <View style={[styles.skeletonLine, { width: '55%' }]} />
+              <View
+                style={[styles.skeletonLine, { width: '40%', marginTop: 8 }]}
+              />
+            </View>
+          </View>
+        ))}
       </View>
     );
   }
@@ -148,18 +221,24 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
         </View>
         <Text style={styles.emptyTitle}>No tienes órdenes asignadas</Text>
         <Text style={styles.emptySubtitle}>
-          Cuando te asignen una orden aparecerá aquí. Si conoces el código, puedes
-          cargarla manualmente.
+          Cuando te asignen una orden aparecerá aquí. Desliza hacia abajo para
+          volver a comprobar.
         </Text>
+        {/* CTA outlined: el camino del codigo manual es secundario, no la
+            accion principal del conductor. */}
         <TouchableOpacity
-          style={styles.cta}
+          style={styles.ctaOutline}
           onPress={onCargarPorCodigo}
-          activeOpacity={0.85}
+          activeOpacity={0.7}
+          accessibilityRole="button"
         >
-          <Ionicons name="keypad-outline" size={18} color="#FFFFFF" />
-          <Text style={styles.ctaText}>Cargar por código</Text>
+          <Ionicons
+            name="keypad-outline"
+            size={16}
+            color={authColors.brandInk}
+          />
+          <Text style={styles.ctaOutlineText}>Cargar por código</Text>
         </TouchableOpacity>
-        <Text style={styles.hint}>Desliza hacia abajo para volver a comprobar.</Text>
       </View>
     );
   }
@@ -183,8 +262,13 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
           style={styles.footerCta}
           onPress={onCargarPorCodigo}
           activeOpacity={0.7}
+          accessibilityRole="button"
         >
-          <Ionicons name="keypad-outline" size={16} color={authColors.brandInk} />
+          <Ionicons
+            name="keypad-outline"
+            size={16}
+            color={authColors.brandInk}
+          />
           <Text style={styles.footerCtaText}>Cargar por código</Text>
         </TouchableOpacity>
       }
@@ -199,10 +283,83 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 12,
     paddingBottom: 24,
   },
+  // ----- Card -----
   card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingLeft: 14,
+    paddingRight: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: authColors.border,
+    gap: 12,
+    overflow: 'hidden',
+  },
+  cardActual: {
+    borderColor: authColors.brandInk,
+    backgroundColor: 'rgba(27, 155, 215, 0.04)',
+    paddingLeft: 18, // compensa la franja izquierda
+  },
+  cardActualAccent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    backgroundColor: authColors.brandInk,
+  },
+  cardIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(27, 155, 215, 0.10)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardBody: {
+    flex: 1,
+  },
+  cardHeadline: {
+    fontSize: 15.5,
+    fontWeight: '700',
+    color: authColors.ink,
+    letterSpacing: -0.1,
+  },
+  cardMeta: {
+    fontSize: 12.5,
+    color: authColors.inkSoft,
+    marginTop: 3,
+  },
+  metaActual: {
+    color: authColors.brandInk,
+    fontWeight: '700',
+  },
+  metaPausada: {
+    color: authColors.inkSoft,
+    fontWeight: '700',
+  },
+  metaId: {
+    color: authColors.inkMuted,
+  },
+  progresoLinea: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+  },
+  progresoTexto: {
+    fontSize: 12,
+    color: authColors.inkSoft,
+    fontWeight: '500',
+  },
+  // ----- Skeleton -----
+  skeletonCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
@@ -213,58 +370,25 @@ const styles = StyleSheet.create({
     borderColor: authColors.border,
     gap: 12,
   },
-  cardActual: {
-    borderColor: authColors.brandInk,
-    borderWidth: 1.5,
-    backgroundColor: 'rgba(27, 155, 215, 0.04)',
+  skeletonIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#EEF2F5',
   },
-  cardTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  actualChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
-    backgroundColor: authColors.brandInk,
-  },
-  actualChipText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    letterSpacing: 0.2,
-  },
-  cardIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(27, 155, 215, 0.10)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cardBody: {
+  skeletonBody: {
     flex: 1,
   },
-  cardCode: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: authColors.ink,
+  skeletonLine: {
+    height: 11,
+    borderRadius: 6,
+    backgroundColor: '#EEF2F5',
   },
-  cardMeta: {
-    fontSize: 13,
-    color: authColors.inkSoft,
-    marginTop: 2,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  // ----- Empty -----
   empty: {
     flex: 1,
     paddingHorizontal: 28,
-    paddingTop: 40,
+    paddingTop: 24,
     alignItems: 'center',
   },
   emptyIcon: {
@@ -291,27 +415,24 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 22,
   },
-  cta: {
+  ctaOutline: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    height: 50,
-    paddingHorizontal: 24,
-    borderRadius: 14,
-    backgroundColor: authColors.brandInk,
+    height: 44,
+    paddingHorizontal: 18,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: authColors.border,
+    backgroundColor: 'transparent',
     justifyContent: 'center',
   },
-  ctaText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFFFFF',
+  ctaOutlineText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: authColors.brandInk,
   },
-  hint: {
-    fontSize: 12,
-    color: authColors.inkMuted,
-    textAlign: 'center',
-    marginTop: 18,
-  },
+  // ----- Footer -----
   footerCta: {
     flexDirection: 'row',
     alignItems: 'center',

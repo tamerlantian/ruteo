@@ -101,10 +101,6 @@ export const NovedadesHeader: React.FC<NovedadesHeaderProps> = ({
 
   return (
     <View style={visitasStyles.header}>
-      <View style={visitasStyles.titleRow}>
-      <Text style={visitasStyles.title}>Novedades</Text>
-      </View>
-
       {hasNovedades && (
         <>
           <SimpleSearchWithScanner

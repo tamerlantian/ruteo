@@ -6,6 +6,7 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import CustomBottomSheet from '../../../../shared/components/bottom-sheet/bottom-sheet';
+import { AppBar, AppBarAction } from '../../../../shared/components/ui/app-bar/app-bar.component';
 import CargarOrdenComponent from '../../components/cargar-orden/cargar-orden.component';
 import { MisOrdenesComponent } from '../../components/mis-ordenes/mis-ordenes.component';
 import VisitaCardComponent from '../../components/visita-card/visita-card.component';
@@ -83,24 +84,50 @@ export const VisitasScreen = () => {
   return (
     <SafeAreaView style={visitasStyles.container}>
       {/* Header fijo - no se mueve con el scroll */}
-      <VisitasHeader
-        hasVisitas={hasVisitas}
-        hasOrdenCargada={hasOrdenCargada}
-        onOpenOptionsSheet={openOptionsSheet}
-        onAbrirCambiarOrden={openCambiarOrdenSheet}
-        activeFilter={activeFilter}
-        onFilterChange={onFilterChange}
-        pendingCount={pendingCount}
-        errorCount={errorCount}
-        erroresCount={erroresCount}
-        novedadesCount={novedadesCount}
-        deliveredCount={deliveredCount}
-        totalCount={totalCount}
-        searchValue={searchValue}
-        onSearchChange={onSearchChange}
-        onScanResult={onScanResult}
-        onClearFilters={onClearFilters}
+      <AppBar
+        title="Entregas"
+        subtitle={
+          hasOrdenCargada
+            ? `${deliveredCount} de ${totalCount} entregadas${
+                novedadesCount > 0
+                  ? ` · ${novedadesCount} novedad${
+                      novedadesCount === 1 ? '' : 'es'
+                    }`
+                  : ''
+              }`
+            : undefined
+        }
+        actions={
+          hasOrdenCargada ? (
+            <>
+              <AppBarAction
+                icon="swap-horizontal-outline"
+                label="Cambiar de orden"
+                onPress={openCambiarOrdenSheet}
+              />
+              <AppBarAction
+                icon="ellipsis-horizontal"
+                label="Más opciones"
+                onPress={openOptionsSheet}
+              />
+            </>
+          ) : undefined
+        }
       />
+      {hasOrdenCargada && (
+        <VisitasHeader
+          activeFilter={activeFilter}
+          onFilterChange={onFilterChange}
+          pendingCount={pendingCount}
+          errorCount={errorCount}
+          erroresCount={erroresCount}
+          novedadesCount={novedadesCount}
+          searchValue={searchValue}
+          onSearchChange={onSearchChange}
+          onScanResult={onScanResult}
+          onClearFilters={onClearFilters}
+        />
+      )}
       {/* Si hay orden cargada, mostrar las visitas; si no, las ordenes asignadas */}
       {hasOrdenCargada ? (
         <FlatList
