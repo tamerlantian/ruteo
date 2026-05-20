@@ -1,5 +1,12 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import React, { useMemo } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from 'react-native';
+import Ionicons from '@react-native-vector-icons/ionicons';
 
 export type FilterType =
   | 'pending'
@@ -18,26 +25,72 @@ interface FilterBadgesProps {
   entregadasCount: number;
 }
 
+interface FilterMeta {
+  key: FilterType;
+  label: string;
+  icon: string;
+  color: string; // color semantico del filtro
+  countTint: string; // bg del count pill en estado inactivo
+}
+
+/**
+ * Cada filtro tiene su "personalidad" cromatica — el conductor barre la fila
+ * y reconoce de un vistazo: azul = lo que esta por entregar, ambar = lo que
+ * espera reintento, rojo = lo que pidio intervencion, verde = lo cerrado.
+ */
+const FILTERS: FilterMeta[] = [
+  {
+    key: 'pending',
+    label: 'Pendientes',
+    icon: 'time-outline',
+    color: '#1B9BD7',
+    countTint: 'rgba(27, 155, 215, 0.12)',
+  },
+  {
+    key: 'error',
+    label: 'Sincronizar',
+    icon: 'sync-outline',
+    color: '#F59E0B',
+    countTint: 'rgba(245, 158, 11, 0.14)',
+  },
+  {
+    key: 'errores',
+    label: 'Errores',
+    icon: 'alert-circle-outline',
+    color: '#DC2626',
+    countTint: 'rgba(220, 38, 38, 0.12)',
+  },
+  {
+    key: 'entregadas',
+    label: 'Entregadas',
+    icon: 'checkmark-circle-outline',
+    color: '#1F7A38',
+    countTint: 'rgba(31, 122, 56, 0.12)',
+  },
+];
+
+const formatCount = (count: number) => (count > 99 ? '99+' : String(count));
+
 export const FilterBadges: React.FC<FilterBadgesProps> = ({
   activeFilter,
   onFilterChange,
   pendingCount,
   errorCount,
   erroresCount,
-  novedadesCount,
   entregadasCount,
 }) => {
-  const filters = [
-    { key: 'pending' as FilterType, label: 'Pendientes', count: pendingCount },
-    { key: 'error' as FilterType, label: 'Sincronizar', count: errorCount },
-    { key: 'errores' as FilterType, label: 'Errores', count: erroresCount },
-    {
-      key: 'entregadas' as FilterType,
-      label: 'Entregadas',
-      count: entregadasCount,
-    },
-    // { key: 'novedades' as FilterType, label: 'Novedades', count: novedadesCount },
-  ];
+  // Mapeamos el count vivo por filtro. Definirlo afuera del render evita
+  // recalcular en cada re-render.
+  const countsByFilter = useMemo<Record<FilterType, number>>(
+    () => ({
+      pending: pendingCount,
+      error: errorCount,
+      errores: erroresCount,
+      entregadas: entregadasCount,
+      novedades: 0,
+    }),
+    [pendingCount, errorCount, erroresCount, entregadasCount],
+  );
 
   return (
     <ScrollView
@@ -46,43 +99,74 @@ export const FilterBadges: React.FC<FilterBadgesProps> = ({
       contentContainerStyle={styles.scrollContainer}
       style={styles.container}
     >
-      {filters.map((filter) => (
-        <TouchableOpacity
-          key={filter.key}
-          style={[
-            styles.badge,
-            activeFilter === filter.key && styles.activeBadge,
-          ]}
-          onPress={() => onFilterChange(filter.key)}
-          activeOpacity={0.7}
-        >
-          <Text
+      {FILTERS.map((filter) => {
+        const count = countsByFilter[filter.key];
+        const isActive = activeFilter === filter.key;
+        const isEmpty = count === 0;
+
+        return (
+          <TouchableOpacity
+            key={filter.key}
             style={[
-              styles.badgeText,
-              activeFilter === filter.key && styles.activeBadgeText,
+              styles.chip,
+              isActive && {
+                backgroundColor: filter.color,
+                borderColor: filter.color,
+              },
+              !isActive && isEmpty && styles.chipEmpty,
             ]}
+            onPress={() => onFilterChange(filter.key)}
+            activeOpacity={0.75}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isActive }}
+            accessibilityLabel={`${filter.label}, ${count} ${
+              count === 1 ? 'visita' : 'visitas'
+            }`}
           >
-            {filter.label}
-          </Text>
-          {filter.count > 0 && (
-            <View
+            <Ionicons
+              name={filter.icon as any}
+              size={15}
+              color={
+                isActive
+                  ? '#FFFFFF'
+                  : isEmpty
+                    ? '#94A3B8'
+                    : filter.color
+              }
+            />
+            <Text
               style={[
-                styles.countBadge,
-                activeFilter === filter.key && styles.activeCountBadge,
+                styles.chipLabel,
+                isActive && styles.chipLabelActive,
+                !isActive && isEmpty && styles.chipLabelEmpty,
               ]}
             >
-              <Text
+              {filter.label}
+            </Text>
+            {count > 0 && (
+              <View
                 style={[
-                  styles.countText,
-                  activeFilter === filter.key && styles.activeCountText,
+                  styles.countPill,
+                  isActive
+                    ? styles.countPillActive
+                    : { backgroundColor: filter.countTint },
                 ]}
               >
-                {filter.count}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      ))}
+                <Text
+                  style={[
+                    styles.countText,
+                    isActive
+                      ? styles.countTextActive
+                      : { color: filter.color },
+                  ]}
+                >
+                  {formatCount(count)}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        );
+      })}
     </ScrollView>
   );
 };
@@ -94,48 +178,54 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexDirection: 'row',
     gap: 8,
+    paddingRight: 8,
   },
-  badge: {
+  chip: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: '#F5F5F5',
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#E5E7EB',
     gap: 6,
   },
-  activeBadge: {
-    backgroundColor: '#0066CC',
-    borderColor: '#0066CC',
+  chipEmpty: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#EEF2F6',
   },
-  badgeText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#666',
+  chipLabel: {
+    fontSize: 13.5,
+    fontWeight: '600',
+    color: '#334155',
+    letterSpacing: -0.1,
   },
-  activeBadgeText: {
+  chipLabelActive: {
     color: '#FFFFFF',
   },
-  countBadge: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    minWidth: 20,
+  chipLabelEmpty: {
+    color: '#94A3B8',
+    fontWeight: '500',
+  },
+  countPill: {
+    minWidth: 22,
     height: 20,
+    borderRadius: 10,
+    paddingHorizontal: 7,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 6,
+    marginLeft: 2,
   },
-  activeCountBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  countPillActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
   },
   countText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#0066CC',
+    fontSize: 11.5,
+    fontWeight: '800',
+    letterSpacing: 0.1,
   },
-  activeCountText: {
+  countTextActive: {
     color: '#FFFFFF',
   },
 });
