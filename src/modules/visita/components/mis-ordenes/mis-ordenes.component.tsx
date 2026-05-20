@@ -2,12 +2,12 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
-  FlatList,
+  SectionList,
   RefreshControl,
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import { BottomSheetSectionList } from '@gorhom/bottom-sheet';
 import { useFocusEffect } from '@react-navigation/native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import Toast from 'react-native-toast-message';
@@ -137,6 +137,38 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
     }, 0);
   }, [ordenesCombinadas, snapshots]);
 
+  // Ordenes COMPLETADAS (todas las visitas entregadas en la sesion local).
+  // Se renderizan en una seccion aparte abajo de las activas — el conductor
+  // puede revisar que entrego sin perder el foco de su trabajo pendiente.
+  const ordenesCompletadas = useMemo(() => {
+    const completadas = Object.values(snapshots)
+      .filter(snap => {
+        if (!snap?.entrega) {
+          return false;
+        }
+        const vs = snap.visitas || [];
+        const entregadas = vs.filter(v => v.estado_entregado).length;
+        return vs.length > 0 && entregadas >= vs.length;
+      })
+      .map(snap => snap.entrega as Entrega);
+    return completadas.sort((a, b) => {
+      if (!a.fecha) return 1;
+      if (!b.fecha) return -1;
+      return new Date(b.fecha).getTime() - new Date(a.fecha).getTime();
+    });
+  }, [snapshots]);
+
+  const secciones = useMemo(() => {
+    const ss: { titulo: 'activas' | 'completadas'; data: Entrega[] }[] = [];
+    if (ordenesCombinadas.length > 0) {
+      ss.push({ titulo: 'activas', data: ordenesCombinadas });
+    }
+    if (ordenesCompletadas.length > 0) {
+      ss.push({ titulo: 'completadas', data: ordenesCompletadas });
+    }
+    return ss;
+  }, [ordenesCombinadas, ordenesCompletadas]);
+
   const listHeader = useMemo(
     () => (
       <View style={styles.listHeader}>
@@ -160,9 +192,48 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
     setRefreshing(false);
   }, [obtenerOrdenes]);
 
-  const renderItem = ({ item }: { item: Entrega }) => {
+  const renderItem = ({
+    item,
+    section,
+  }: {
+    item: Entrega;
+    section: { titulo: 'activas' | 'completadas' };
+  }) => {
     const peso = Math.round(item.peso || 0);
     const totalVisitas = item.visitas;
+
+    if (section.titulo === 'completadas') {
+      return (
+        <TouchableOpacity
+          style={[styles.card, styles.cardCompletada]}
+          onPress={() => onSeleccionOrden(item)}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel={`Orden ${item.id} completada, ${totalVisitas} entregadas`}
+        >
+          <View style={styles.cardIconCompletada}>
+            <Ionicons name="checkmark-circle" size={22} color="#1F7A38" />
+          </View>
+          <View style={styles.cardBody}>
+            <Text style={styles.cardHeadlineCompletada}>
+              {totalVisitas} entregada{totalVisitas === 1 ? '' : 's'}
+              {peso > 0 ? ` · ${peso.toLocaleString('es')} kg` : ''}
+            </Text>
+            <Text style={styles.cardMeta}>
+              <Text style={styles.metaCompletada}>Completada · </Text>
+              {formatearFecha(item.fecha)}
+              {item.fecha ? ' · ' : ''}
+              <Text style={styles.metaId}>#{item.id}</Text>
+            </Text>
+          </View>
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color={authColors.inkMuted}
+          />
+        </TouchableOpacity>
+      );
+    }
 
     // Entregadas locales si hay snapshot con datos, sino lo que reporta el
     // server (estado consistente entre sesiones / dispositivos).
@@ -254,7 +325,7 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
     );
   }
 
-  if (ordenesCombinadas.length === 0) {
+  if (ordenesCombinadas.length === 0 && ordenesCompletadas.length === 0) {
     return (
       <View style={styles.empty}>
         <View style={styles.emptyIcon}>
@@ -284,18 +355,30 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
     );
   }
 
-  // Adentro de un CustomBottomSheet hay que usar BottomSheetFlatList:
-  // sino el gesto del sheet (PanGestureHandler) intercepta los taps de las
-  // cards y la lista no responde — el conductor termina creyendo que la
-  // accion no funciona y forzando un Desvincular para "salir" del sheet.
-  const Lista: any = enBottomSheet ? BottomSheetFlatList : FlatList;
+  // Adentro de un CustomBottomSheet hay que usar la variante de Gorhom para
+  // que el gesto del sheet no se coma los taps de las cards.
+  const Lista: any = enBottomSheet ? BottomSheetSectionList : SectionList;
   return (
     <Lista
-      data={ordenesCombinadas}
+      sections={secciones}
       renderItem={renderItem}
+      renderSectionHeader={({
+        section,
+      }: {
+        section: { titulo: 'activas' | 'completadas'; data: Entrega[] };
+      }) =>
+        section.titulo === 'completadas' ? (
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionHeaderText}>
+              Completadas · {section.data.length}
+            </Text>
+          </View>
+        ) : null
+      }
       keyExtractor={(item: Entrega) => `${item.id}`}
       contentContainerStyle={styles.list}
       ListHeaderComponent={listHeader}
+      stickySectionHeadersEnabled={false}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -336,6 +419,18 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     fontWeight: '600',
     color: authColors.inkSoft,
+  },
+  // ----- Section header -----
+  sectionHeader: {
+    paddingTop: 18,
+    paddingBottom: 8,
+  },
+  sectionHeaderText: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: authColors.inkMuted,
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
   },
   // ----- Card -----
   card: {
@@ -381,6 +476,29 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: authColors.ink,
     letterSpacing: -0.1,
+  },
+  // ----- Variantes para card completada -----
+  cardCompletada: {
+    backgroundColor: '#F7FAF8',
+    borderColor: '#E0EAE3',
+  },
+  cardIconCompletada: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(31, 122, 56, 0.10)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardHeadlineCompletada: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: authColors.inkSoft,
+    letterSpacing: -0.1,
+  },
+  metaCompletada: {
+    color: '#1F7A38',
+    fontWeight: '700',
   },
   cardMeta: {
     fontSize: 12.5,
