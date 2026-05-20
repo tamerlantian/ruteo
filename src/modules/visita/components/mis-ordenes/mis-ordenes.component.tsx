@@ -149,22 +149,29 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
 
   const renderItem = ({ item }: { item: Entrega }) => {
     const peso = Math.round(item.peso || 0);
+    const totalVisitas = item.visitas;
 
-    // "En curso" solo cuando hay progreso REAL en la sesion local — al menos
-    // una visita entregada. Solo "abrir y cerrar" la orden no la deja en
-    // curso, porque no hubo trabajo de campo.
+    // Entregadas locales si hay snapshot con datos, sino lo que reporta el
+    // server (estado consistente entre sesiones / dispositivos).
     const snapshot = snapshots[item.id];
     const localEntregadas = snapshot
       ? snapshot.visitas.filter(v => v.estado_entregado).length
       : 0;
-    const localTotal = snapshot ? snapshot.visitas.length : 0;
-    const tieneEnCurso = !!snapshot && localEntregadas > 0;
-
-    // Si no hay progreso local pero el server reporta progreso parcial (otra
-    // sesion, otro dispositivo, etc.) mantenemos el indicador del server.
     const serverEntregadas = Math.round(item.visitas_entregadas || 0);
-    const tieneProgresoServer =
-      !tieneEnCurso && serverEntregadas > 0 && serverEntregadas < item.visitas;
+    const entregadas =
+      snapshot && snapshot.visitas.length > 0
+        ? localEntregadas
+        : serverEntregadas;
+    const pendientes = Math.max(0, totalVisitas - entregadas);
+    const tieneEnCurso = entregadas > 0 && entregadas < totalVisitas;
+
+    // Headline: la metrica accionable cambia segun el progreso.
+    //   - Sin progreso  -> "N visitas · Y kg" (la carga total del dia).
+    //   - Con progreso  -> "N pendientes · Y kg" (lo que FALTA entregar — coincide
+    //                       con lo que el conductor ve al entrar al detalle).
+    const headline = tieneEnCurso
+      ? `${pendientes} pendiente${pendientes === 1 ? '' : 's'}`
+      : `${totalVisitas} visita${totalVisitas === 1 ? '' : 's'}`;
 
     return (
       <TouchableOpacity
@@ -172,14 +179,18 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
         onPress={() => onSeleccionOrden(item)}
         activeOpacity={0.85}
         accessibilityRole="button"
-        accessibilityLabel={`Orden ${item.id}, ${item.visitas} visitas`}
+        accessibilityLabel={
+          tieneEnCurso
+            ? `Orden ${item.id}, ${pendientes} pendientes de ${totalVisitas}`
+            : `Orden ${item.id}, ${totalVisitas} visitas`
+        }
       >
         <View style={styles.cardIcon}>
           <Ionicons name="cube-outline" size={22} color={authColors.brandInk} />
         </View>
         <View style={styles.cardBody}>
           <Text style={styles.cardHeadline}>
-            {item.visitas} visita{item.visitas === 1 ? '' : 's'}
+            {headline}
             {peso > 0 ? ` · ${peso.toLocaleString('es')} kg` : ''}
           </Text>
           <Text style={styles.cardMeta}>
@@ -198,19 +209,7 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
                 color={authColors.inkSoft}
               />
               <Text style={styles.progresoTexto}>
-                {localEntregadas} de {localTotal} entregadas
-              </Text>
-            </View>
-          )}
-          {tieneProgresoServer && (
-            <View style={styles.progresoLinea}>
-              <Ionicons
-                name="checkmark-circle-outline"
-                size={13}
-                color={authColors.inkSoft}
-              />
-              <Text style={styles.progresoTexto}>
-                {serverEntregadas} de {item.visitas} entregadas
+                {entregadas} de {totalVisitas} entregadas
               </Text>
             </View>
           )}
