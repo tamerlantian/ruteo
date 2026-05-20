@@ -112,12 +112,15 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
     });
   }, [ordenes, snapshots]);
 
-  // Conteo de ordenes "en curso" = con snapshot local que tiene visitas
-  // (el conductor ya entro al menos una vez y se cargaron los datos).
+  // Conteo de "en curso" = con al menos una visita entregada localmente.
+  // Coincide con cuando la card muestra el chip "En curso".
   const conteoEnCurso = useMemo(() => {
     return ordenesCombinadas.reduce((acc, o) => {
       const snap = snapshots[o.id];
-      return acc + (snap && snap.visitas.length > 0 ? 1 : 0);
+      const entregadas = snap
+        ? snap.visitas.filter(v => v.estado_entregado).length
+        : 0;
+      return acc + (entregadas > 0 ? 1 : 0);
     }, 0);
   }, [ordenesCombinadas, snapshots]);
 
@@ -147,21 +150,21 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
   const renderItem = ({ item }: { item: Entrega }) => {
     const peso = Math.round(item.peso || 0);
 
-    // Si hay snapshot local del despacho, mostramos el progreso DEL CONDUCTOR
-    // (no el del server) — refleja lo que realmente lleva entregado en su
-    // sesion local.
+    // "En curso" solo cuando hay progreso REAL en la sesion local — al menos
+    // una visita entregada. Solo "abrir y cerrar" la orden no la deja en
+    // curso, porque no hubo trabajo de campo.
     const snapshot = snapshots[item.id];
     const localEntregadas = snapshot
       ? snapshot.visitas.filter(v => v.estado_entregado).length
       : 0;
     const localTotal = snapshot ? snapshot.visitas.length : 0;
-    const tienePausa = !!snapshot && localTotal > 0;
+    const tieneEnCurso = !!snapshot && localEntregadas > 0;
 
-    // Si no hay snapshot pero el server reporta progreso parcial (otra sesion,
-    // otro dispositivo, etc.) mantenemos el indicador anterior.
+    // Si no hay progreso local pero el server reporta progreso parcial (otra
+    // sesion, otro dispositivo, etc.) mantenemos el indicador del server.
     const serverEntregadas = Math.round(item.visitas_entregadas || 0);
     const tieneProgresoServer =
-      !tienePausa && serverEntregadas > 0 && serverEntregadas < item.visitas;
+      !tieneEnCurso && serverEntregadas > 0 && serverEntregadas < item.visitas;
 
     return (
       <TouchableOpacity
@@ -180,14 +183,14 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
             {peso > 0 ? ` · ${peso.toLocaleString('es')} kg` : ''}
           </Text>
           <Text style={styles.cardMeta}>
-            {tienePausa && (
-              <Text style={styles.metaPausada}>Pausada · </Text>
+            {tieneEnCurso && (
+              <Text style={styles.metaEnCurso}>En curso · </Text>
             )}
             {formatearFecha(item.fecha)}
             {item.fecha ? ' · ' : ''}
             <Text style={styles.metaId}>#{item.id}</Text>
           </Text>
-          {tienePausa && (
+          {tieneEnCurso && (
             <View style={styles.progresoLinea}>
               <Ionicons
                 name="checkmark-circle-outline"
@@ -195,7 +198,7 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
                 color={authColors.inkSoft}
               />
               <Text style={styles.progresoTexto}>
-                {localEntregadas} de {localTotal} entregadas en tu sesión
+                {localEntregadas} de {localTotal} entregadas
               </Text>
             </View>
           )}
@@ -376,8 +379,8 @@ const styles = StyleSheet.create({
     color: authColors.brandInk,
     fontWeight: '700',
   },
-  metaPausada: {
-    color: authColors.inkSoft,
+  metaEnCurso: {
+    color: authColors.brandInk,
     fontWeight: '700',
   },
   metaId: {
