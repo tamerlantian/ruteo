@@ -82,6 +82,7 @@ export const DashboardScreen = () => {
     let erroresTotal = 0;
     let erroresRetryablesTotal = 0;
     let ordenesEnCurso = 0;
+    let totalActivas = 0;
 
     Object.values(snapshots).forEach(snap => {
       if (!snap?.entrega) {
@@ -93,6 +94,7 @@ export const DashboardScreen = () => {
       if (vs.length > 0 && entregadas >= vs.length) {
         return;
       }
+      totalActivas += 1;
       visitasTotal += vs.length;
       entregadasTotal += entregadas;
       pendientesTotal += vs.filter(
@@ -120,10 +122,11 @@ export const DashboardScreen = () => {
       erroresTotal,
       erroresRetryablesTotal,
       ordenesEnCurso,
+      totalActivas,
       progreso,
     };
   }, [snapshots]);
-  const hayActividad = agregado.ordenesEnCurso > 0 || agregado.visitasTotal > 0;
+  const hayActividad = agregado.totalActivas > 0;
 
   // === Auto-stop de geolocation cuando no quedan pendientes ===
   useEffect(() => {
@@ -271,9 +274,9 @@ export const DashboardScreen = () => {
         title="Inicio"
         subtitle={
           hayActividad
-            ? `${agregado.ordenesEnCurso} ${
-                agregado.ordenesEnCurso === 1 ? 'orden' : 'órdenes'
-              } en curso`
+            ? `${agregado.totalActivas} ${
+                agregado.totalActivas === 1 ? 'orden activa' : 'órdenes activas'
+              }`
             : undefined
         }
       />
@@ -296,13 +299,13 @@ export const DashboardScreen = () => {
                 </View>
                 <View style={styles.heroBody}>
                   <Text style={styles.heroTitulo}>
-                    {agregado.ordenesEnCurso === 0
-                      ? `${Object.keys(snapshots).length} ${
-                          Object.keys(snapshots).length === 1 ? 'orden' : 'órdenes'
-                        }`
-                      : `${agregado.ordenesEnCurso} ${
+                    {agregado.ordenesEnCurso > 0
+                      ? `${agregado.ordenesEnCurso} ${
                           agregado.ordenesEnCurso === 1 ? 'orden' : 'órdenes'
-                        } en curso`}
+                        } en curso`
+                      : `${agregado.totalActivas} ${
+                          agregado.totalActivas === 1 ? 'orden' : 'órdenes'
+                        }`}
                   </Text>
                   <Text style={styles.heroSubtitulo}>
                     {agregado.entregadasTotal} de {agregado.visitasTotal}{' '}
