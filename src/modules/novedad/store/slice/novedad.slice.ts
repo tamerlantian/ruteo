@@ -46,6 +46,20 @@ const novedadSlice = createSlice({
         entrega: entrega ?? state.snapshotsByDespacho[entregaId]?.entrega,
       };
     },
+    /** Crea snapshot VACIO con solo la metadata. Ver visita.slice. */
+    agregarOrdenALaListaNovedad: (
+      state,
+      action: PayloadAction<{ entregaId: number; entrega: Entrega }>,
+    ) => {
+      if (!state.snapshotsByDespacho) {
+        state.snapshotsByDespacho = {};
+      }
+      const { entregaId, entrega } = action.payload;
+      const existente = state.snapshotsByDespacho[entregaId];
+      state.snapshotsByDespacho[entregaId] = existente
+        ? { ...existente, entrega }
+        : { novedades: [], seleccionadas: [], entrega };
+    },
     /** Restaura el snapshot del despacho (o limpia si no hay). */
     restaurarSnapshotNovedades: (state, action: PayloadAction<number | null>) => {
       if (action.payload === null) {
@@ -209,5 +223,6 @@ export const {
   restaurarSnapshotNovedades,
   descartarSnapshotNovedades,
   descartarSnapshotsNovedadesExcepto,
+  agregarOrdenALaListaNovedad,
 } = novedadSlice.actions;
 export default novedadSlice.reducer;

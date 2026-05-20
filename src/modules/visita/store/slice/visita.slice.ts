@@ -267,6 +267,26 @@ const visitaSlice = createSlice({
       };
     },
     /**
+     * Crea un snapshot VACIO con solo la metadata de la entrega. Para el
+     * caso "Cargar por codigo": el conductor agrega una orden a la lista sin
+     * navegar al detalle todavia, no hay visitas locales que guardar — y NO
+     * queremos heredar state.visitas residual de la orden anterior.
+     */
+    agregarOrdenALaLista: (
+      state,
+      action: PayloadAction<{ entregaId: number; entrega: Entrega }>,
+    ) => {
+      if (!state.snapshotsByDespacho) {
+        state.snapshotsByDespacho = {};
+      }
+      const { entregaId, entrega } = action.payload;
+      const existente = state.snapshotsByDespacho[entregaId];
+      // Si ya existia (re-add) preservamos visitas/selecciones locales.
+      state.snapshotsByDespacho[entregaId] = existente
+        ? { ...existente, entrega }
+        : { visitas: [], seleccionadas: [], entrega };
+    },
+    /**
      * Restaura el snapshot guardado del despacho (o limpia si no hay).
      * El refetch posterior (cargarVisitasThunk.fulfilled) mergeara campos del
      * server sin pisar lo local.
@@ -393,5 +413,6 @@ export const {
   restaurarSnapshotVisitas,
   descartarSnapshotVisitas,
   descartarSnapshotsVisitasExcepto,
+  agregarOrdenALaLista,
 } = visitaSlice.actions;
 export default visitaSlice.reducer;

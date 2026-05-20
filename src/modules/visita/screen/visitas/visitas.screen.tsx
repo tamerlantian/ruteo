@@ -17,8 +17,8 @@ import { visitasStyles } from './visitas.style';
 import { Entrega } from '../../../vertical/interfaces/entrega.interface';
 import { MainStackParamList } from '../../../../navigation/types';
 import { useAppDispatch } from '../../../../store/hooks';
-import { guardarSnapshotVisitas } from '../../store/slice/visita.slice';
-import { guardarSnapshotNovedades } from '../../../novedad/store/slice/novedad.slice';
+import { agregarOrdenALaLista } from '../../store/slice/visita.slice';
+import { agregarOrdenALaListaNovedad } from '../../../novedad/store/slice/novedad.slice';
 import { toastTextOneStyle } from '../../../../shared/styles/global.style';
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
@@ -52,12 +52,12 @@ export const VisitasScreen = () => {
   const onEntregaResueltaPorCodigo = useCallback(
     (entrega: Entrega) => {
       closeCargarOrdenSheet();
-      // Agregamos a la lista (sin navegar) creando un snapshot vacio con la
-      // metadata de la entrega — MisOrdenes hace el surfacing via `entrega`.
-      // El conductor ve la card aparecer en su lista y decide cuando tocarla
-      // para entrar al detalle (donde recien se carga visitas del server).
-      dispatch(guardarSnapshotVisitas({ entregaId: entrega.id, entrega }));
-      dispatch(guardarSnapshotNovedades({ entregaId: entrega.id, entrega }));
+      // Agregamos a la lista usando un snapshot VACIO con la metadata. NO
+      // usamos guardarSnapshot porque ese copia state.visitas, que puede
+      // tener datos residuales de la orden anterior. agregarOrdenALaLista
+      // explicitamente arranca vacio.
+      dispatch(agregarOrdenALaLista({ entregaId: entrega.id, entrega }));
+      dispatch(agregarOrdenALaListaNovedad({ entregaId: entrega.id, entrega }));
       Toast.show({
         type: 'success',
         text1: `Orden #${entrega.id} agregada a tu lista`,

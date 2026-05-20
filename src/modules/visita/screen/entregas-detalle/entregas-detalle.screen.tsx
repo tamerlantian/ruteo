@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { FlatList, ListRenderItem } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
@@ -23,10 +23,14 @@ import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import {
   guardarSnapshotVisitas,
   restaurarSnapshotVisitas,
+  removerVisitas,
+  descartarSnapshotVisitas,
 } from '../../store/slice/visita.slice';
 import {
   guardarSnapshotNovedades,
   restaurarSnapshotNovedades,
+  limpiarNovedades,
+  descartarSnapshotNovedades,
 } from '../../../novedad/store/slice/novedad.slice';
 import { useCargarOrden } from '../../hooks/use-cargar-orden.hook';
 import { backgroundGeolocationService } from '../../../../shared/services';
@@ -60,6 +64,9 @@ export const EntregasDetalleScreen = () => {
   const cargarOrden = useCargarOrden();
   const { entrega } = route.params;
   const entregaId = entrega.id;
+  // Si el conductor desvinculo, los snapshots ya se borraron — el unmount
+  // NO debe re-crearlos. Este ref lo gobierna.
+  const desvinculadoRef = useRef(false);
 
   useEffect(() => {
     // Restaura snapshot (no-op si no hay) y carga la orden contra el server.
@@ -71,10 +78,18 @@ export const EntregasDetalleScreen = () => {
     });
 
     return () => {
-      // Al desmontar (back), pausamos la orden: snapshot (con metadata
-      // de la entrega, asi MisOrdenes puede mostrarla) + detener tracking.
+      if (desvinculadoRef.current) {
+        // Desvinculacion explicita: ya se borraron snapshots y state.
+        backgroundGeolocationService.cleanup().catch(() => {});
+        return;
+      }
+      // Back normal: pausamos la orden (snapshot con metadata) y limpiamos
+      // state.visitas/novedades para que la proxima Detail no herede los
+      // datos residuales de esta.
       dispatch(guardarSnapshotVisitas({ entregaId, entrega }));
       dispatch(guardarSnapshotNovedades({ entregaId, entrega }));
+      dispatch(removerVisitas());
+      dispatch(limpiarNovedades());
       backgroundGeolocationService.cleanup().catch(() => {});
     };
   }, [entregaId, entrega, dispatch, cargarOrden]);
@@ -140,11 +155,16 @@ export const EntregasDetalleScreen = () => {
     navigation.goBack();
   }, [navigation]);
 
-  // Si confirmaron desvincular, ademas de limpiar redux volvemos a la lista.
+  // Si confirmaron desvincular: marcamos el flag para que el unmount NO
+  // recree el snapshot, borramos snapshots explicitamente, y volvemos a
+  // la lista. Asi la orden desaparece efectivamente.
   const onDesvincularConfirmado = useCallback(async () => {
+    desvinculadoRef.current = true;
     await confirmarDesvinculacion();
+    dispatch(descartarSnapshotVisitas(entregaId));
+    dispatch(descartarSnapshotNovedades(entregaId));
     navigation.goBack();
-  }, [confirmarDesvinculacion, navigation]);
+  }, [confirmarDesvinculacion, dispatch, entregaId, navigation]);
 
   return (
     <SafeAreaView style={visitasStyles.container}>

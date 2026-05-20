@@ -15,9 +15,7 @@ import Toast from 'react-native-toast-message';
 import { authColors } from '../../../auth/styles/auth.theme';
 import { verticalRepository } from '../../../vertical/repositories/vertical.repository';
 import { Entrega } from '../../../vertical/interfaces/entrega.interface';
-import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
-import { descartarSnapshotsVisitasExcepto } from '../../store/slice/visita.slice';
-import { descartarSnapshotsNovedadesExcepto } from '../../../novedad/store/slice/novedad.slice';
+import { useAppSelector } from '../../../../store/hooks';
 import { toastTextOneStyle } from '../../../../shared/styles/global.style';
 
 interface MisOrdenesComponentProps {
@@ -53,7 +51,6 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
   onSeleccionOrden,
   enBottomSheet = false,
 }) => {
-  const dispatch = useAppDispatch();
   /** Mapa de snapshots locales — permite mostrar "Pausada · X/Y" en cada card.
    *  ?? {} defiende rehidrataciones desde versiones sin snapshotsByDespacho. */
   const snapshots = useAppSelector(
@@ -67,10 +64,10 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
     try {
       const data = await verticalRepository.getMisDespachos();
       setOrdenes(data);
-      // Limpia snapshots de ordenes que el server ya no asigna.
-      const idsAMantener: number[] = data.map(e => e.id);
-      dispatch(descartarSnapshotsVisitasExcepto(idsAMantener));
-      dispatch(descartarSnapshotsNovedadesExcepto(idsAMantener));
+      // No descartamos snapshots aca: hacerlo cuando el server no las
+      // lista borra las ordenes que el conductor cargo por codigo (caso
+      // legitimo: admin/coordinador, o re-asignacion mid-ruta). La
+      // limpieza la hacemos explicita cuando el conductor desvincule.
     } catch (error: any) {
       Toast.show({
         type: 'error',
@@ -79,7 +76,7 @@ export const MisOrdenesComponent: React.FC<MisOrdenesComponentProps> = ({
         text1Style: toastTextOneStyle,
       });
     }
-  }, [dispatch]);
+  }, []);
 
   useEffect(() => {
     (async () => {
