@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
-    "ios": "react-native run-ios",
+    "ios": "react-native run-ios --list-devices",
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest"
@@ -30,6 +30,8 @@
     "react-native": "0.81.5",
     "react-native-background-fetch": "^4.2.8",
     "react-native-background-geolocation": "^4.19.3",
+    "react-native-blob-util": "^0.22.2",
+    "react-native-draggable-flatlist": "^4.0.3",
     "react-native-gesture-handler": "^2.26.1",
     "react-native-keyboard-controller": "1.19.6",
     "react-native-permissions": "^5.4.3",

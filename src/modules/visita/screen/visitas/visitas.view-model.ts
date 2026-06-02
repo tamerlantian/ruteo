@@ -26,6 +26,7 @@ import {
   limpiarSeleccionVisitas,
   seleccionarMultiplesVisitas,
   anularVisitasNoRetryables,
+  reordenarVisitasPendientes,
 } from '../../store/slice/visita.slice';
 import { VisitaResponse } from '../../interfaces/visita.interface';
 import { MainStackParamList } from '../../../../navigation/types';
@@ -227,6 +228,23 @@ export const useVisitasViewModel = () => {
     }
   }, [visitasSeleccionadasConDatosGuardados, reintentarVisitasConError]);
 
+  // Sincroniza TODAS las entregas pendientes de envío (retryables con datos
+  // guardados) sin que el conductor tenga que seleccionarlas una por una.
+  // Lo usa el banner de "pendientes por sincronizar" y el auto-sync.
+  const sincronizarTodo = useCallback(async () => {
+    const ids = visitasConErrorRetryables
+      .filter(visita => !!visita.datos_formulario_guardados)
+      .map(visita => visita.id);
+    if (ids.length === 0) {
+      return;
+    }
+    try {
+      await reintentarVisitasConError(ids);
+    } catch (error) {
+      console.error('Error al sincronizar todo:', error);
+    }
+  }, [visitasConErrorRetryables, reintentarVisitasConError]);
+
   const anularSelectedVisitas = useCallback(() => {
     if (visitasSeleccionadasNoRetryables.length === 0) {
       console.warn('No hay visitas no-retryables seleccionadas para anular');
@@ -257,6 +275,22 @@ export const useVisitasViewModel = () => {
     (item: VisitaResponse) => `visita-${item.id}`,
     [],
   );
+
+  // === ACCIONES DE REORDENAMIENTO (drag & drop) ===
+  // Recibe la nueva secuencia de visitas pendientes (tal como las entrega
+  // DraggableFlatList en onDragEnd) y persiste el orden manual del conductor.
+  const reordenarPendientes = useCallback(
+    (visitasOrdenadas: VisitaResponse[]) => {
+      dispatch(
+        reordenarVisitasPendientes(visitasOrdenadas.map(visita => visita.id)),
+      );
+    },
+    [dispatch],
+  );
+
+  // El drag solo tiene sentido en el filtro "Pendientes" y sin busqueda activa
+  // (con busqueda la lista es un subset y reordenar corromperia el orden global).
+  const canReorder = activeFilter === 'pending' && !searchValue.trim();
 
   // === ACCIONES DE FILTRO ===
   const handleFilterChange = useCallback(
@@ -424,6 +458,7 @@ export const useVisitasViewModel = () => {
     retrySelectedVisitas,
     reportNovedadSelectedVisitas,
     anularSelectedVisitas,
+    sincronizarTodo,
 
     // Estados de visitas no-retryables
     hasNonRetryableSelected: hayVisitasSeleccionadasNoRetryables,
@@ -434,6 +469,10 @@ export const useVisitasViewModel = () => {
 
     // Acciones de Filtro
     onFilterChange: handleFilterChange,
+
+    // Reordenamiento (drag & drop)
+    reordenarPendientes,
+    canReorder,
 
     // Optimizaciones de FlatList
     keyExtractor,

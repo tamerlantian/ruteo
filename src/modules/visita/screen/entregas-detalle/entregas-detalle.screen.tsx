@@ -1,5 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, ListRenderItem } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import DraggableFlatList, {
+  RenderItemParams,
+  ScaleDecorator,
+  DragEndParams,
+} from 'react-native-draggable-flatlist';
+import Ionicons from '@react-native-vector-icons/ionicons';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
@@ -15,6 +21,7 @@ import { VisitasHeader } from '../../components/visitas-header/visitas-header.co
 import { VisitasFloatingActions } from '../../components/visita-floating-actions/visitas-floating-actions.component';
 import { VisitasLoadingFooter } from '../../components/visitas-loading-footer/visitas-loading-footer.component';
 import { VisitasOptionsComponent } from '../../components/visitas-options/visitas-options.component';
+import { SyncBanner } from '../../components/sync-banner/sync-banner.component';
 import { ConfirmacionDesvincularComponent } from '../../components/confirmacion-desvincular/confirmacion-desvincular.component';
 import { VisitaDetalleEntregadaComponent } from '../../components/visita-detalle-entregada/visita-detalle-entregada.component';
 import {
@@ -35,6 +42,7 @@ import {
   descartarSnapshotNovedades,
 } from '../../../novedad/store/slice/novedad.slice';
 import { useCargarOrden } from '../../hooks/use-cargar-orden.hook';
+import { useAutoSync } from '../../hooks/use-auto-sync.hook';
 import { backgroundGeolocationService } from '../../../../shared/services';
 import { VisitaResponse } from '../../interfaces/visita.interface';
 import { Entrega } from '../../../vertical/interfaces/entrega.interface';
@@ -64,6 +72,8 @@ export const EntregasDetalleScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const dispatch = useAppDispatch();
   const cargarOrden = useCargarOrden();
+  // Reintenta solo las entregas "sin enviar" en cuanto vuelve la conexión.
+  useAutoSync();
   const { entrega } = route.params;
   const entregaId = entrega.id;
   // Si el conductor desvinculo, los snapshots ya se borraron — el unmount
@@ -130,6 +140,9 @@ export const EntregasDetalleScreen = () => {
     totalConErrorSeleccionadas,
     selectAllErrors,
     anularSelectedVisitas,
+    reordenarPendientes,
+    canReorder,
+    sincronizarTodo,
   } = useVisitasViewModel();
 
   // Si la orden ya esta completada al entrar (todas las visitas entregadas),
@@ -170,16 +183,57 @@ export const EntregasDetalleScreen = () => {
     setVisitaDetalle(null);
   }, []);
 
-  const renderVisitaItem: ListRenderItem<VisitaResponse> = useCallback(
-    ({ item, index }) => (
-      <VisitaCardComponent
-        visita={item}
-        index={index}
-        onVerDetalle={abrirDetalleEntrega}
-      />
+  const renderVisitaItem = useCallback(
+    ({ item, drag, isActive, getIndex }: RenderItemParams<VisitaResponse>) => (
+      <ScaleDecorator>
+        <VisitaCardComponent
+          visita={item}
+          index={getIndex() ?? 0}
+          onVerDetalle={abrirDetalleEntrega}
+          draggable={canReorder}
+          drag={drag}
+          isDragging={isActive}
+        />
+      </ScaleDecorator>
     ),
-    [abrirDetalleEntrega],
+    [abrirDetalleEntrega, canReorder],
   );
+
+  // Al soltar: persistimos la nueva secuencia de pendientes (solo aplica en
+  // el filtro "Pendientes" sin busqueda; el reducer ignora el resto por guard).
+  const handleDragEnd = useCallback(
+    ({ data }: DragEndParams<VisitaResponse>) => {
+      reordenarPendientes(data);
+    },
+    [reordenarPendientes],
+  );
+
+  // El banner de "sin sincronizar" lleva al filtro de la cola de envío.
+  const verPendientesSync = useCallback(
+    () => onFilterChange('error'),
+    [onFilterChange],
+  );
+
+  // Estado vacío del filtro "Sincronizar": dejar claro que no quedó nada
+  // pendiente de envío (antes se veía una lista vacía sin explicación).
+  const renderEmpty = useCallback(() => {
+    if (isLoading || activeFilter !== 'error') {
+      return null;
+    }
+    return (
+      <View style={emptyStyles.box}>
+        <Ionicons
+          name="checkmark-done-circle-outline"
+          size={44}
+          color="#1F7A38"
+        />
+        <Text style={emptyStyles.title}>Todo sincronizado</Text>
+        <Text style={emptyStyles.sub}>
+          No hay entregas pendientes de envío.
+        </Text>
+      </View>
+    );
+  }, [isLoading, activeFilter]);
 
   const contentContainerStyle = useMemo(
     () => ({
@@ -250,22 +304,32 @@ export const EntregasDetalleScreen = () => {
         onScanResult={onScanResult}
         onClearFilters={onClearFilters}
       />
-      <FlatList
+      <SyncBanner
+        pendientes={errorCount}
+        isSyncing={isRetryLoading}
+        onSincronizar={sincronizarTodo}
+        onVerPendientes={verPendientesSync}
+      />
+      <DraggableFlatList
         data={visitas}
         renderItem={renderVisitaItem}
         keyExtractor={keyExtractor}
+        onDragEnd={handleDragEnd}
+        dragItemOverflow
+        activationDistance={canReorder ? 12 : 10000}
+        ListEmptyComponent={renderEmpty}
         ListFooterComponent={<VisitasLoadingFooter isLoading={isLoading} />}
-        removeClippedSubviews={true}
+        removeClippedSubviews={false}
         maxToRenderPerBatch={listConfig.MAX_TO_RENDER_PER_BATCH}
         initialNumToRender={listConfig.INITIAL_NUM_TO_RENDER}
         windowSize={listConfig.WINDOW_SIZE}
         updateCellsBatchingPeriod={listConfig.UPDATE_CELLS_BATCHING_PERIOD}
         refreshing={refreshing}
         onRefresh={onRefresh}
+        containerStyle={visitasStyles.flatList}
         style={visitasStyles.flatList}
         contentContainerStyle={contentContainerStyle}
         showsVerticalScrollIndicator={false}
-        legacyImplementation={false}
       />
       {activeFilter !== 'novedades' && activeFilter !== 'entregadas' && (
         <VisitasFloatingActions
@@ -312,3 +376,25 @@ export const EntregasDetalleScreen = () => {
     </SafeAreaView>
   );
 };
+
+const emptyStyles = StyleSheet.create({
+  box: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 40,
+    paddingVertical: 60,
+    gap: 6,
+  },
+  title: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#1c1c1e',
+    marginTop: 6,
+  },
+  sub: {
+    fontSize: 13.5,
+    color: '#8e8e93',
+    textAlign: 'center',
+  },
+});

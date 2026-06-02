@@ -1,5 +1,6 @@
 import ImageResizer from '@bam.tech/react-native-image-resizer';
 import { PhotoData } from '../components/ui/photo-capture/PhotoCapture.types';
+import { persistFoto } from './photo-storage.util';
 
 /**
  * Utility class for handling image rotation based on EXIF orientation
@@ -45,11 +46,18 @@ export class ImageRotationUtil {
       console.log('✅ [ImageRotation] Rotation successful:', rotatedImage.uri);
       console.log('✅ [ImageRotation] New size:', rotatedImage.width, 'x', rotatedImage.height);
 
-      // Return new PhotoData with rotated image
-      return {
-        uri: rotatedImage.uri.startsWith('file://')
+      // El resizer escribe en el directorio TEMPORAL (Caches), que iOS purga.
+      // Copiamos a Documents (persistente) para que el reintento offline/auto-sync
+      // siempre encuentre el archivo. Ver photo-storage.util.ts.
+      const persistentUri = await persistFoto(
+        rotatedImage.uri.startsWith('file://')
           ? rotatedImage.uri
           : `file://${rotatedImage.uri}`,
+      );
+
+      // Return new PhotoData with rotated image
+      return {
+        uri: persistentUri,
         fileName: photoData.fileName || `rotated-${Date.now()}.jpg`,
         type: 'image/jpeg',
         fileSize: rotatedImage.size || 0,
@@ -60,10 +68,11 @@ export class ImageRotationUtil {
     } catch (error) {
       console.error('❌ [ImageRotation] Error rotating image:', error);
 
-      // If rotation fails, return original photo data
-      // This ensures the app continues to work even if rotation fails
+      // Si la rotacion falla, igual persistimos la foto ORIGINAL a Documents
+      // (no podemos dejarla en el temp volatil o el reintento fallaria).
       console.warn('⚠️ [ImageRotation] Falling back to original image');
-      return photoData;
+      const persistentUri = await persistFoto(photoData.uri);
+      return { ...photoData, uri: persistentUri };
     }
   }
 

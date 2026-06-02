@@ -247,6 +247,53 @@ const visitaSlice = createSlice({
       });
     },
     /**
+     * Reordena la lista de visitas PENDIENTES segun la nueva secuencia de ids
+     * que produce el drag & drop. Es 100% local (no toca el server) y persiste
+     * via redux-persist; el merge en cargarVisitasThunk.fulfilled preserva
+     * `orden`, asi que sobrevive a recargas y al escenario offline.
+     *
+     * Estrategia "slot-preserving": las visitas ya entregadas / con novedad
+     * conservan su posicion relativa dentro de la lista global ordenada por
+     * `orden`; solo las pendientes se reacomodan en sus propios slots segun la
+     * secuencia recibida. Al final se renumera 1..N preservando referencias.
+     */
+    reordenarVisitasPendientes: (state, action: PayloadAction<number[]>) => {
+      const idsEnNuevoOrden = action.payload;
+      const esPendiente = (v: VisitaResponse) =>
+        !v.estado_entregado && v.estado === 'pending' && !v.estado_novedad;
+
+      const pendientesPorId = new Map<number, VisitaResponse>();
+      state.visitas.forEach(v => {
+        if (esPendiente(v)) {
+          pendientesPorId.set(v.id, v);
+        }
+      });
+
+      const cola = idsEnNuevoOrden
+        .map(id => pendientesPorId.get(id))
+        .filter((v): v is VisitaResponse => v !== undefined);
+
+      // Guard: si la secuencia no cubre exactamente todas las pendientes
+      // (ej. el drag ocurrio con una busqueda activa que mostraba un subset),
+      // no aplicamos para no corromper el orden global.
+      if (cola.length !== pendientesPorId.size) {
+        return;
+      }
+
+      const ordenadas = [...state.visitas].sort((a, b) => a.orden - b.orden);
+      let qi = 0;
+      const resultado = ordenadas.map(v => (esPendiente(v) ? cola[qi++] : v));
+
+      const nuevoOrden = new Map<number, number>();
+      resultado.forEach((v, i) => nuevoOrden.set(v.id, i + 1));
+      state.visitas.forEach(v => {
+        const nuevo = nuevoOrden.get(v.id);
+        if (nuevo !== undefined && v.orden !== nuevo) {
+          v.orden = nuevo;
+        }
+      });
+    },
+    /**
      * Guarda el estado actual de visitas como snapshot del despacho indicado.
      * Se llama justo antes de cambiar a otra orden, para que al volver el
      * conductor encuentre su trabajo local (reorden + entregas pendientes de
@@ -424,6 +471,7 @@ export const {
   anularVisitasNoRetryables,
   setSyncing,
   moverVisitaLocal,
+  reordenarVisitasPendientes,
   guardarSnapshotVisitas,
   restaurarSnapshotVisitas,
   descartarSnapshotVisitas,

@@ -17,6 +17,7 @@ import {
 import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../shared/styles/global.style';
 import { reportBatchProcessingError } from '../../../shared/utils/sentry-helpers';
+import { deleteFotos } from '../../../shared/utils/photo-storage.util';
 
 /**
  * Configuración para el hook de procesamiento de visitas
@@ -60,6 +61,13 @@ export const useVisitaProcessing = () => {
       );
 
       if (result.success) {
+        // Borrar las fotos persistidas (ya se subieron OK) antes de limpiar
+        // los datos guardados. Best-effort, no bloquea.
+        const visitaOk = visitas.find(v => v.id === visitaId);
+        const fotosOk = visitaOk?.datos_formulario_guardados?.fotos;
+        if (fotosOk?.length) {
+          deleteFotos(fotosOk.map(f => f.uri));
+        }
         // Marcar como entregada y limpiar datos guardados
         dispatch(marcarVisitaComoEntregada(visitaId));
         dispatch(limpiarDatosFormularioDeVisita(visitaId));
@@ -153,6 +161,12 @@ export const useVisitaProcessing = () => {
         batchResult.results.forEach(result => {
           const { visitaId, success, error, apiError } = result;
           if (success) {
+            // Borrar fotos persistidas (ya subidas) — best-effort.
+            const visitaOk = visitas.find(v => v.id === visitaId);
+            const fotosOk = visitaOk?.datos_formulario_guardados?.fotos;
+            if (fotosOk?.length) {
+              deleteFotos(fotosOk.map(f => f.uri));
+            }
             dispatch(marcarVisitaComoEntregada(visitaId));
             dispatch(limpiarDatosFormularioDeVisita(visitaId));
           } else if (config.markErrorOnFailure) {

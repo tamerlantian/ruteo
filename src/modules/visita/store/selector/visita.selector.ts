@@ -12,12 +12,16 @@ export const selectVisitas = createSelector(
 export const selectVisitasPendientes = createSelector(
   [selectVisitas],
   visitas =>
-    visitas.filter(
-      visita =>
-        !visita.estado_entregado &&
-        visita.estado === 'pending' &&
-        !visita.estado_novedad,
-    ),
+    visitas
+      .filter(
+        visita =>
+          !visita.estado_entregado &&
+          visita.estado === 'pending' &&
+          !visita.estado_novedad,
+      )
+      // Respetar el orden manual del conductor (drag & drop). El reducer
+      // reordenarVisitasPendientes renumera `orden`; aca lo materializamos.
+      .sort((a, b) => a.orden - b.orden),
 );
 
 export const selectVisitasEntregadas = createSelector(

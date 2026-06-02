@@ -159,8 +159,8 @@ export const visitaCardStyle = StyleSheet.create({
   },
   containerWarning: {
     borderWidth: 2,
-    borderColor: '#ff9500',
-    backgroundColor: '#fffbf0',
+    borderColor: '#F59E0B',
+    backgroundColor: '#FFFBEB',
   },
   errorBadge: {
     backgroundColor: '#ff3b30',
@@ -172,7 +172,7 @@ export const visitaCardStyle = StyleSheet.create({
     gap: 4,
   },
   warningBadge: {
-    backgroundColor: '#ff9500',
+    backgroundColor: '#F59E0B',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -198,14 +198,14 @@ export const visitaCardStyle = StyleSheet.create({
   },
   warningBanner: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 6,
-    backgroundColor: '#fffbf0',
+    backgroundColor: '#FFFBEB',
     padding: 8,
     borderRadius: 8,
     marginTop: 8,
     borderLeftWidth: 3,
-    borderLeftColor: '#ff9500',
+    borderLeftColor: '#F59E0B',
   },
   errorText: {
     fontSize: 11,
@@ -215,7 +215,8 @@ export const visitaCardStyle = StyleSheet.create({
   },
   warningText: {
     fontSize: 11,
-    color: '#ff9500',
+    color: '#B45309',
+    fontWeight: '600',
     flex: 1,
     lineHeight: 16,
   },

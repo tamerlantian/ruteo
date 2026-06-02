@@ -14,9 +14,21 @@ interface VisitaCardProps {
   visita: VisitaResponse;
   index: number;
   onVerDetalle?: (visita: VisitaResponse) => void;
+  /** Habilita el reordenamiento por arrastre (solo filtro "Pendientes"). */
+  draggable?: boolean;
+  /** Inicia el gesto de arrastre (lo provee DraggableFlatList). */
+  drag?: () => void;
+  /** True mientras esta card es la que se esta arrastrando. */
+  isDragging?: boolean;
 }
 
-const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita, onVerDetalle }) => {
+const VisitaCardComponent = React.memo<VisitaCardProps>(({
+  visita,
+  onVerDetalle,
+  draggable = false,
+  drag,
+  isDragging = false,
+}) => {
   const dispatch = useAppDispatch();
   const isSelected = useAppSelector(selectIsVisitaSeleccionada(visita.id));
   const { openLocationInMaps } = useMaps();
@@ -83,8 +95,11 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita, onVerDetalle 
         isNonRetryableError && visitaCardStyle.containerError,
         isRetryableError && visitaCardStyle.containerWarning,
         visita.estado_entregado && moverStyles.containerEntregada,
+        isDragging && moverStyles.containerDragging,
       ]}
       onPress={handlePress}
+      onLongPress={draggable ? drag : undefined}
+      delayLongPress={180}
       activeOpacity={0.7}
     >
       <View style={visitaCardStyle.content}>
@@ -112,18 +127,34 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita, onVerDetalle 
             )}
             {isRetryableError && (
               <View style={visitaCardStyle.warningBadge}>
-                <Ionicons name="sync" size={12} color="#ffffff" />
-                <Text style={visitaCardStyle.errorBadgeText}>Sincronizar</Text>
+                <Ionicons name="cloud-offline-outline" size={12} color="#ffffff" />
+                <Text style={visitaCardStyle.errorBadgeText}>Sin enviar</Text>
               </View>
             )}
-            {puedeMover && (
+            {draggable ? (
               <TouchableOpacity
-                onPress={handleMoverPress}
+                onPressIn={drag}
+                onLongPress={drag}
+                delayLongPress={120}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                style={moverStyles.kebab}
+                style={moverStyles.dragHandle}
               >
-                <Ionicons name="ellipsis-vertical" size={18} color="#8e8e93" />
+                <Ionicons
+                  name="reorder-three-outline"
+                  size={22}
+                  color={isDragging ? '#0E7BB0' : '#8e8e93'}
+                />
               </TouchableOpacity>
+            ) : (
+              puedeMover && (
+                <TouchableOpacity
+                  onPress={handleMoverPress}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  style={moverStyles.kebab}
+                >
+                  <Ionicons name="ellipsis-vertical" size={18} color="#8e8e93" />
+                </TouchableOpacity>
+              )
             )}
           </View>
         </View>
@@ -154,12 +185,15 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({ visita, onVerDetalle 
           </View>
         )}
 
-        {/* Banner de error retryable */}
+        {/* Banner de "sin enviar": NO mostramos el error tecnico crudo
+            (ej. "Servidor fuera de linea") porque asusta y no aporta. El
+            conductor solo necesita saber que su entrega quedo guardada y
+            se enviara sola. */}
         {isRetryableError && (
           <View style={visitaCardStyle.warningBanner}>
-            <Ionicons name="sync" size={16} color="#ff9500" />
+            <Ionicons name="cloud-upload-outline" size={16} color="#B45309" />
             <Text style={visitaCardStyle.warningText}>
-              {visita.error_mensaje || 'Pendiente de reintento'}
+              Entrega guardada · se sincronizará automáticamente
             </Text>
           </View>
         )}
@@ -248,6 +282,22 @@ const moverStyles = StyleSheet.create({
     paddingHorizontal: 4,
     paddingVertical: 2,
     marginLeft: 4,
+  },
+  dragHandle: {
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    marginLeft: 4,
+  },
+  containerDragging: {
+    // Card "levantada" mientras se arrastra: sombra mas marcada y borde de
+    // acento para dejar claro que esta en modo reordenamiento.
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 8,
+    borderColor: '#0E7BB0',
+    borderWidth: 1.5,
   },
   containerEntregada: {
     // Atenuamos visualmente la card de una visita ya entregada: sigue

@@ -18,6 +18,7 @@ import {
   limpiarDatosFormularioDeVisita,
 } from '../../store/slice/visita.slice';
 import { useVisitaProcessing } from '../../hooks/use-visita-processing.hook';
+import { networkService } from '../../../../shared/services';
 import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../../shared/styles/global.style';
 
@@ -165,25 +166,51 @@ export const useEntregaFormViewModel = (
         }
       });
 
-      // 6. Mostrar mensajes según resultados
-      if (batchResult.successCount > 0 && batchResult.errorCount === 0) {
+      // 6. Feedback HONESTO segun el resultado. La distincion clave para el
+      //    conductor es: ¿se perdio algo, o quedo guardado para enviarse luego?
+      //    Un fallo "retryable" (sin conexion / servidor ocupado) NO es un
+      //    error desde su punto de vista: su trabajo esta a salvo y se
+      //    sincroniza solo. Por eso usamos tono informativo (no rojo) y copy
+      //    tranquilizador, y reservamos el rojo para lo que SI requiere accion.
+      const fallidas = batchResult.results.filter(r => !r.success);
+      const todasRecuperables =
+        fallidas.length > 0 &&
+        fallidas.every(r => (r.apiError?.isRetryable ?? true));
+
+      if (batchResult.errorCount === 0) {
         Toast.show({
           type: 'success',
-          text1: `${batchResult.successCount} entrega(s) exitosa(s)`,
+          text1: `${batchResult.successCount} entrega(s) registrada(s)`,
           text1Style: toastTextOneStyle,
         });
-      } else if (batchResult.errorCount > 0 && batchResult.successCount === 0) {
-        Toast.show({
-          type: 'error',
-          text1: 'Error en la entrega',
-          text2: 'La orden volverá a la lista. Puede reintentar.',
-          text1Style: toastTextOneStyle,
-        });
-      } else if (batchResult.errorCount > 0 && batchResult.successCount > 0) {
+      } else if (todasRecuperables) {
+        const online = await networkService.isConnected();
+        const n = fallidas.length;
+        const hayExitosas = batchResult.successCount > 0;
         Toast.show({
           type: 'info',
-          text1: `${batchResult.successCount} exitosa(s), ${batchResult.errorCount} fallida(s)`,
-          text2: 'Las órdenes con error volverán a la lista.',
+          text1: online
+            ? `${n} entrega(s) guardada(s) · se sincronizan en breve`
+            : `Sin conexión · ${n} entrega(s) guardada(s)`,
+          text2: online
+            ? 'El servidor está ocupado, se reintentarán solas.'
+            : hayExitosas
+              ? 'Las demás se enviarán al volver el internet.'
+              : 'Se enviarán automáticamente al volver el internet.',
+          text1Style: toastTextOneStyle,
+        });
+      } else if (batchResult.successCount > 0) {
+        Toast.show({
+          type: 'info',
+          text1: `${batchResult.successCount} registrada(s) · ${batchResult.errorCount} con error`,
+          text2: 'Revisa el filtro "Errores" para corregirlas.',
+          text1Style: toastTextOneStyle,
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'No se pudo registrar la entrega',
+          text2: 'Revisa el filtro "Errores" para corregir y reintentar.',
           text1Style: toastTextOneStyle,
         });
       }
