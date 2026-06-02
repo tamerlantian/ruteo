@@ -1,6 +1,19 @@
 import { updateApiBaseUrl } from '../../config/environment';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useAppDispatch } from '../../store/hooks';
+import {
+  removerVisitas,
+  limpiarSeleccionVisitas,
+  descartarSnapshotsVisitasExcepto,
+} from '../../modules/visita/store/slice/visita.slice';
+import {
+  limpiarNovedades,
+  limpiarSeleccionNovedades,
+  descartarSnapshotsNovedadesExcepto,
+} from '../../modules/novedad/store/slice/novedad.slice';
+import { resetSettings } from '../../modules/settings';
+import { backgroundGeolocationService } from '../services';
 
 // URLs de los endpoints
 export const ENDPOINTS = {
@@ -20,8 +33,26 @@ interface DevModeContextType {
 const DevModeContext = createContext<DevModeContextType | undefined>(undefined);
 
 export const DevModeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const dispatch = useAppDispatch();
   const [isDeveloperMode, setIsDeveloperMode] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  /**
+   * Limpia TODO el estado de sesión/orden al cambiar de entorno. Los datos de
+   * pruebas y producción son mundos distintos (otra base, otros despachos,
+   * otros tokens): si no se limpia, la orden del entorno anterior queda pegada
+   * (persistida en redux-persist) y reaparece tras cambiar de ambiente.
+   */
+  const limpiarSesionEntorno = () => {
+    dispatch(removerVisitas());
+    dispatch(limpiarSeleccionVisitas());
+    dispatch(descartarSnapshotsVisitasExcepto([]));
+    dispatch(limpiarNovedades());
+    dispatch(limpiarSeleccionNovedades());
+    dispatch(descartarSnapshotsNovedadesExcepto([]));
+    dispatch(resetSettings());
+    backgroundGeolocationService.cleanup().catch(() => {});
+  };
 
   // Carga el estado guardado al iniciar la aplicación
   useEffect(() => {
@@ -54,6 +85,8 @@ export const DevModeProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setIsDeveloperMode(newMode);
       // Actualizar inmediatamente la configuración
       updateApiBaseUrl(newMode);
+      // Cambió el entorno: descartar la orden/sesión del ambiente anterior.
+      limpiarSesionEntorno();
     } catch (error) {
       console.error('Error saving developer mode state:', error);
     }
