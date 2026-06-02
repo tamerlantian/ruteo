@@ -144,6 +144,18 @@ export const visitaCardStyle = StyleSheet.create({
     minWidth: 28,
     minHeight: 22,
   },
+  whatsappButton: {
+    backgroundColor: '#E7F9EF',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#BFE8CF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 28,
+    minHeight: 22,
+  },
   containerSelected: {
     backgroundColor: '#f0f8ff', // Azul muy suave
     borderWidth: 2,

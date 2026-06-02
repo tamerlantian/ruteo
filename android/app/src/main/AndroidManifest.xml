@@ -30,6 +30,20 @@
     <!-- PUBLICIDAD Y ANALÍTICA -->
     <uses-permission android:name="com.google.android.gms.permission.AD_ID"/> <!-- Acceso al identificador de anuncios de Google -->
 
+    <!-- Visibilidad de paquetes (Android 11+): permite abrir WhatsApp y marcar -->
+    <queries>
+        <package android:name="com.whatsapp" />
+        <package android:name="com.whatsapp.w4b" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
+        </intent>
+    </queries>
+
     <application
       android:name=".MainApplication"
       android:label="@string/app_name"

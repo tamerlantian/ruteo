@@ -11,6 +11,10 @@ export const API_URLS = {
 // Configuración de contacto
 export const WHATSAPP_NUMBER = '3106097801';
 
+// Código de país por defecto para construir enlaces de WhatsApp (Colombia = 57).
+// Los teléfonos de los clientes vienen en formato nacional, sin indicativo.
+export const DEFAULT_COUNTRY_CODE = '57';
+
 // La configuración del entorno con opciones para cambiar dinámicamente
 export const environment = {
   production: false,

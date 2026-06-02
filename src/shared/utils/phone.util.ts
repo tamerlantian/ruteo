@@ -63,6 +63,50 @@ export const formatPhoneNumber = (phoneNumber: string): string => {
 };
 
 /**
+ * Normaliza un teléfono a formato internacional para WhatsApp (solo dígitos,
+ * con código de país). Toma el primer número si vienen varios.
+ *
+ * @param phoneString - Teléfono(s) del cliente (formato libre/nacional)
+ * @param countryCode - Indicativo a anteponer si el número es nacional (def. 57)
+ * @returns Dígitos en formato internacional, o '' si no es válido
+ *
+ * @example
+ * toWhatsAppNumber('3001234567')        // '573001234567'
+ * toWhatsAppNumber('300 123 4567')      // '573001234567'
+ * toWhatsAppNumber('573001234567')      // '573001234567' (ya tenía indicativo)
+ * toWhatsAppNumber('3001234567-310...') // '573001234567' (toma el primero)
+ */
+export const toWhatsAppNumber = (
+  phoneString: string,
+  countryCode = '57',
+): string => {
+  const first = getFirstPhoneNumber(phoneString);
+  if (!first) return '';
+
+  let digits = first.replace(/\D/g, '');
+
+  // Prefijo de marcación internacional "00" -> quitarlo
+  if (digits.startsWith('00')) {
+    digits = digits.slice(2);
+  }
+
+  if (digits.length < 7) return '';
+
+  // Ya viene con el indicativo del país
+  if (digits.startsWith(countryCode) && digits.length > 10) {
+    return digits;
+  }
+
+  // Número nacional típico (Colombia: 10 dígitos) -> anteponer indicativo
+  if (digits.length === 10) {
+    return countryCode + digits;
+  }
+
+  // Fallback: si es largo asumimos que ya trae indicativo; si no, lo anteponemos
+  return digits.length > 10 ? digits : countryCode + digits;
+};
+
+/**
  * Valida si una cadena contiene un número de teléfono válido
  * 
  * @param phoneNumber - Cadena a validar

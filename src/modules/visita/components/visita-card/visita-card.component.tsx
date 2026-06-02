@@ -8,7 +8,14 @@ import { toggleVisitaSeleccion } from '../../store/slice/visita.slice'
 import { visitaCardStyle } from './visita-card.style'
 import { getFirstPhoneNumber } from '../../../../shared/utils/phone.util'
 import { useMaps } from '../../../../shared/hooks/use-maps.hook'
+import { useWhatsApp } from '../../../../shared/hooks/use-whatsapp.hook'
 import { useMoverVisita } from '../../hooks/use-mover-visita.hook'
+import { selectSubdominio } from '../../../settings'
+import { useAuth } from '../../../auth/context/auth.context'
+import {
+  buildEntregaWhatsAppMensaje,
+  prettifyEmpresa,
+} from '../../utils/whatsapp-message.util'
 
 interface VisitaCardProps {
   visita: VisitaResponse;
@@ -32,7 +39,10 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({
   const dispatch = useAppDispatch();
   const isSelected = useAppSelector(selectIsVisitaSeleccionada(visita.id));
   const { openLocationInMaps } = useMaps();
+  const { openChat } = useWhatsApp();
   const mostrarMenuMover = useMoverVisita();
+  const subdominio = useAppSelector(selectSubdominio);
+  const { user } = useAuth();
 
   const handlePress = () => {
     // Una visita ya entregada no se puede re-entregar. Si el caller registro
@@ -60,6 +70,22 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({
       const firstPhone = getFirstPhoneNumber(visita.destinatario_telefono);
       Linking.openURL(`tel:${firstPhone}`);
     }
+  };
+
+  const handleWhatsAppPress = (event: any) => {
+    event.stopPropagation();
+    if (!visita.destinatario_telefono) {
+      return;
+    }
+    // Abre el WhatsApp del conductor con un mensaje pre-cargado (editable) que
+    // se identifica con empresa + conductor para generar confianza.
+    const mensaje = buildEntregaWhatsAppMensaje({
+      clienteNombre: visita.destinatario,
+      empresaNombre: prettifyEmpresa(subdominio),
+      conductorNombre: user?.nombre_corto || user?.nombre,
+      numero: visita.numero,
+    });
+    openChat(visita.destinatario_telefono, mensaje);
   };
 
   const handleLocationPress = (event: any) => {
@@ -223,7 +249,7 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({
             <View style={visitaCardStyle.actionButtons}>
               {/* Botón de teléfono */}
               {displayPhone && (
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={visitaCardStyle.phoneButton}
                   onPress={handlePhonePress}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -232,6 +258,19 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({
                   <Text style={visitaCardStyle.phoneText}>
                     {displayPhone}
                   </Text>
+                </TouchableOpacity>
+              )}
+
+              {/* Botón de WhatsApp: abre el chat en el WhatsApp del conductor */}
+              {displayPhone && (
+                <TouchableOpacity
+                  style={visitaCardStyle.whatsappButton}
+                  onPress={handleWhatsAppPress}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Chatear por WhatsApp"
+                >
+                  <Ionicons name="logo-whatsapp" size={16} color="#25D366" />
                 </TouchableOpacity>
               )}
               
