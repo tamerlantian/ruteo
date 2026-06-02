@@ -10,12 +10,7 @@ import { getFirstPhoneNumber } from '../../../../shared/utils/phone.util'
 import { useMaps } from '../../../../shared/hooks/use-maps.hook'
 import { useWhatsApp } from '../../../../shared/hooks/use-whatsapp.hook'
 import { useMoverVisita } from '../../hooks/use-mover-visita.hook'
-import { selectSubdominio } from '../../../settings'
-import { useAuth } from '../../../auth/context/auth.context'
-import {
-  buildEntregaWhatsAppMensaje,
-  prettifyEmpresa,
-} from '../../utils/whatsapp-message.util'
+import { buildEntregaWhatsAppMensaje } from '../../utils/whatsapp-message.util'
 
 interface VisitaCardProps {
   visita: VisitaResponse;
@@ -27,6 +22,10 @@ interface VisitaCardProps {
   drag?: () => void;
   /** True mientras esta card es la que se esta arrastrando. */
   isDragging?: boolean;
+  /** Nombre de la empresa DE LA ORDEN (no del usuario): para el msg de WhatsApp. */
+  empresaNombre?: string;
+  /** Nombre del conductor (usuario logueado): para el msg de WhatsApp. */
+  conductorNombre?: string;
 }
 
 const VisitaCardComponent = React.memo<VisitaCardProps>(({
@@ -35,14 +34,14 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({
   draggable = false,
   drag,
   isDragging = false,
+  empresaNombre,
+  conductorNombre,
 }) => {
   const dispatch = useAppDispatch();
   const isSelected = useAppSelector(selectIsVisitaSeleccionada(visita.id));
   const { openLocationInMaps } = useMaps();
   const { openChat } = useWhatsApp();
   const mostrarMenuMover = useMoverVisita();
-  const subdominio = useAppSelector(selectSubdominio);
-  const { user } = useAuth();
 
   const handlePress = () => {
     // Una visita ya entregada no se puede re-entregar. Si el caller registro
@@ -78,11 +77,11 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({
       return;
     }
     // Abre el WhatsApp del conductor con un mensaje pre-cargado (editable) que
-    // se identifica con empresa + conductor para generar confianza.
+    // se identifica con empresa (DE LA ORDEN) + conductor para generar confianza.
     const mensaje = buildEntregaWhatsAppMensaje({
       clienteNombre: visita.destinatario,
-      empresaNombre: prettifyEmpresa(subdominio),
-      conductorNombre: user?.nombre_corto || user?.nombre,
+      empresaNombre,
+      conductorNombre,
       numero: visita.numero,
     });
     openChat(visita.destinatario_telefono, mensaje);

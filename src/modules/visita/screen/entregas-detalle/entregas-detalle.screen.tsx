@@ -43,9 +43,10 @@ import {
 } from '../../../novedad/store/slice/novedad.slice';
 import { useCargarOrden } from '../../hooks/use-cargar-orden.hook';
 import { useAutoSync } from '../../hooks/use-auto-sync.hook';
+import { useAuth } from '../../../auth/context/auth.context';
+import { prettifyEmpresa } from '../../utils/whatsapp-message.util';
 import { backgroundGeolocationService } from '../../../../shared/services';
 import { VisitaResponse } from '../../interfaces/visita.interface';
-import { Entrega } from '../../../vertical/interfaces/entrega.interface';
 import { MainStackParamList } from '../../../../navigation/types';
 import { useVisitasViewModel } from '../visitas/visitas.view-model';
 import { visitasStyles } from '../visitas/visitas.style';
@@ -183,6 +184,16 @@ export const EntregasDetalleScreen = () => {
     setVisitaDetalle(null);
   }, []);
 
+  // La empresa viene DE LA ORDEN (un conductor trabaja para varias). Hoy es el
+  // schema_name prettificado; cuando el back exponga el nombre real por orden,
+  // se cambia solo esta línea. El conductor es el usuario logueado.
+  const { user } = useAuth();
+  const empresaNombre = useMemo(
+    () => prettifyEmpresa(entrega.schema_name),
+    [entrega.schema_name],
+  );
+  const conductorNombre = user?.nombre_corto || user?.nombre || undefined;
+
   const renderVisitaItem = useCallback(
     ({ item, drag, isActive, getIndex }: RenderItemParams<VisitaResponse>) => (
       <ScaleDecorator>
@@ -193,10 +204,12 @@ export const EntregasDetalleScreen = () => {
           draggable={canReorder}
           drag={drag}
           isDragging={isActive}
+          empresaNombre={empresaNombre}
+          conductorNombre={conductorNombre}
         />
       </ScaleDecorator>
     ),
-    [abrirDetalleEntrega, canReorder],
+    [abrirDetalleEntrega, canReorder, empresaNombre, conductorNombre],
   );
 
   // Al soltar: persistimos la nueva secuencia de pendientes (solo aplica en
