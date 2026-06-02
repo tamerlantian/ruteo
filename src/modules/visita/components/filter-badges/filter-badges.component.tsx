@@ -67,6 +67,8 @@ const FILTERS: FilterMeta[] = [
     color: '#1F7A38',
     countTint: 'rgba(31, 122, 56, 0.12)',
   },
+  // Nota: "Novedades" NO es un chip aquí — es una vista del bottom nav de la
+  // orden (OrderBottomNav). Los chips quedan solo como sub-filtros de estado.
 ];
 
 const formatCount = (count: number) => (count > 99 ? '99+' : String(count));
@@ -78,6 +80,7 @@ export const FilterBadges: React.FC<FilterBadgesProps> = ({
   errorCount,
   erroresCount,
   entregadasCount,
+  novedadesCount,
 }) => {
   // Mapeamos el count vivo por filtro. Definirlo afuera del render evita
   // recalcular en cada re-render.
@@ -87,9 +90,9 @@ export const FilterBadges: React.FC<FilterBadgesProps> = ({
       error: errorCount,
       errores: erroresCount,
       entregadas: entregadasCount,
-      novedades: 0,
+      novedades: novedadesCount,
     }),
-    [pendingCount, errorCount, erroresCount, entregadasCount],
+    [pendingCount, errorCount, erroresCount, entregadasCount, novedadesCount],
   );
 
   return (

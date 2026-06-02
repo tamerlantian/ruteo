@@ -22,6 +22,12 @@ import { VisitasFloatingActions } from '../../components/visita-floating-actions
 import { VisitasLoadingFooter } from '../../components/visitas-loading-footer/visitas-loading-footer.component';
 import { VisitasOptionsComponent } from '../../components/visitas-options/visitas-options.component';
 import { SyncBanner } from '../../components/sync-banner/sync-banner.component';
+import { NovedadesBody } from '../../../novedad/components/novedades-body/novedades-body.component';
+import {
+  OrderBottomNav,
+  OrderVista,
+} from '../../components/order-bottom-nav/order-bottom-nav.component';
+import { RutaMapaView } from '../ruta-mapa/ruta-mapa-view.component';
 import { ConfirmacionDesvincularComponent } from '../../components/confirmacion-desvincular/confirmacion-desvincular.component';
 import { VisitaDetalleEntregadaComponent } from '../../components/visita-detalle-entregada/visita-detalle-entregada.component';
 import {
@@ -259,6 +265,9 @@ export const EntregasDetalleScreen = () => {
 
   // El back del native stack se maneja solo, pero ofrecemos un leading
   // explicito para que sea evidente al conductor.
+  // Vista activa del bottom nav de la orden (entregas / mapa / novedades).
+  const [vista, setVista] = useState<OrderVista>('entregas');
+
   const handleBack = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
@@ -304,61 +313,78 @@ export const EntregasDetalleScreen = () => {
           />
         }
       />
-      <VisitasHeader
-        activeFilter={activeFilter}
-        onFilterChange={onFilterChange}
-        pendingCount={pendingCount}
-        errorCount={errorCount}
-        erroresCount={erroresCount}
+      {/* Contenido por vista. Es flex:1 para que las acciones flotantes
+          (position absolute bottom:0) queden JUSTO encima del bottom nav. */}
+      <View style={styles.contenido}>
+        {vista === 'entregas' && (
+          <>
+            <VisitasHeader
+              activeFilter={activeFilter}
+              onFilterChange={onFilterChange}
+              pendingCount={pendingCount}
+              errorCount={errorCount}
+              erroresCount={erroresCount}
+              novedadesCount={novedadesCount}
+              entregadasCount={deliveredCount}
+              searchValue={searchValue}
+              onSearchChange={onSearchChange}
+              onScanResult={onScanResult}
+              onClearFilters={onClearFilters}
+            />
+            <SyncBanner
+              pendientes={errorCount}
+              isSyncing={isRetryLoading}
+              onSincronizar={sincronizarTodo}
+              onVerPendientes={verPendientesSync}
+            />
+            <DraggableFlatList
+              data={visitas}
+              renderItem={renderVisitaItem}
+              keyExtractor={keyExtractor}
+              onDragEnd={handleDragEnd}
+              dragItemOverflow
+              activationDistance={canReorder ? 12 : 10000}
+              ListEmptyComponent={renderEmpty}
+              ListFooterComponent={
+                <VisitasLoadingFooter isLoading={isLoading} />
+              }
+              removeClippedSubviews={false}
+              maxToRenderPerBatch={listConfig.MAX_TO_RENDER_PER_BATCH}
+              initialNumToRender={listConfig.INITIAL_NUM_TO_RENDER}
+              windowSize={listConfig.WINDOW_SIZE}
+              updateCellsBatchingPeriod={listConfig.UPDATE_CELLS_BATCHING_PERIOD}
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              containerStyle={visitasStyles.flatList}
+              style={visitasStyles.flatList}
+              contentContainerStyle={contentContainerStyle}
+              showsVerticalScrollIndicator={false}
+            />
+            {activeFilter !== 'entregadas' && (
+              <VisitasFloatingActions
+                totalSeleccionadas={totalSeleccionadas}
+                totalConError={totalConErrorSeleccionadas}
+                activeFilter={activeFilter}
+                isRetryLoading={isRetryLoading}
+                onClearSelection={clearSelection}
+                onDeliverVisitas={deliverSelectedVisitas}
+                onRetryVisitas={retrySelectedVisitas}
+                onNovedadVisitas={reportNovedadSelectedVisitas}
+                onAnularVisitas={anularSelectedVisitas}
+                onSelectAllErrors={selectAllErrors}
+                totalErrorsInFilter={errorCount}
+              />
+            )}
+          </>
+        )}
+        {vista === 'mapa' && <RutaMapaView />}
+        {vista === 'novedades' && <NovedadesBody />}
+      </View>
+      <OrderBottomNav
+        active={vista}
+        onChange={setVista}
         novedadesCount={novedadesCount}
-        entregadasCount={deliveredCount}
-        searchValue={searchValue}
-        onSearchChange={onSearchChange}
-        onScanResult={onScanResult}
-        onClearFilters={onClearFilters}
       />
-      <SyncBanner
-        pendientes={errorCount}
-        isSyncing={isRetryLoading}
-        onSincronizar={sincronizarTodo}
-        onVerPendientes={verPendientesSync}
-      />
-      <DraggableFlatList
-        data={visitas}
-        renderItem={renderVisitaItem}
-        keyExtractor={keyExtractor}
-        onDragEnd={handleDragEnd}
-        dragItemOverflow
-        activationDistance={canReorder ? 12 : 10000}
-        ListEmptyComponent={renderEmpty}
-        ListFooterComponent={<VisitasLoadingFooter isLoading={isLoading} />}
-        removeClippedSubviews={false}
-        maxToRenderPerBatch={listConfig.MAX_TO_RENDER_PER_BATCH}
-        initialNumToRender={listConfig.INITIAL_NUM_TO_RENDER}
-        windowSize={listConfig.WINDOW_SIZE}
-        updateCellsBatchingPeriod={listConfig.UPDATE_CELLS_BATCHING_PERIOD}
-        refreshing={refreshing}
-        onRefresh={onRefresh}
-        containerStyle={visitasStyles.flatList}
-        style={visitasStyles.flatList}
-        contentContainerStyle={contentContainerStyle}
-        showsVerticalScrollIndicator={false}
-      />
-      {activeFilter !== 'novedades' && activeFilter !== 'entregadas' && (
-        <VisitasFloatingActions
-          totalSeleccionadas={totalSeleccionadas}
-          totalConError={totalConErrorSeleccionadas}
-          activeFilter={activeFilter}
-          isRetryLoading={isRetryLoading}
-          onClearSelection={clearSelection}
-          onDeliverVisitas={deliverSelectedVisitas}
-          onRetryVisitas={retrySelectedVisitas}
-          onNovedadVisitas={reportNovedadSelectedVisitas}
-          onAnularVisitas={anularSelectedVisitas}
-          onSelectAllErrors={selectAllErrors}
-          totalErrorsInFilter={errorCount}
-        />
-      )}
       <CustomBottomSheet
         ref={optionsBottomSheetRef}
         enableDynamicSizing={false}
@@ -389,6 +415,10 @@ export const EntregasDetalleScreen = () => {
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  contenido: { flex: 1 },
+});
 
 const emptyStyles = StyleSheet.create({
   box: {

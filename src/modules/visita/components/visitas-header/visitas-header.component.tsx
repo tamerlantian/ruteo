@@ -18,6 +18,8 @@ interface VisitasHeaderProps {
   onSearchChange: (value: string) => void;
   onScanResult: (result: ScanResult) => void;
   onClearFilters: () => void;
+  /** Oculta la búsqueda de visitas (ej. en el filtro Novedades, que trae la suya). */
+  hideSearch?: boolean;
 }
 
 /**
@@ -38,16 +40,19 @@ export const VisitasHeader: React.FC<VisitasHeaderProps> = ({
   onSearchChange,
   onScanResult,
   onClearFilters,
+  hideSearch = false,
 }) => {
   return (
     <View style={visitasStyles.header}>
-      <SimpleSearchWithScanner
-        searchValue={searchValue}
-        onSearchChange={onSearchChange}
-        placeholder="Buscar # o documento"
-        onClear={onClearFilters}
-        onScanResult={onScanResult}
-      />
+      {!hideSearch && (
+        <SimpleSearchWithScanner
+          searchValue={searchValue}
+          onSearchChange={onSearchChange}
+          placeholder="Buscar # o documento"
+          onClear={onClearFilters}
+          onScanResult={onScanResult}
+        />
+      )}
       <FilterBadges
         activeFilter={activeFilter}
         onFilterChange={onFilterChange}

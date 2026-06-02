@@ -144,6 +144,12 @@ const VisitaCardComponent = React.memo<VisitaCardProps>(({
                 <Text style={moverStyles.entregadaBadgeText}>Entregada</Text>
               </View>
             )}
+            {visita.estado_novedad && (
+              <View style={moverStyles.novedadBadge}>
+                <Ionicons name="alert-circle" size={12} color="#FFFFFF" />
+                <Text style={moverStyles.entregadaBadgeText}>Novedad</Text>
+              </View>
+            )}
             {isNonRetryableError && (
               <View style={visitaCardStyle.errorBadge}>
                 <Ionicons name="alert-circle" size={12} color="#ffffff" />
@@ -351,6 +357,15 @@ const moverStyles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 999,
     backgroundColor: '#1F7A38',
+  },
+  novedadBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    backgroundColor: '#FB923C',
   },
   entregadaBadgeText: {
     fontSize: 10.5,
