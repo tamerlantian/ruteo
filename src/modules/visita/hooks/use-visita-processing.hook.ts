@@ -18,6 +18,7 @@ import Toast from 'react-native-toast-message';
 import { toastTextOneStyle } from '../../../shared/styles/global.style';
 import { reportBatchProcessingError } from '../../../shared/utils/sentry-helpers';
 import { deleteFotos } from '../../../shared/utils/photo-storage.util';
+import { networkService } from '../../../shared/services';
 
 /**
  * Configuración para el hook de procesamiento de visitas
@@ -159,7 +160,7 @@ export const useVisitaProcessing = () => {
 
         // Actualizar Redux para cada resultado
         batchResult.results.forEach(result => {
-          const { visitaId, success, error, apiError } = result;
+          const { visitaId, success } = result;
           if (success) {
             // Borrar fotos persistidas (ya subidas) — best-effort.
             const visitaOk = visitas.find(v => v.id === visitaId);
@@ -170,71 +171,36 @@ export const useVisitaProcessing = () => {
             dispatch(marcarVisitaComoEntregada(visitaId));
             dispatch(limpiarDatosFormularioDeVisita(visitaId));
           } else if (config.markErrorOnFailure) {
-            // Extraer mensaje de error como string
-            let errorMensaje = 'Error desconocido al procesar la entrega';
-            let esErrorRetryable = true; // Default a retryable por seguridad
-
-            if (error) {
-              if (typeof error === 'string') {
-                errorMensaje = error;
-              } else if (typeof error === 'object') {
-                // Si el error es un objeto, intentar extraer el mensaje
-                errorMensaje =
-                  error.mensaje ||
-                  error.message ||
-                  error.titulo ||
-                  JSON.stringify(error);
-              }
-            }
-
-            // Extraer clasificación del apiError si existe
-            if (apiError) {
-              esErrorRetryable = apiError.isRetryable ?? true;
-            }
+            // Extracción null-safe del mensaje + clasificación retryable.
+            const { mensaje, esRetryable } =
+              VisitaProcessingService.extraerErrorVisita(result);
 
             dispatch(
               cambiarEstadoVisita({
                 visitaId,
                 estado: 'error',
-                errorMensaje,
-                esErrorRetryable,
+                errorMensaje: mensaje,
+                esErrorRetryable: esRetryable,
               }),
             );
           }
         });
 
-        // Mostrar mensajes de resultado
-        const messageResult =
-          VisitaProcessingService.generarMensajesDeResultado(
-            batchResult.successCount,
-            batchResult.errorCount,
-            config.messagePrefix || 'operación',
-          );
-
-        if (messageResult) {
-          switch (messageResult.type) {
-            case 'success':
-              Toast.show({
-                type: 'success',
-                text1: messageResult.message,
-                text1Style: toastTextOneStyle,
-              });
-              break;
-            case 'warning':
-              Toast.show({
-                type: 'info',
-                text1: messageResult.message,
-                text1Style: toastTextOneStyle,
-              });
-              break;
-            case 'error':
-              Toast.show({
-                type: 'error',
-                text1: messageResult.message,
-                text1Style: toastTextOneStyle,
-              });
-              break;
-          }
+        // Feedback ÚNICO y honesto (mismo copy para entrega inicial, reintento
+        // manual y auto-sync). Offline-aware: un fallo recuperable se comunica
+        // como "guardada, se sincroniza" (info), no como error rojo.
+        const online = await networkService.isConnected();
+        const mensaje = VisitaProcessingService.generarMensajeEntrega(
+          batchResult,
+          online,
+        );
+        if (mensaje) {
+          Toast.show({
+            type: mensaje.type,
+            text1: mensaje.text1,
+            text2: mensaje.text2,
+            text1Style: toastTextOneStyle,
+          });
         }
 
         // Limpiar selecciones si todas fueron exitosas y está configurado

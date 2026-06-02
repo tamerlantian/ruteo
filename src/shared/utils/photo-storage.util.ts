@@ -57,6 +57,27 @@ export const persistFoto = async (uri: string): Promise<string> => {
   }
 };
 
+/**
+ * Devuelve true si ALGUNA de las fotos ya no existe en disco. Sirve para
+ * detectar entregas legacy cuya foto vivia en Caches y fue purgada: reintentar
+ * esas es inutil (no hay bytes), asi que conviene marcarlas como no-retryable.
+ */
+export const algunaFotoFalta = async (uris: string[]): Promise<boolean> => {
+  for (const uri of uris) {
+    try {
+      const existe = await fs.exists(stripFilePrefix(uri));
+      if (!existe) {
+        return true;
+      }
+    } catch {
+      // Si no podemos verificar, asumimos que falta (mejor pedir re-registro
+      // que quedar en loop de reintentos).
+      return true;
+    }
+  }
+  return false;
+};
+
 /** Borra archivos de fotos por uri. Best-effort: nunca lanza. */
 export const deleteFotos = async (uris: string[]): Promise<void> => {
   await Promise.all(
