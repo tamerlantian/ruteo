@@ -184,13 +184,13 @@ export const EntregasDetalleScreen = () => {
     setVisitaDetalle(null);
   }, []);
 
-  // La empresa viene DE LA ORDEN (un conductor trabaja para varias). Hoy es el
-  // schema_name prettificado; cuando el back exponga el nombre real por orden,
-  // se cambia solo esta línea. El conductor es el usuario logueado.
+  // La empresa viene DE LA ORDEN (un conductor trabaja para varias). Usamos el
+  // nombre real que expone el back (empresa_nombre); si no viene, caemos al
+  // schema_name prettificado. El conductor es el usuario logueado.
   const { user } = useAuth();
   const empresaNombre = useMemo(
-    () => prettifyEmpresa(entrega.schema_name),
-    [entrega.schema_name],
+    () => entrega.empresa_nombre || prettifyEmpresa(entrega.schema_name),
+    [entrega.empresa_nombre, entrega.schema_name],
   );
   const conductorNombre = user?.nombre_corto || user?.nombre || undefined;
 
