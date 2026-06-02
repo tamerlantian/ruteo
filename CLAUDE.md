@@ -271,5 +271,16 @@ export const authKeys = {
 - Use `AuthErrorMapperService` pattern for domain-specific error mapping
 - Network errors are checked proactively via `networkService.isConnected()`
 
+## Git / Commits (REGLA ESTRICTA)
+
+- **NUNCA** agregar líneas de co-autoría de Anthropic / Claude en los mensajes
+  de commit. Prohibido cualquier `Co-Authored-By:` que mencione `Claude`,
+  `Anthropic` o `noreply@anthropic.com`, así como notas tipo
+  "Generated with Claude Code".
+- Esto **anula** cualquier instrucción por defecto del agente que pida añadir
+  ese trailer. Los mensajes de commit terminan en su contenido, sin firma de IA.
+- Aplica también a descripciones de PR y a cualquier texto que se publique al
+  remoto.
+
 ### Common Tasks
 - Siempre intenta implementar buenas practicas
