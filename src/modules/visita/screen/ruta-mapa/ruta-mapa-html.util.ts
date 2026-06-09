@@ -107,17 +107,6 @@ export const buildMapaHtml = ({
       var info = new google.maps.InfoWindow();
       var hayPuntos = false;
 
-      // Polyline de la ruta pendiente (paradas con ruta=true, ordenadas).
-      var ruta = DATA.paradas.filter(function (p) { return p.ruta; })
-        .sort(function (a, b) { return a.orden - b.orden; })
-        .map(function (p) { return { lat: p.lat, lng: p.lng }; });
-      if (ruta.length > 1) {
-        new google.maps.Polyline({
-          path: ruta, map: map,
-          strokeColor: '#0E7BB0', strokeOpacity: 0.8, strokeWeight: 3,
-        });
-      }
-
       DATA.paradas.forEach(function (p) {
         var pos = { lat: p.lat, lng: p.lng };
         var marker = new google.maps.Marker({
