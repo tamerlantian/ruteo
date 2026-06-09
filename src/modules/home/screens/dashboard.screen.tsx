@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,75 +6,95 @@ import {
   StatusBar,
   TouchableOpacity,
   Linking,
-  Switch,
+  ScrollView,
+  RefreshControl,
 } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useAuth } from '../../auth/context/auth.context';
-import { useAppSelector, useAppDispatch } from '../../../store/hooks';
-import {
-  selectVisitas,
-  selectVisitasPendientes,
-  selectVisitasEntregadas,
-  selectVisitaIdsConErrorCompleto,
-  selectVisitasConError,
-  selectVisitasConErrorRetryables,
-  selectVisitasConErrorNoRetryables,
-} from '../../visita/store/selector/visita.selector';
+import { useAppSelector } from '../../../store/hooks';
 import { MainTabParamList } from '../../../navigation/types';
-import { setSyncing } from '../../visita/store/slice/visita.slice';
-import { selectOrdenEntrega, selectSubdominio, selectDespacho } from '../../settings';
-import { useRetryNovedades } from '../../novedad/hooks';
-import { useRetrySoluciones } from '../../novedad/hooks/use-retry-soluciones.hook';
-import { useRetryVisitas } from '../../visita/hooks/use-retry-visitas.hook';
-import {
-  selectNovedadesConEstadosError,
-  selectNovedadesPendientesPorSolventar,
-} from '../../novedad/store/selector/novedad.selector';
-import Toast from 'react-native-toast-message';
-import { toastTextOneStyle } from '../../../shared/styles/global.style';
-import { networkService } from '../../../shared/services/network.service';
-import { backgroundGeolocationService } from '../../../shared/services/background-geolocation.service';
-import { reportLocationTrackingError } from '../../../shared/utils/sentry-helpers';
+import { verticalRepository } from '../../vertical/repositories/vertical.repository';
+import { Entrega } from '../../vertical/interfaces/entrega.interface';
 import { WHATSAPP_NUMBER } from '../../../config/environment';
 import { authColors } from '../../auth/styles/auth.theme';
 import { AppBar } from '../../../shared/components/ui/app-bar/app-bar.component';
 
+const DIAS = [
+  'Domingo',
+  'Lunes',
+  'Martes',
+  'Miércoles',
+  'Jueves',
+  'Viernes',
+  'Sábado',
+];
+const MESES = [
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
+];
+
 export const DashboardScreen = () => {
   const { user } = useAuth();
-  const dispatch = useAppDispatch();
-  const [isRetrying, setIsRetrying] = useState(false);
-  const [isLocationTracking, setIsLocationTracking] = useState(true);
-  const [isTogglingLocation, setIsTogglingLocation] = useState(false);
-  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { reintentarNovedadesConError } = useRetryNovedades();
-  const { reintentarSolucionesConError } = useRetrySoluciones();
-  const { reintentarVisitasConError } = useRetryVisitas();
+  const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
 
-  const ordenEntrega = useAppSelector(selectOrdenEntrega);
-  const subdominio = useAppSelector(selectSubdominio);
-  const despacho = useAppSelector(selectDespacho);
-  const visitas = useAppSelector(selectVisitas);
-  const visitasConError = useAppSelector(selectVisitasConError);
-  const novedadesConError = useAppSelector(selectNovedadesConEstadosError);
-  const novedades = useAppSelector(selectNovedadesPendientesPorSolventar);
-  const visitasPendientes = useAppSelector(selectVisitasPendientes);
-  const visitasEntregadas = useAppSelector(selectVisitasEntregadas);
-  const visitaIdsConError = useAppSelector(selectVisitaIdsConErrorCompleto);
-  const visitasConErrorRetryables = useAppSelector(selectVisitasConErrorRetryables);
-  const visitasConErrorNoRetryables = useAppSelector(selectVisitasConErrorNoRetryables);
+  // Órdenes asignadas por el server (incluye las que el conductor aún no abrió).
+  const [ordenesServer, setOrdenesServer] = useState<Entrega[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // === Agregacion de snapshots para el modelo navegacional ===
-  // Despues del refactor a Lista -> Detalle, NO hay "una orden activa" cuyo
-  // state.visitas resuma la pantalla. Los stats reales se calculan
-  // agregando todos los snapshots de ordenes en las que el conductor
-  // trabajo localmente.
   const snapshots = useAppSelector(
     state => state.visita.snapshotsByDespacho ?? {},
   );
-  const agregado = useMemo(() => {
+
+  const cargarAsignadas = useCallback(async () => {
+    try {
+      const data = await verticalRepository.getMisDespachos();
+      setOrdenesServer(data ?? []);
+    } catch {
+      // Best-effort: en el home no spameamos toasts de error de red.
+    }
+  }, []);
+
+  useEffect(() => {
+    cargarAsignadas();
+  }, [cargarAsignadas]);
+
+  // Refresca al volver al tab Inicio (ej. tras trabajar una orden).
+  useFocusEffect(
+    useCallback(() => {
+      cargarAsignadas();
+    }, [cargarAsignadas]),
+  );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await cargarAsignadas();
+    setRefreshing(false);
+  }, [cargarAsignadas]);
+
+  // === Resumen del día: combina órdenes del server + snapshots locales ===
+  // Para cada orden activa (no completada) prefiere el detalle local (snapshot)
+  // y, si el conductor aún no la abrió, usa los conteos del server. Así el home
+  // refleja también las órdenes asignadas nuevas, no solo las ya trabajadas.
+  const resumen = useMemo(() => {
+    const idsServer = new Set(ordenesServer.map(o => o.id));
+    const locales: Entrega[] = Object.values(snapshots)
+      .map(s => s.entrega)
+      .filter((e): e is Entrega => !!e && !idsServer.has(e.id));
+    const todas = [...ordenesServer, ...locales];
+
     let visitasTotal = 0;
     let entregadasTotal = 0;
     let pendientesTotal = 0;
@@ -82,186 +102,88 @@ export const DashboardScreen = () => {
     let erroresTotal = 0;
     let erroresRetryablesTotal = 0;
     let ordenesEnCurso = 0;
-    let totalActivas = 0;
+    let activas = 0;
 
-    Object.values(snapshots).forEach(snap => {
-      if (!snap?.entrega) {
+    todas.forEach(o => {
+      const snap = snapshots[o.id];
+      const vs = snap?.visitas ?? [];
+      const tieneDetalle = vs.length > 0;
+      const visitas = tieneDetalle ? vs.length : o.visitas || 0;
+      const entregadas = tieneDetalle
+        ? vs.filter(v => v.estado_entregado).length
+        : Math.round(o.visitas_entregadas || 0);
+
+      // Completada → no aporta a "lo que falta".
+      if (visitas > 0 && entregadas >= visitas) {
         return;
       }
-      const vs = snap.visitas || [];
-      const entregadas = vs.filter(v => v.estado_entregado).length;
-      // Saltea las completadas: no aportan a "lo que falta".
-      if (vs.length > 0 && entregadas >= vs.length) {
-        return;
-      }
-      totalActivas += 1;
-      visitasTotal += vs.length;
+      activas += 1;
+      visitasTotal += visitas;
       entregadasTotal += entregadas;
-      pendientesTotal += vs.filter(
-        v => !v.estado_entregado && !v.estado_novedad && v.estado !== 'error',
-      ).length;
-      novedadesTotal += vs.filter(v => v.estado_novedad).length;
-      const errores = vs.filter(v => v.estado === 'error');
-      erroresTotal += errores.length;
-      erroresRetryablesTotal += errores.filter(
-        v => v.es_error_retryable !== false,
-      ).length;
       if (entregadas > 0) {
         ordenesEnCurso += 1;
       }
+
+      if (tieneDetalle) {
+        pendientesTotal += vs.filter(
+          v => !v.estado_entregado && !v.estado_novedad && v.estado !== 'error',
+        ).length;
+        novedadesTotal += vs.filter(v => v.estado_novedad).length;
+        const errores = vs.filter(v => v.estado === 'error');
+        erroresTotal += errores.length;
+        erroresRetryablesTotal += errores.filter(
+          v => v.es_error_retryable !== false,
+        ).length;
+      } else {
+        // Sin detalle local: estimamos pendientes con los conteos del server.
+        pendientesTotal += Math.max(0, visitas - entregadas);
+      }
     });
+
     const progreso =
-      visitasTotal > 0
-        ? Math.round((entregadasTotal / visitasTotal) * 100)
-        : 0;
+      visitasTotal > 0 ? Math.round((entregadasTotal / visitasTotal) * 100) : 0;
     return {
+      activas,
+      ordenesEnCurso,
       visitasTotal,
       entregadasTotal,
       pendientesTotal,
       novedadesTotal,
       erroresTotal,
       erroresRetryablesTotal,
-      ordenesEnCurso,
-      totalActivas,
       progreso,
     };
-  }, [snapshots]);
-  const hayActividad = agregado.totalActivas > 0;
+  }, [ordenesServer, snapshots]);
 
-  // === Auto-stop de geolocation cuando no quedan pendientes ===
-  useEffect(() => {
-    if (!ordenEntrega || !subdominio || !despacho || !user?.id || !isLocationTracking) {
-      return;
-    }
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-    if (visitasPendientes.length === 0) {
-      debounceTimeoutRef.current = setTimeout(async () => {
-        try {
-          await backgroundGeolocationService.stopTracking();
-          setIsLocationTracking(false);
-          Toast.show({
-            type: 'info',
-            text1: 'Ubicación detenida automáticamente',
-            text2: 'No hay entregas pendientes',
-            text1Style: toastTextOneStyle,
-          });
-        } catch (error) {
-          reportLocationTrackingError('runtime', error, {
-            phase: 'auto_stop',
-            pendingCount: visitasPendientes.length,
-            wasTracking: isLocationTracking,
-          });
-        }
-      }, 1000);
-    }
-    return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
+  const hayActividad = resumen.activas > 0;
+
+  // Saludo + fecha (sin Intl para compatibilidad con Hermes).
+  const { saludo, fecha } = useMemo(() => {
+    const ahora = new Date();
+    const h = ahora.getHours();
+    const s =
+      h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
+    return {
+      saludo: s,
+      fecha: `${DIAS[ahora.getDay()]}, ${ahora.getDate()} de ${
+        MESES[ahora.getMonth()]
+      }`,
     };
-  }, [visitasPendientes.length, isLocationTracking, ordenEntrega, subdominio, despacho, user?.id]);
-
-  // === Sincronizar estado real del tracking ===
-  useEffect(() => {
-    const checkAndSyncTrackingStatus = () => {
-      try {
-        const isTracking = backgroundGeolocationService.isTrackingActive();
-        if (isTracking !== isLocationTracking) {
-          setIsLocationTracking(isTracking);
-        }
-      } catch (error) {
-        reportLocationTrackingError('runtime', error, {
-          phase: 'status_sync',
-          localState: isLocationTracking,
-        });
-      }
-    };
-    checkAndSyncTrackingStatus();
-    const interval = setInterval(checkAndSyncTrackingStatus, 5000);
-    return () => clearInterval(interval);
-  }, [isLocationTracking]);
-
-  const handleToggleLocationTracking = async () => {
-    if (!ordenEntrega || !subdominio || !despacho || !user?.id) {
-      Toast.show({
-        type: 'error',
-        text1: 'Configuración incompleta',
-        text2: 'Faltan datos necesarios para el tracking',
-        text1Style: toastTextOneStyle,
-      });
-      return;
-    }
-    setIsTogglingLocation(true);
-    try {
-      if (isLocationTracking) {
-        await backgroundGeolocationService.stopTracking();
-        setIsLocationTracking(false);
-      } else {
-        await backgroundGeolocationService.startTracking({
-          schemaName: subdominio,
-          despacho: parseInt(despacho, 10),
-          usuarioId: user.id,
-        });
-        setIsLocationTracking(true);
-      }
-    } catch (error) {
-      reportLocationTrackingError('runtime', error, {
-        phase: 'toggle_tracking',
-        action: isLocationTracking ? 'stop' : 'start',
-      });
-      Toast.show({
-        type: 'error',
-        text1: 'Error al cambiar el estado',
-        text1Style: toastTextOneStyle,
-      });
-    } finally {
-      setIsTogglingLocation(false);
-    }
-  };
-
-  const handleRetryErrorVisitas = async () => {
-    const isConnected = await networkService.isConnected();
-    if (!isConnected) {
-      Toast.show({
-        type: 'error',
-        text1: 'Sin conexión a internet',
-        text2: 'Verifica tu conexión e intenta nuevamente',
-        text1Style: toastTextOneStyle,
-      });
-      return;
-    }
-    if (visitaIdsConError.length === 0) {
-      return;
-    }
-    setIsRetrying(true);
-    dispatch(setSyncing(true));
-    try {
-      const visitasConErrorIds = visitasConError.map(v => v.id);
-      const novedadesConErrorIds = novedadesConError.map(n => n.id);
-      await reintentarNovedadesConError(novedadesConErrorIds);
-      await reintentarSolucionesConError(novedadesConErrorIds);
-      await reintentarVisitasConError(visitasConErrorIds);
-    } catch {
-      Toast.show({
-        type: 'error',
-        text1: 'Error al reintentar',
-        text2: 'Inténtalo nuevamente.',
-        text1Style: toastTextOneStyle,
-      });
-    } finally {
-      setIsRetrying(false);
-      dispatch(setSyncing(false));
-    }
-  };
+  }, []);
+  const primerNombre =
+    user?.nombre?.trim().split(/\s+/)[0] ||
+    user?.nombre_corto ||
+    user?.username ||
+    '';
 
   const handleOpenWhatsApp = () => {
     Linking.openURL(`whatsapp://send?phone=${WHATSAPP_NUMBER}`);
   };
 
-  const navigation =
-    useNavigation<BottomTabNavigationProp<MainTabParamList>>();
+  const irAEntregas = useCallback(
+    () => navigation.navigate('Visitas'),
+    [navigation],
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -274,20 +196,43 @@ export const DashboardScreen = () => {
         title="Inicio"
         subtitle={
           hayActividad
-            ? `${agregado.totalActivas} ${
-                agregado.totalActivas === 1 ? 'orden activa' : 'órdenes activas'
+            ? `${resumen.activas} ${
+                resumen.activas === 1 ? 'orden activa' : 'órdenes activas'
               }`
             : undefined
         }
       />
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={authColors.brandInk}
+            colors={[authColors.brandInk]}
+          />
+        }
+      >
+        {/* ===== Saludo + fecha ===== */}
+        <View style={styles.greetingBlock}>
+          <Text style={styles.saludo}>
+            {saludo}
+            {primerNombre ? `, ${primerNombre}` : ''}
+          </Text>
+          <Text style={styles.fecha}>{fecha}</Text>
+        </View>
+
         {hayActividad ? (
           <>
             {/* ===== Hero: total agregado de TODAS las ordenes ===== */}
             <TouchableOpacity
               style={styles.heroCard}
-              onPress={() => navigation.navigate('Visitas')}
+              onPress={irAEntregas}
               activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel="Ver mis órdenes"
             >
               <View style={styles.heroTopRow}>
                 <View style={styles.heroIcon}>
@@ -299,16 +244,16 @@ export const DashboardScreen = () => {
                 </View>
                 <View style={styles.heroBody}>
                   <Text style={styles.heroTitulo}>
-                    {agregado.ordenesEnCurso > 0
-                      ? `${agregado.ordenesEnCurso} ${
-                          agregado.ordenesEnCurso === 1 ? 'orden' : 'órdenes'
+                    {resumen.ordenesEnCurso > 0
+                      ? `${resumen.ordenesEnCurso} ${
+                          resumen.ordenesEnCurso === 1 ? 'orden' : 'órdenes'
                         } en curso`
-                      : `${agregado.totalActivas} ${
-                          agregado.totalActivas === 1 ? 'orden' : 'órdenes'
+                      : `${resumen.activas} ${
+                          resumen.activas === 1 ? 'orden' : 'órdenes'
                         }`}
                   </Text>
                   <Text style={styles.heroSubtitulo}>
-                    {agregado.entregadasTotal} de {agregado.visitasTotal}{' '}
+                    {resumen.entregadasTotal} de {resumen.visitasTotal}{' '}
                     entregadas
                   </Text>
                 </View>
@@ -319,56 +264,66 @@ export const DashboardScreen = () => {
                 />
               </View>
 
-              {agregado.visitasTotal > 0 && (
+              {resumen.visitasTotal > 0 && (
                 <>
                   <View style={styles.progressTrack}>
                     <View
                       style={[
                         styles.progressFill,
-                        { width: `${agregado.progreso}%` },
+                        { width: `${resumen.progreso}%` },
                       ]}
                     />
                   </View>
                   <View style={styles.progressLabels}>
                     <Text style={styles.progressTexto}>Ver mis órdenes</Text>
-                    <Text style={styles.progressPct}>{agregado.progreso}%</Text>
+                    <Text style={styles.progressPct}>{resumen.progreso}%</Text>
                   </View>
                 </>
               )}
             </TouchableOpacity>
 
-            {/* ===== Stats agregadas ===== */}
+            {/* ===== Stats agregadas (tappables) ===== */}
             <View style={styles.statsRow}>
-              <View style={styles.statBlock}>
-                <Text style={styles.statNumero}>{agregado.pendientesTotal}</Text>
+              <TouchableOpacity
+                style={styles.statBlock}
+                onPress={irAEntregas}
+                activeOpacity={0.6}
+              >
+                <Text style={styles.statNumero}>{resumen.pendientesTotal}</Text>
                 <Text style={styles.statLabel}>Pendientes</Text>
-              </View>
+              </TouchableOpacity>
               <View style={styles.statDivisor} />
-              <View style={styles.statBlock}>
-                <Text style={styles.statNumero}>{agregado.novedadesTotal}</Text>
+              <TouchableOpacity
+                style={styles.statBlock}
+                onPress={irAEntregas}
+                activeOpacity={0.6}
+              >
+                <Text style={styles.statNumero}>{resumen.novedadesTotal}</Text>
                 <Text style={styles.statLabel}>Novedades</Text>
-              </View>
+              </TouchableOpacity>
               <View style={styles.statDivisor} />
-              <View style={styles.statBlock}>
+              <TouchableOpacity
+                style={styles.statBlock}
+                onPress={irAEntregas}
+                activeOpacity={0.6}
+              >
                 <Text
                   style={[
                     styles.statNumero,
-                    agregado.erroresTotal > 0 && styles.statNumeroError,
+                    resumen.erroresTotal > 0 && styles.statNumeroError,
                   ]}
                 >
-                  {agregado.erroresTotal}
+                  {resumen.erroresTotal}
                 </Text>
                 <Text style={styles.statLabel}>Con error</Text>
-              </View>
+              </TouchableOpacity>
             </View>
 
-            {/* ===== Aviso de pendientes de sincronizar (no auto-retry desde
-                aqui: el reintentar vive dentro de cada detalle, sino habria
-                que restaurar/sync/guardar cada snapshot — feature aparte). */}
-            {agregado.erroresRetryablesTotal > 0 && (
+            {/* ===== Aviso de pendientes de sincronizar ===== */}
+            {resumen.erroresRetryablesTotal > 0 && (
               <TouchableOpacity
                 style={styles.syncCard}
-                onPress={() => navigation.navigate('Visitas')}
+                onPress={irAEntregas}
                 activeOpacity={0.85}
               >
                 <View style={styles.syncIcon}>
@@ -380,8 +335,8 @@ export const DashboardScreen = () => {
                 </View>
                 <View style={styles.syncBody}>
                   <Text style={styles.syncTitulo}>
-                    {agregado.erroresRetryablesTotal} entrega
-                    {agregado.erroresRetryablesTotal === 1 ? '' : 's'} con error
+                    {resumen.erroresRetryablesTotal} entrega
+                    {resumen.erroresRetryablesTotal === 1 ? '' : 's'} con error
                   </Text>
                   <Text style={styles.syncSubtitulo}>
                     Abrí la orden y reintentá el envío desde ahí
@@ -393,43 +348,6 @@ export const DashboardScreen = () => {
                   color={authColors.inkMuted}
                 />
               </TouchableOpacity>
-            )}
-
-            {/* ===== Toggle de ubicación — solo si hay una orden con
-                tracking config en settings (la ultima abierta) ===== */}
-            {ordenEntrega && (
-            <View style={styles.toggleCard}>
-              <View style={styles.toggleIcon}>
-                <Ionicons
-                  name="location-outline"
-                  size={20}
-                  color={
-                    isLocationTracking
-                      ? authColors.brandInk
-                      : authColors.inkMuted
-                  }
-                />
-              </View>
-              <View style={styles.toggleBody}>
-                <Text style={styles.toggleTitulo}>Ubicación en vivo</Text>
-                <Text style={styles.toggleSubtitulo}>
-                  {isLocationTracking
-                    ? 'Tu posición se está enviando'
-                    : 'No estás enviando tu posición'}
-                </Text>
-              </View>
-              <Switch
-                value={isLocationTracking}
-                onValueChange={handleToggleLocationTracking}
-                disabled={isTogglingLocation}
-                trackColor={{
-                  false: authColors.border,
-                  true: authColors.brandInk,
-                }}
-                thumbColor="#FFFFFF"
-                ios_backgroundColor={authColors.border}
-              />
-            </View>
             )}
           </>
         ) : (
@@ -444,12 +362,19 @@ export const DashboardScreen = () => {
             </View>
             <Text style={styles.emptyTitulo}>Sin trabajo activo</Text>
             <Text style={styles.emptySubtitulo}>
-              Andá a la pestaña <Text style={styles.emptyBold}>Entregas</Text>{' '}
-              para ver tus órdenes asignadas y empezar el día.
+              No tienes órdenes asignadas por ahora. Desliza hacia abajo para
+              actualizar.
             </Text>
+            <TouchableOpacity
+              style={styles.emptyButton}
+              onPress={irAEntregas}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.emptyButtonText}>Ver entregas</Text>
+            </TouchableOpacity>
           </View>
         )}
-      </View>
+      </ScrollView>
 
       {/* ===== FAB de soporte ===== */}
       <TouchableOpacity
@@ -470,10 +395,28 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: authColors.background,
   },
-  content: {
+  scroll: {
     flex: 1,
+  },
+  scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 16,
+    paddingBottom: 100,
+  },
+  // ----- Saludo -----
+  greetingBlock: {
+    marginBottom: 16,
+  },
+  saludo: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: authColors.ink,
+    letterSpacing: -0.3,
+  },
+  fecha: {
+    fontSize: 13.5,
+    color: authColors.inkSoft,
+    marginTop: 2,
   },
   // ----- Hero -----
   heroCard: {
@@ -511,10 +454,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: authColors.ink,
     marginTop: 2,
-  },
-  heroOrdenId: {
-    color: authColors.inkMuted,
-    fontWeight: '600',
   },
   progressTrack: {
     height: 8,
@@ -587,9 +526,6 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 14,
   },
-  syncCardDisabled: {
-    opacity: 0.6,
-  },
   syncIcon: {
     width: 40,
     height: 40,
@@ -607,38 +543,6 @@ const styles = StyleSheet.create({
     color: authColors.ink,
   },
   syncSubtitulo: {
-    fontSize: 12.5,
-    color: authColors.inkSoft,
-    marginTop: 2,
-  },
-  // ----- Toggle de ubicación -----
-  toggleCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: authColors.border,
-    gap: 12,
-  },
-  toggleIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(27, 155, 215, 0.10)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  toggleBody: {
-    flex: 1,
-  },
-  toggleTitulo: {
-    fontSize: 14.5,
-    fontWeight: '700',
-    color: authColors.ink,
-  },
-  toggleSubtitulo: {
     fontSize: 12.5,
     color: authColors.inkSoft,
     marginTop: 2,
@@ -675,9 +579,17 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginTop: 6,
   },
-  emptyBold: {
+  emptyButton: {
+    marginTop: 18,
+    backgroundColor: authColors.brandInk,
+    paddingHorizontal: 22,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  emptyButtonText: {
+    color: '#FFFFFF',
     fontWeight: '700',
-    color: authColors.ink,
+    fontSize: 15,
   },
   // ----- WhatsApp FAB -----
   whatsappButton: {
