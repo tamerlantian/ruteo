@@ -13,10 +13,8 @@ import { visitasStyles } from '../../../visita/screen/visitas/visitas.style';
  * cards + acciones flotantes Solucionar/Reintentar), manejado por
  * `useNovedadesViewModel` (opera sobre las novedades de la orden abierta).
  *
- * Se usa en DOS lugares para no duplicar el flujo:
- *  - La pestaña inferior `NovedadesScreen` (con su propio AppBar).
- *  - El detalle de la orden, bajo el filtro "Novedades" (embebido, sin AppBar),
- *    para que el conductor resuelva/reintente sin salir de la orden.
+ * Se monta dentro del detalle de la orden, en la vista "Novedades" del bottom
+ * nav, para que el conductor vea/resuelva/reintente sin salir de la orden.
  */
 export const NovedadesBody = () => {
   const {

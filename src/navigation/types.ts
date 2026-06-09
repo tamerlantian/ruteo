@@ -53,6 +53,5 @@ export type MainStackParamList = {
 export type MainTabParamList = {
   Dashboard: undefined;
   Visitas: undefined;
-  Novedades: undefined;
   Settings: undefined;
 };
