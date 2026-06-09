@@ -198,7 +198,9 @@ export const EntregasDetalleScreen = () => {
     () => entrega.empresa_nombre || prettifyEmpresa(entrega.schema_name),
     [entrega.empresa_nombre, entrega.schema_name],
   );
-  const conductorNombre = user?.nombre_corto || user?.nombre || undefined;
+  // Prioriza `nombre` (el campo editable del perfil) sobre `nombre_corto`,
+  // para que el nombre que el conductor edita sí aparezca en el mensaje.
+  const conductorNombre = user?.nombre || user?.nombre_corto || undefined;
 
   const renderVisitaItem = useCallback(
     ({ item, drag, isActive, getIndex }: RenderItemParams<VisitaResponse>) => (
