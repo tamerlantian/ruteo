@@ -13,6 +13,9 @@
 const primerNombre = (nombre?: string | null): string =>
   (nombre ?? '').trim().split(/\s+/)[0] ?? '';
 
+const capitalizar = (texto: string): string =>
+  texto ? texto.charAt(0).toUpperCase() + texto.slice(1) : texto;
+
 /** Convierte un subdominio/slug en un nombre presentable: "mi-tienda" -> "Mi Tienda". */
 export const prettifyEmpresa = (slug?: string | null): string => {
   if (!slug) return '';
@@ -64,10 +67,15 @@ export const buildEntregaWhatsAppMensaje = ({
 
   // Propósito en lenguaje del cliente + referencia opcional del pedido.
   const refPedido = numero ? ` #${numero}` : '';
-  const proposito = `estoy en ruta con tu pedido${refPedido}`;
 
-  // CTA único y concreto.
-  const cta = '¿Me confirmas que te encuentras disponible para recibirlo? ¡Gracias!';
+  // Mensaje organizado en líneas (más legible en WhatsApp que un párrafo).
+  const lineas = [
+    saludo,
+    `${capitalizar(presentacion)}.`,
+    `Estoy en ruta con tu pedido${refPedido}.`,
+    '¿Me confirmas que estás disponible para recibirlo?',
+    '¡Gracias!',
+  ];
 
-  return `${saludo}, ${presentacion}. Te aviso que ${proposito}. ${cta}`;
+  return lineas.join('\n');
 };
