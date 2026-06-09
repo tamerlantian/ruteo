@@ -41,6 +41,13 @@ export const authController = {
     return usuario;
   },
 
+  // Actualizar el perfil (nombre) y persistir el usuario actualizado
+  actualizarPerfil: async (data: { nombre: string }): Promise<AuthUser> => {
+    const usuario = await AuthRepository.getInstance().actualizarPerfil(data);
+    await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(usuario));
+    return usuario;
+  },
+
   // Registrar nuevo usuario
   register: async (userData: RegisterCredentials): Promise<RegisterResponse> => {
     try {

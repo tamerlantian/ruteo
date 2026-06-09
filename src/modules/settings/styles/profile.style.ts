@@ -112,4 +112,73 @@ export const profileStyles = StyleSheet.create({
     color: '#ef4444',
     fontWeight: '400',
   },
+  // ----- Editar nombre -----
+  editButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f0f8ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+  },
+  modalCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1c1c1e',
+    marginBottom: 14,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#1f2937',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+    marginTop: 18,
+  },
+  modalBtn: {
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 10,
+    minWidth: 96,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalBtnCancel: {
+    backgroundColor: '#f0f0f0',
+  },
+  modalBtnSave: {
+    backgroundColor: '#007aff',
+  },
+  modalBtnDisabled: {
+    opacity: 0.5,
+  },
+  modalBtnCancelText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  modalBtnSaveText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#fff',
+  },
 });

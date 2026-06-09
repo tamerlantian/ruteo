@@ -18,6 +18,7 @@ interface AuthContextType {
   logoutTokenExpired: () => Promise<void>;
   checkAuthStatus: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  actualizarPerfil: (data: { nombre: string }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -149,6 +150,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
+  // Actualiza el perfil (nombre) en el server y refleja el usuario nuevo.
+  // Propaga el error para que la pantalla muestre el feedback adecuado.
+  const actualizarPerfil = useCallback(async (data: { nombre: string }) => {
+    const actualizado = await authController.actualizarPerfil(data);
+    setUser(actualizado);
+  }, []);
+
   // Verificar estado al montar el componente
   useEffect(() => {
     console.log('🔍 AuthProvider: useEffect ejecutándose...');
@@ -178,6 +186,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logoutTokenExpired,
     checkAuthStatus,
     refreshUser,
+    actualizarPerfil,
   };
 
   console.log('🔍 AuthProvider: Renderizando con valor:', value);

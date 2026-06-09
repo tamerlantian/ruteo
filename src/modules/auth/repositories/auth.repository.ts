@@ -54,6 +54,14 @@ export class AuthRepository extends HttpBaseRepository implements IAuthService {
   }
 
   /**
+   * Actualiza datos editables del perfil del usuario móvil (por ahora: nombre).
+   * @returns Promise con el usuario actualizado
+   */
+  async actualizarPerfil(data: { nombre: string }): Promise<AuthUser> {
+    return this.patch<AuthUser>('api/v2/auth/me/', data);
+  }
+
+  /**
    * Registra un nuevo usuario
    * @param userData Datos del usuario a registrar
    * @returns Promise con la respuesta del registro
