@@ -41,6 +41,22 @@ const determineIfRetryable = (error: AxiosError<ApiErrorResponse>): boolean => {
  * Maneja los errores de respuesta HTTP y devuelve un objeto de error estandarizado
  */
 export const handleErrorResponse = (error: AxiosError<ApiErrorResponse>): ApiErrorResponse => {
+  // Error de RED real: el servidor nunca respondió (hay request pero no
+  // response). Es el equipo el que está sin conexión / timeout / DNS, NO el
+  // servidor "fuera de línea". Antes esto caía en `status || 500` y mostraba
+  // "Servidor fuera de línea", confundiendo al conductor durante el sync
+  // offline. Se marca retryable para que el auto-sync lo reintente al volver
+  // internet.
+  if (!error.response && error.request) {
+    return {
+      titulo: 'Sin conexión',
+      mensaje:
+        'Sin conexión a internet. La entrega quedó guardada y se enviará automáticamente al volver la conexión.',
+      codigo: 0,
+      isRetryable: true,
+    };
+  }
+
   // Envelope v2 {codigo, titulo, mensaje}: el backend ya entrega el error listo
   // para mostrar. Lo pasamos tal cual (cubre cualquier status, incluido 403).
   const data = error.response?.data as ApiErrorResponse | undefined;
@@ -138,11 +154,16 @@ const error404 = (error: AxiosError): ApiErrorResponse => {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const error405 = (error: AxiosError): ApiErrorResponse => {
+  // 405 = método no permitido: NO es una caída temporal del servidor (un
+  // "intente más tarde" no lo resuelve). Suele indicar un problema de ruteo /
+  // redirección (p.ej. http→https que convierte el POST en GET). El mensaje
+  // ahora es coherente con isRetryable:false para no dejar la entrega atascada
+  // prometiendo un reintento que nunca ocurre.
   return {
     titulo: 'Error',
-    mensaje: 'Servidor fuera de línea, intente más tarde',
+    mensaje: 'No se pudo completar la solicitud (método no permitido). Si persiste, contacta a soporte.',
     codigo: 405,
-    isRetryable: false, // No retryable - método no permitido
+    isRetryable: false, // No retryable - método no permitido (no lo arregla reintentar)
   };
 };
 
