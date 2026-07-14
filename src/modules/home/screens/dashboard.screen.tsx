@@ -21,6 +21,7 @@ import { Entrega } from '../../vertical/interfaces/entrega.interface';
 import { WHATSAPP_NUMBER } from '../../../config/environment';
 import { authColors } from '../../auth/styles/auth.theme';
 import { AppBar } from '../../../shared/components/ui/app-bar/app-bar.component';
+import { esVisitaPendiente } from '../../visita/utils/visita-estado.util';
 
 const DIAS = [
   'Domingo',
@@ -125,9 +126,7 @@ export const DashboardScreen = () => {
       }
 
       if (tieneDetalle) {
-        pendientesTotal += vs.filter(
-          v => !v.estado_entregado && !v.estado_novedad && v.estado !== 'error',
-        ).length;
+        pendientesTotal += vs.filter(esVisitaPendiente).length;
         novedadesTotal += vs.filter(v => v.estado_novedad).length;
         const errores = vs.filter(v => v.estado === 'error');
         erroresTotal += errores.length;

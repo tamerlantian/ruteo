@@ -6,6 +6,7 @@ import {
 } from '../../interfaces/visita.interface';
 import { cargarVisitasThunk } from '../thunk/visita.thunk';
 import { Entrega } from '../../../vertical/interfaces/entrega.interface';
+import { esVisitaPendiente } from '../../utils/visita-estado.util';
 
 /**
  * Snapshot del estado de una orden cuando se pausa para abrir otra.
@@ -259,8 +260,9 @@ const visitaSlice = createSlice({
      */
     reordenarVisitasPendientes: (state, action: PayloadAction<number[]>) => {
       const idsEnNuevoOrden = action.payload;
-      const esPendiente = (v: VisitaResponse) =>
-        !v.estado_entregado && v.estado === 'pending' && !v.estado_novedad;
+      // Definicion unica de "pendiente" (compartida con selectVisitasPendientes
+      // y el resumen del Inicio) para que las tres vistas no vuelvan a divergir.
+      const esPendiente = esVisitaPendiente;
 
       const pendientesPorId = new Map<number, VisitaResponse>();
       state.visitas.forEach(v => {
@@ -433,10 +435,19 @@ const visitaSlice = createSlice({
               datos_formulario_guardados: undefined,
             };
           }
+          // El server dice que NO esta entregada. Preservamos el estado local
+          // solo si es coherente con eso: 'error' (cola de Sincronizar) o
+          // 'pending'. Un 'sync' (o undefined) local en una visita no entregada
+          // es un estado fantasma —quedaria invisible en todos los tabs—; lo
+          // normalizamos a 'pending' para que el conductor la vea y la entregue.
+          const estadoCoherente =
+            local.estado === 'error' || local.estado === 'pending'
+              ? local.estado
+              : 'pending';
           return {
             ...visita,
             orden: local.orden,
-            estado: local.estado,
+            estado: estadoCoherente,
             error_mensaje: local.error_mensaje,
             es_error_retryable: local.es_error_retryable,
             datos_formulario_guardados: local.datos_formulario_guardados,

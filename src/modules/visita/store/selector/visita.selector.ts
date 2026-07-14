@@ -1,6 +1,7 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '../../../../store/root-reducer';
 import { selectVisitaIdsWithNovedades } from '../../../novedad/store/selector/novedad.selector';
+import { esVisitaPendiente } from '../../utils/visita-estado.util';
 
 const selectVisitasRootState = (state: RootState) => state.visita;
 
@@ -13,12 +14,10 @@ export const selectVisitasPendientes = createSelector(
   [selectVisitas],
   visitas =>
     visitas
-      .filter(
-        visita =>
-          !visita.estado_entregado &&
-          visita.estado === 'pending' &&
-          !visita.estado_novedad,
-      )
+      // Definicion unica de "pendiente" (ver esVisitaPendiente). Antes se exigia
+      // `estado === 'pending'` exacto aca, lo que escondia visitas con estado
+      // "fantasma" que el Inicio SI contaba -> lista vacia con "2 pendientes".
+      .filter(esVisitaPendiente)
       // Respetar el orden manual del conductor (drag & drop). El reducer
       // reordenarVisitasPendientes renumera `orden`; aca lo materializamos.
       .sort((a, b) => a.orden - b.orden),
