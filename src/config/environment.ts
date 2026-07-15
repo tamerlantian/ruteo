@@ -17,7 +17,8 @@ export const DEFAULT_COUNTRY_CODE = '57';
 
 // Google Maps JS API — usada por el mapa de ruta (WebView). Misma key que la
 // web (rutenio). El mapa carga dentro de un WebView.
-export const GOOGLE_MAPS_API_KEY = 'AIzaSyABnddF-aGC5kNcSk74Brfqd4U0ZDlKAgM';
+// La key vive en `secrets.ts` (NO versionado); ver `secrets.example.ts`.
+export { GOOGLE_MAPS_API_KEY } from './secrets';
 
 // Referrer (baseUrl del WebView) para que la key sea aceptada si está
 // restringida por dominio. Ajustar al dominio web permitido en la consola de

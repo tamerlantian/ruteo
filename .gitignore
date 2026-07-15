@@ -78,5 +78,8 @@ yarn-error.log
 android/sentry.properties
 ios/sentry.properties
 
+# Secrets locales (llaves/credenciales) — usar secrets.example.ts como plantilla
+src/config/secrets.ts
+
 # Claude
 CLAUDE.md
