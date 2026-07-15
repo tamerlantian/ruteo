@@ -215,4 +215,12 @@ export interface EntregaFormData {
   parentesco: string;
   firma: string; // Base64 de la firma
   fotos: PhotoData[];
+  /**
+   * Momento en que el conductor REGISTRO la entrega (formato 'YYYY-MM-DD HH:MM'),
+   * sellado al enviar el formulario. Se reusa en el sync/retry para que una
+   * entrega hecha offline conserve su hora real y NO quede con la hora del sync.
+   * Opcional: entregas encoladas antes de este cambio no lo traen (fallback a la
+   * hora actual en FormDataBuilder).
+   */
+  fechaEntrega?: string;
 }

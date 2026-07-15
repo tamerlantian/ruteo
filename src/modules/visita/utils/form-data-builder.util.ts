@@ -16,7 +16,10 @@ export class FormDataBuilder {
 
     // Add basic visita data
     formData.append('id', visitaId.toString());
-    formData.append('fecha_entrega', dateUtil.getCurrentForAPI());
+    // Hora de la ENTREGA (registro), no del envio: una entrega guardada offline
+    // se sincroniza luego y debe conservar su hora real. `fechaEntrega` se sella
+    // al enviar el formulario; el fallback cubre datos encolados antes del cambio.
+    formData.append('fecha_entrega', data.fechaEntrega || dateUtil.getCurrentForAPI());
 
     // Add additional data
     const datosAdicionales = {

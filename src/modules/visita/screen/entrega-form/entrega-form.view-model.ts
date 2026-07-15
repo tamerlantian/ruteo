@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParamList } from '../../../../navigation/types';
 import { EntregaFormData } from '../../interfaces/visita.interface';
+import { dateUtil } from '../../../../shared/utils/date.util';
 import {
   visitaFormValidationRules,
   parentescos,
@@ -116,10 +117,21 @@ export const useEntregaFormViewModel = (
       setIsSubmitting(true);
       const visitaIds = visitasSeleccionadas.map(id => parseInt(id, 10));
 
+      // Sella la hora de ENTREGA ahora (momento del registro), NO al sincronizar.
+      // Asi una entrega guardada offline conserva su hora real cuando se envie
+      // despues. Se reusa este mismo objeto en guardar / procesar / rollback.
+      const dataConFecha: EntregaFormData = {
+        ...data,
+        fechaEntrega: data.fechaEntrega ?? dateUtil.getCurrentForAPI(),
+      };
+
       // 1. Guardar datos del formulario en Redux (backup para rollback si falla)
       visitaIds.forEach(visitaId => {
         dispatch(
-          guardarDatosFormularioEnVisita({ visitaId, datosFormulario: data }),
+          guardarDatosFormularioEnVisita({
+            visitaId,
+            datosFormulario: dataConFecha,
+          }),
         );
       });
 
@@ -141,7 +153,7 @@ export const useEntregaFormViewModel = (
           messagePrefix: 'entrega',
           clearSelectionsOnSuccess: false, // Ya limpiamos arriba
         },
-        data,
+        dataConFecha,
       );
 
       // 5. Procesar resultados individuales
@@ -157,7 +169,7 @@ export const useEntregaFormViewModel = (
           dispatch(
             revertirEntregaOptimista({
               visitaId: result.visitaId,
-              datosFormulario: data, // Preservar datos para retry SI es retryable
+              datosFormulario: dataConFecha, // Preservar datos (con la hora sellada) para retry SI es retryable
               error: result.error || 'Error al procesar entrega',
               esErrorRetryable, // ✅ Usar el valor del error interceptor
             }),
