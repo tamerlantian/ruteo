@@ -48,10 +48,14 @@ export const handleErrorResponse = (error: AxiosError<ApiErrorResponse>): ApiErr
   // offline. Se marca retryable para que el auto-sync lo reintente al volver
   // internet.
   if (!error.response && error.request) {
+    // Handler GLOBAL (todas las repos): el mensaje debe ser neutral, no
+    // especifico de entregas — tambien lo ven login, cargar orden, etc. ante
+    // un timeout/DNS. El texto puntual de "entrega guardada" lo pone la capa de
+    // entrega (generarMensajeEntrega), no aca.
     return {
       titulo: 'Sin conexión',
       mensaje:
-        'Sin conexión a internet. La entrega quedó guardada y se enviará automáticamente al volver la conexión.',
+        'Sin conexión a internet. Revisa tu red; tu trabajo quedó guardado y se reintenta solo al reconectar.',
       codigo: 0,
       isRetryable: true,
     };
